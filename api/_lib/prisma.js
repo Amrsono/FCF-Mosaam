@@ -7,12 +7,14 @@ import ws from 'ws';
 neonConfig.webSocketConstructor = ws;
 
 const connectionString = process.env.DATABASE_URL;
-const pool = new Pool({ connectionString });
-const adapter = new PrismaNeon(pool);
 
 // Prevent multiple instances of Prisma Client in development
 const globalForPrisma = globalThis;
 
-export const prisma = globalForPrisma.prisma || new PrismaClient({ adapter });
+export const prisma =
+  globalForPrisma.prisma ||
+  new PrismaClient({
+    adapter: new PrismaNeon(connectionString)
+  });
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;

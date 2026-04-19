@@ -8,6 +8,7 @@ import ParkedPenaltiesTab from './tabs/ParkedPenaltiesTab';
 import AnalyticsTab from './tabs/AnalyticsTab';
 import ReturnedTab from './tabs/ReturnedTab';
 import BasataTab from './tabs/BasataTab';
+import BostaTab from './tabs/BostaTab';
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState('orders');
@@ -18,6 +19,7 @@ function AppContent() {
     { id: 'sla', label: 'Delivery SLA', icon: <Clock size={20} /> },
     { id: 'penalties', label: 'Parked Penalties', icon: <AlertTriangle size={20} /> },
     { id: 'basata', label: 'Basata POS', icon: <Zap size={20} /> },
+    { id: 'bosta', label: 'Bosta Orders', icon: <Package size={20} /> },
     { id: 'returned', label: 'Returned to Jumia', icon: <Package size={20} /> },
     { id: 'analytics', label: 'Analytics Insights', icon: <BarChart3 size={20} /> },
   ];
@@ -65,6 +67,7 @@ function AppContent() {
           {activeTab === 'sla' && <SLATab />}
           {activeTab === 'penalties' && <ParkedPenaltiesTab />}
           {activeTab === 'basata' && <BasataTab />}
+          {activeTab === 'bosta' && <BostaTab />}
           {activeTab === 'returned' && <ReturnedTab />}
           {activeTab === 'analytics' && <AnalyticsTab />}
         </section>

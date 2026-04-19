@@ -8,16 +8,18 @@ datasource db {
 }
 
 model Customer {
-  id         String   @id @default(uuid())
-  phone      String   @unique
-  name       String
-  email      String?
-  address    String?
-  tier       String   @default("New")
-  deliveries Int      @default(0)
-  createdAt  DateTime @default(now())
+  id              String       @id @default(uuid())
+  phone           String       @unique
+  name            String
+  email           String?
+  address         String?
+  tier            String       @default("New")
+  deliveries      Int          @default(0) // Jumia deliveries
+  bostaDeliveries Int          @default(0) // Bosta deliveries
+  createdAt       DateTime     @default(now())
 
-  orders     Order[]
+  orders          Order[]
+  bostaOrders     BostaOrder[]
 }
 
 model Order {
@@ -42,4 +44,19 @@ model BasataTransaction {
   referenceNumber String?  // Optional Reference / Receipt Number
   performedAt     DateTime @default(now())
 }
+
+model BostaOrder {
+  id            String    @id
+  customerPhone String
+  description   String
+  totalValue    Float     
+  category      String
+  status        String    @default("Inventory") // "Inventory", "Picked Up", "Returned"
+  receivedAt    DateTime  @default(now())
+  pickedUpAt    DateTime?
+  returnedAt    DateTime?
+
+  customer      Customer  @relation(fields: [customerPhone], references: [phone])
+}
+
 

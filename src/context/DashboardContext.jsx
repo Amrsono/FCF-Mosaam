@@ -9,6 +9,7 @@ export const getDaysDifference = (fromDate) => {
 
 export const DashboardProvider = ({ children }) => {
   const [orders, setOrders] = useState([]);
+  const [bostaOrders, setBostaOrders] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [basataTransactions, setBasataTransactions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -16,13 +17,15 @@ export const DashboardProvider = ({ children }) => {
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      const [oRes, cRes, bRes] = await Promise.all([
+      const [oRes, bostaRes, cRes, bRes] = await Promise.all([
         fetch('/api/orders'),
+        fetch('/api/bosta'),
         fetch('/api/customers'),
         fetch('/api/basata')
       ]);
 
       if (oRes.ok) setOrders(await oRes.json());
+      if (bostaRes.ok) setBostaOrders(await bostaRes.json());
       if (cRes.ok) setCustomers(await cRes.json());
       if (bRes.ok) setBasataTransactions(await bRes.json());
 
@@ -101,6 +104,48 @@ export const DashboardProvider = ({ children }) => {
     return days * 5; 
   };
 
+  const receiveBostaOrder = async (orderData) => {
+    try {
+      const res = await fetch('/api/bosta', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData)
+      });
+      if (res.ok) await fetchData();
+      else {
+        alert("Database Connection Error (Bosta API).");
+      }
+    } catch (err) {
+      alert("Network Error: Could not reach backend API for Bosta.");
+    }
+  };
+
+  const markBostaOrderPickedUp = async (orderId) => {
+    try {
+      const res = await fetch('/api/bosta', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: orderId, action: 'PICK_UP' })
+      });
+      if (res.ok) await fetchData(); 
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const returnBostaOrder = async (orderId) => {
+    try {
+      const res = await fetch('/api/bosta', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: orderId, action: 'RETURN' })
+      });
+      if (res.ok) await fetchData(); 
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const logBasataService = async (category, serviceProvider, amount, referenceNumber) => {
     try {
       const res = await fetch('/api/basata', {
@@ -124,12 +169,16 @@ export const DashboardProvider = ({ children }) => {
   return (
     <DashboardContext.Provider value={{ 
       orders, 
+      bostaOrders,
       customers, 
       basataTransactions,
       isLoading,
       receiveOrder, 
       markOrderPickedUp, 
       returnOrder,
+      receiveBostaOrder,
+      markBostaOrderPickedUp,
+      returnBostaOrder,
       updateCustomer,
       calculatePenalty,
       logBasataService

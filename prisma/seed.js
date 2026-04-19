@@ -1,11 +1,26 @@
-/**
- * Run this script once after `npx prisma db push` to seed the default admin user.
- * Usage: node prisma/seed.js
- */
+import 'dotenv/config';
 import bcrypt from 'bcryptjs';
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import pg from 'pg';
 
-const prisma = new PrismaClient();
+// Use TCP `pg` for local/CI seeding — avoids Neon serverless WebSocket Pool issues in Node scripts.
+// Vercel API routes keep using `@prisma/adapter-neon` in `api/_lib/prisma.js`.
+const connectionString =
+  process.env.DIRECT_URL ||
+  process.env.DATABASE_URL_UNPOOLED ||
+  process.env.DATABASE_URL;
+
+if (!connectionString) {
+  console.error(
+    'DATABASE_URL is not set. Add it to .env (local) or your host env (e.g. Vercel), then run again.'
+  );
+  process.exit(1);
+}
+
+const pool = new pg.Pool({ connectionString });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
   const hash = await bcrypt.hash('FCFAdmin@2024', 10);
@@ -38,5 +53,11 @@ async function main() {
 }
 
 main()
-  .catch(e => { console.error(e); process.exit(1); })
-  .finally(() => prisma.$disconnect());
+  .catch(e => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+    await pool.end();
+  });

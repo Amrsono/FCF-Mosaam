@@ -28,7 +28,18 @@ export const AuthProvider = ({ children }) => {
       body: JSON.stringify({ username, password })
     });
 
-    const data = await res.json();
+    const text = await res.text();
+    let data;
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch {
+      const snippet = text.replace(/\s+/g, ' ').trim().slice(0, 160);
+      throw new Error(
+        snippet
+          ? `Login failed (non-JSON response): ${snippet}`
+          : `Login failed (${res.status})`
+      );
+    }
 
     if (!res.ok) throw new Error(data.error || 'Login failed');
 

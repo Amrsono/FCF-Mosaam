@@ -3,18 +3,20 @@ import { PrismaNeon } from '@prisma/adapter-neon';
 import { Pool, neonConfig } from '@neondatabase/serverless';
 import ws from 'ws';
 
-// Required for Neon serverless to work in Node.js environments
+// Stability flags for Neon in Serverless
 neonConfig.webSocketConstructor = ws;
+neonConfig.useSecureWebSocket = true;
+neonConfig.pipelineConnect = false; // Prevents some 'terminated unexpectedly' errors
 
 const connectionString = process.env.DATABASE_URL;
 
 // Prevent multiple instances of Prisma Client in development
 const globalForPrisma = globalThis;
 
-export const prisma =
-  globalForPrisma.prisma ||
-  new PrismaClient({
-    adapter: new PrismaNeon(connectionString)
-  });
+if (!globalForPrisma.prisma) {
+  const pool = new Pool({ connectionString });
+  const adapter = new PrismaNeon(pool);
+  globalForPrisma.prisma = new PrismaClient({ adapter });
+}
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+export const prisma = globalForPrisma.prisma;

@@ -38,19 +38,21 @@ export default function ReturnedTab() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: '100%' }}>
       
       {/* Top Banner */}
-      <div className="glass-panel" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(135deg, rgba(var(--hue-danger), 80%, 15%, 0.8), rgba(var(--hue-primary), 15%, 10%, 0.8))' }}>
-        <div>
-          <h2 style={{ color: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+      <div className="glass-panel" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(135deg, rgba(239,68,68,0.15), rgba(var(--hue-primary), 15%, 10%, 0.5))', flexWrap: 'wrap', gap: '1.5rem', padding: '1.5rem' }}>
+        <div style={{ flex: '1 1 200px' }}>
+          <h2 style={{ color: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.25rem' }}>
             <RefreshCcw size={24} color="var(--color-danger)" /> 
-            Returned to Warehouse
+            Warehouse Returns
           </h2>
-          <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem' }}>Orders permanently returned after SLA expiration.</p>
+          <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem', fontSize: '0.9rem' }}>Orders permanently returned after SLA expiration.</p>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
-          <div style={{ fontSize: '3rem', fontWeight: 700, color: 'var(--color-danger)', lineHeight: 1 }}>
-            {returnedOrders.length} <span style={{ fontSize: '1.5rem', color: 'var(--text-muted)' }}>Items</span>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem', flex: '1 1 auto' }}>
+          <div style={{ fontSize: 'clamp(2rem, 8vw, 3rem)', fontWeight: 700, color: 'var(--color-danger)', lineHeight: 1 }}>
+            {returnedOrders.length} <span style={{ fontSize: '0.5em', color: 'var(--text-muted)' }}>Items</span>
           </div>
-          <ExportActions data={returnedOrders} headers={exportHeaders} filename="Returned_Orders_Export" title="Jumia Returned Orders" />
+          <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
+            <ExportActions data={returnedOrders} headers={exportHeaders} filename="Returned_Orders_Export" title="Jumia Returned Orders" />
+          </div>
         </div>
       </div>
 

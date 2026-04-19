@@ -164,15 +164,15 @@ export default function AnalyticsTab() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: '100%', overflowY: 'auto', paddingRight: '0.5rem' }}>
 
       {/* Sticky Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10, background: 'var(--bg-main)', paddingBottom: '0.75rem' }}>
-        <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'white', margin: 0 }}>
-          <TrendingUp size={22} color="var(--color-primary)" /> Performance Analytics
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10, background: 'var(--bg-main)', paddingBottom: '0.75rem', flexWrap: 'wrap', gap: '1rem' }}>
+        <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'white', margin: 0, fontSize: '1.25rem' }}>
+          <TrendingUp size={22} color="var(--color-primary)" /> Performance
         </h2>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'var(--bg-panel)', borderRadius: 'var(--radius-md)', padding: '0.4rem', border: '1px solid var(--border-color)' }}>
-          <div style={{ display: 'flex', gap: '0.15rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'var(--bg-panel)', borderRadius: 'var(--radius-md)', padding: '0.4rem', border: '1px solid var(--border-color)', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '0.15rem', flexWrap: 'wrap' }}>
             {['daily', 'weekly', 'monthly'].map(tf => (
-              <button key={tf} className={`btn ${timeframe === tf ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none' }} onClick={() => setTimeframe(tf)}>
-                {tf.charAt(0).toUpperCase() + tf.slice(1)}
+              <button key={tf} className={`btn ${timeframe === tf ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none', padding: '0.4rem 0.8rem', fontSize: '0.85rem' }} onClick={() => setTimeframe(tf)}>
+                {tf.charAt(0).toUpperCase()}
               </button>
             ))}
           </div>
@@ -201,25 +201,25 @@ export default function AnalyticsTab() {
       {/* Grand Revenue Hero */}
       <div className="glass-panel" style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.2), rgba(249,115,22,0.1))', padding: '1.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
-          <div>
+          <div style={{ flex: '1 1 300px' }}>
             <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem' }}>
-              <Activity size={14} /> Total Station Revenue — All Streams
+              <Activity size={14} /> Total Station Revenue
             </div>
-            <div style={{ fontSize: '3.5rem', fontWeight: 800, color: 'white', lineHeight: 1 }}>
+            <div style={{ fontSize: 'clamp(2.5rem, 10vw, 3.5rem)', fontWeight: 800, color: 'white', lineHeight: 1 }}>
               {grandTotal.toLocaleString()}
-              <span style={{ fontSize: '1.5rem', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>EGP</span>
+              <span style={{ fontSize: '0.4em', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>EGP</span>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: '2rem' }}>
+          <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', flex: '1 1 auto' }}>
             {[
               { label: 'Jumia', value: jumiaCash, color: CHART_COLORS.jumia },
               { label: 'Bosta', value: bostaCash, color: CHART_COLORS.bosta },
               { label: 'Basata', value: basataVolume, color: CHART_COLORS.basata },
             ].map(s => (
-              <div key={s.label} style={{ textAlign: 'center' }}>
+              <div key={s.label} style={{ flex: '1 1 auto', minWidth: '80px', textAlign: 'center' }}>
                 <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: s.color, margin: '0 auto 0.4rem' }} />
-                <div style={{ fontSize: '1.3rem', fontWeight: 700, color: s.color }}>{s.value.toLocaleString()}</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{s.label} EGP</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: 700, color: s.color }}>{s.value.toLocaleString()}</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{s.label}</div>
               </div>
             ))}
           </div>
@@ -237,7 +237,7 @@ export default function AnalyticsTab() {
       </div>
 
       {/* Row 2: Revenue Streams Pie + Orders Comparison Bar */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 350px), 1fr))', gap: '1rem' }}>
         <ChartCard title="Revenue Streams Breakdown" icon={<Activity size={16} color="var(--color-primary)" />}>
           <ResponsiveContainer width="100%" height={260}>
             <PieChart>
@@ -275,7 +275,7 @@ export default function AnalyticsTab() {
       </div>
 
       {/* Row 3: Orders Status Pie + SLA Health */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 350px), 1fr))', gap: '1rem' }}>
         <ChartCard title="Full Orders Status Distribution" icon={<PackageCheck size={16} color={CHART_COLORS.success} />}>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={ordersStatusData} layout="vertical">
@@ -323,7 +323,7 @@ export default function AnalyticsTab() {
       </div>
 
       {/* Row 4: Basata Category Bar + Top Providers */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 350px), 1fr))', gap: '1rem' }}>
         <ChartCard title="Basata Revenue by Category" icon={<Zap size={16} color={CHART_COLORS.basata} />}>
           {basataCatData.length > 0 ? (
             <ResponsiveContainer width="100%" height={220}>

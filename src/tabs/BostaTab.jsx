@@ -81,7 +81,7 @@ export default function BostaTab() {
     <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: '100%' }}>
 
       {/* Header Summary Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
         <div className="glass-panel" style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.15), transparent)', borderLeft: '3px solid #6366f1', padding: '1rem' }}>
           <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>In Inventory</div>
           <div style={{ fontSize: '2rem', fontWeight: 700, color: 'white' }}>{inventoryCount}</div>
@@ -98,8 +98,8 @@ export default function BostaTab() {
 
       {/* Controls */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', flex: 1 }}>
-          <div style={{ position: 'relative', width: '250px' }}>
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', flex: '1 1 300px' }}>
+          <div style={{ position: 'relative', width: '100%', maxWidth: '250px', flex: '1 1 200px' }}>
             <Search size={18} style={{ position: 'absolute', left: '10px', top: '10px', color: 'var(--text-muted)' }} />
             <input
               type="text"
@@ -110,13 +110,13 @@ export default function BostaTab() {
               onChange={e => setSearchTerm(e.target.value)}
             />
           </div>
-          <select className="input-field" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+          <select className="input-field" style={{ flex: '1 1 140px' }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
             <option value="All">All Statuses</option>
             <option value="Inventory">In Inventory</option>
             <option value="Picked Up">Picked Up</option>
             <option value="Returned">Returned</option>
           </select>
-          <select className="input-field" value={filterCategory} onChange={e => setFilterCategory(e.target.value)}>
+          <select className="input-field" style={{ flex: '1 1 120px' }} value={filterCategory} onChange={e => setFilterCategory(e.target.value)}>
             <option value="All">All Categories</option>
             <option value="Electronics">Electronics</option>
             <option value="Apparel">Apparel</option>
@@ -124,13 +124,13 @@ export default function BostaTab() {
             <option value="Groceries">Groceries</option>
           </select>
         </div>
-        <button className="btn btn-primary" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }} onClick={() => setShowModal(true)}>
+        <button className="btn btn-primary" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', flex: '1 1 auto' }} onClick={() => setShowModal(true)}>
           <Plus size={18} /> Receive Bosta Package
         </button>
       </div>
 
       {/* Export bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div className="badge badge-neutral">Showing: {orderList.length} Bosta Orders</div>
         <ExportActions data={orderList} headers={exportHeaders} filename="Bosta_Orders_Export" title="Bosta Orders Dashboard" />
       </div>
@@ -233,8 +233,8 @@ export default function BostaTab() {
 
       {/* Receive Modal */}
       {showModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-          <div className="glass-panel" style={{ width: '440px', background: 'var(--bg-main)', borderTop: '3px solid #6366f1' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '1rem' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '440px', background: 'var(--bg-main)', borderTop: '3px solid #6366f1' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h3 style={{ color: 'white', margin: 0 }}>Receive Bosta Package</h3>
               <Package color="#6366f1" size={24} />
@@ -256,12 +256,12 @@ export default function BostaTab() {
                 <label className="input-label">Description</label>
                 <input required className="input-field" value={newOrder.description} onChange={e => setNewOrder({ ...newOrder, description: e.target.value })} placeholder="Items..." />
               </div>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <div className="input-group" style={{ flex: 1 }}>
+              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                <div className="input-group" style={{ flex: '1 1 150px' }}>
                   <label className="input-label">Total Value (EGP)</label>
                   <input required type="number" className="input-field" value={newOrder.totalValue} onChange={e => setNewOrder({ ...newOrder, totalValue: e.target.value })} placeholder="0.00" />
                 </div>
-                <div className="input-group" style={{ flex: 1 }}>
+                <div className="input-group" style={{ flex: '1 1 150px' }}>
                   <label className="input-label">Category</label>
                   <select className="input-field" value={newOrder.category} onChange={e => setNewOrder({ ...newOrder, category: e.target.value })}>
                     <option>Electronics</option>

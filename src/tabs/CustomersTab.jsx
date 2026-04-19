@@ -48,14 +48,16 @@ export default function CustomersTab() {
 
   return (
     <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: '100%' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h3 style={{ color: 'white', margin: 0 }}>Registered Station Customers</h3>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <div className="badge badge-primary">Total Customers: {customers.length}</div>
-          <button className="btn btn-primary" onClick={() => { setShowAddModal(true); setError(''); }}>
-            <UserPlus size={18} /> Register New Customer
-          </button>
-          <ExportActions data={customers} headers={exportHeaders} filename="Customers_Export" title="FCF Mosaam Station Customers" />
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+        <h3 style={{ color: 'white', margin: 0, flex: '1 1 100%' }}>Registered Station Customers</h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', width: '100%', justifyContent: 'space-between' }}>
+          <div className="badge badge-primary">Total: {customers.length}</div>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <button className="btn btn-primary" onClick={() => { setShowAddModal(true); setError(''); }} style={{ flex: '1 1 auto' }}>
+              <UserPlus size={18} /> Register Customer
+            </button>
+            <ExportActions data={customers} headers={exportHeaders} filename="Customers_Export" title="FCF Mosaam Station Customers" />
+          </div>
         </div>
       </div>
 
@@ -141,10 +143,10 @@ export default function CustomersTab() {
 
       {/* Add Customer Modal */}
       {showAddModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-          <div className="glass-panel" style={{ width: '450px', background: 'var(--bg-main)', border: '1px solid var(--color-primary)' }}>
-            <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <UserPlus color="var(--color-primary)" /> Register New Customer
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '1rem' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '450px', background: 'var(--bg-main)', border: '1px solid var(--color-primary)' }}>
+            <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.25rem' }}>
+              <UserPlus color="var(--color-primary)" /> Register Customer
             </h2>
             
             {error && (
@@ -154,12 +156,12 @@ export default function CustomersTab() {
             )}
 
             <form onSubmit={handleAddSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <div className="input-group" style={{ flex: 1 }}>
+              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                <div className="input-group" style={{ flex: '1 1 200px' }}>
                   <label className="input-label">Phone Number</label>
                   <input required className="input-field" value={newCustomer.phone} onChange={e => setNewCustomer({...newCustomer, phone: e.target.value})} placeholder="01..." />
                 </div>
-                <div className="input-group" style={{ flex: 1 }}>
+                <div className="input-group" style={{ flex: '1 1 200px' }}>
                   <label className="input-label">Full Name</label>
                   <input required className="input-field" value={newCustomer.name} onChange={e => setNewCustomer({...newCustomer, name: e.target.value})} placeholder="Name" />
                 </div>

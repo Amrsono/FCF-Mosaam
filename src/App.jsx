@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { DashboardProvider } from './context/DashboardContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { Package, Users, Clock, AlertTriangle, BarChart3, LayoutDashboard, Zap, LogOut, Shield } from 'lucide-react';
+import { Package, Users, Clock, AlertTriangle, BarChart3, LayoutDashboard, Zap, LogOut, Shield, Menu, X } from 'lucide-react';
 import OrdersTab from './tabs/OrdersTab';
 import CustomersTab from './tabs/CustomersTab';
 import SLATab from './tabs/SLATab';
@@ -14,6 +14,7 @@ import LoginPage from './pages/LoginPage';
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState('orders');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, logout, isLoading } = useAuth();
 
   if (isLoading) {
@@ -41,8 +42,14 @@ function AppContent() {
 
   return (
     <div className="app-container">
+      {/* Mobile Overlay */}
+      <div className={`mobile-overlay ${isMobileMenuOpen ? 'open' : ''}`} onClick={() => setIsMobileMenuOpen(false)}></div>
+
       {/* Sidebar */}
-      <aside className="sidebar">
+      <aside className={`sidebar ${isMobileMenuOpen ? 'open' : ''}`}>
+        <button className="sidebar-close" onClick={() => setIsMobileMenuOpen(false)}>
+          <X size={24} />
+        </button>
         <div style={{ padding: '1rem 0', marginBottom: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'white', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
             FCF <span style={{ color: 'var(--color-accent)' }}>Mosaam</span>
@@ -60,7 +67,10 @@ function AppContent() {
             <button
               key={tab.id}
               className={`nav-item ${activeTab === tab.id ? 'active' : ''}`}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => {
+                setActiveTab(tab.id);
+                setIsMobileMenuOpen(false);
+              }}
               style={{ background: activeTab === tab.id ? undefined : 'transparent', border: activeTab === tab.id ? undefined : 'none', textAlign: 'left', width: '100%' }}
             >
               {tab.icon}
@@ -93,6 +103,9 @@ function AppContent() {
       {/* Main Panel */}
       <main className="main-content">
         <header className="header">
+          <button className="menu-toggle" onClick={() => setIsMobileMenuOpen(true)}>
+            <Menu size={24} />
+          </button>
           <h2>{tabs.find(t => t.id === activeTab)?.label}</h2>
         </header>
 

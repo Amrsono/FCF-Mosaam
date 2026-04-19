@@ -120,13 +120,13 @@ export default function BasataTab() {
 
       {/* 3. Reports Section */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '2px solid var(--border-color)', paddingBottom: '0.5rem' }}>
-           <div>
+         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '2px solid var(--border-color)', paddingBottom: '0.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+           <div style={{ flex: '1 1 200px' }}>
              <h3 style={{ color: 'white', margin: 0 }}>Transactions Report</h3>
              <p style={{ color: 'var(--text-secondary)', margin: '0.2rem 0 0 0', fontSize: '0.85rem' }}>Full history of processed POS services.</p>
            </div>
-           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
-              <div style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--color-primary)' }}>Total Volume: {totalRevenue.toLocaleString()} EGP</div>
+           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem', flex: '1 1 auto' }}>
+              <div style={{ fontSize: 'clamp(1.1rem, 4vw, 1.5rem)', fontWeight: 600, color: 'var(--color-primary)', textAlign: 'right' }}>Total Volume: {totalRevenue.toLocaleString()} EGP</div>
               <ExportActions data={basataTransactions} headers={exportHeaders} filename="Basata_POS_Transactions" title="Basata POS Report" />
            </div>
          </div>
@@ -163,8 +163,8 @@ export default function BasataTab() {
 
       {/* Transaction Modal */}
       {showModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-          <div className="glass-panel" style={{ width: '400px', background: 'var(--bg-main)' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '1rem' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '400px', background: 'var(--bg-main)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                <h3 style={{ color: 'white', margin: 0 }}>Log POS Transaction</h3>
                <CreditCard color="var(--color-primary)" />

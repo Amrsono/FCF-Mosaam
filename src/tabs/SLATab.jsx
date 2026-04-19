@@ -85,10 +85,10 @@ export default function SLATab() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: '100%' }}>
 
       {/* Source Toggle */}
-      <div style={{ display: 'flex', gap: '0.5rem', background: 'var(--bg-panel)', borderRadius: 'var(--radius-md)', padding: '0.4rem', alignSelf: 'flex-start', border: '1px solid var(--border-color)' }}>
+      <div style={{ display: 'flex', gap: '0.5rem', background: 'var(--bg-panel)', borderRadius: 'var(--radius-md)', padding: '0.4rem', alignSelf: 'stretch', border: '1px solid var(--border-color)', flexWrap: 'wrap' }}>
         <button
           className={`btn ${activeSource === 'jumia' ? 'btn-primary' : 'btn-outline'}`}
-          style={{ border: 'none', gap: '0.5rem' }}
+          style={{ border: 'none', gap: '0.5rem', flex: '1 1 auto' }}
           onClick={() => setActiveSource('jumia')}
         >
           <Package size={16} /> Jumia SLA
@@ -96,7 +96,7 @@ export default function SLATab() {
         </button>
         <button
           className={`btn ${activeSource === 'bosta' ? 'btn-primary' : 'btn-outline'}`}
-          style={{ border: 'none', gap: '0.5rem', ...(activeSource === 'bosta' ? { background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' } : {}) }}
+          style={{ border: 'none', gap: '0.5rem', flex: '1 1 auto', ...(activeSource === 'bosta' ? { background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' } : {}) }}
           onClick={() => setActiveSource('bosta')}
         >
           <Package size={16} /> Bosta SLA
@@ -108,9 +108,9 @@ export default function SLATab() {
 
       {/* Timeline */}
       <div className="glass-panel" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3 style={{ color: 'white', margin: 0 }}>
-            {activeSource === 'jumia' ? 'Jumia' : 'Bosta'} SLA Tracking Timeline
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+          <h3 style={{ color: 'white', margin: 0, fontSize: '1.2rem' }}>
+            {activeSource === 'jumia' ? 'Jumia' : 'Bosta'} Tracking Timeline
           </h3>
           <ExportActions
             data={inventoryOrders}
@@ -121,9 +121,9 @@ export default function SLATab() {
         </div>
 
         {inventoryOrders.map(order => (
-          <div key={order.id} style={{ ...getSlaCardStyle(order.slaStatus), padding: '1.25rem', borderRadius: 'var(--radius-md)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div key={order.id} style={{ ...getSlaCardStyle(order.slaStatus), padding: '1.25rem', borderRadius: 'var(--radius-md)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: '1 1 200px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: '1.1rem', fontWeight: 600, color: 'white' }}>{order.id}</span>
                 <span className={`badge badge-${order.slaStatus === 'red' ? 'danger' : order.slaStatus === 'orange' ? 'warning' : 'success'}`}>
                   {order.daysParked} Days Parked
@@ -134,7 +134,7 @@ export default function SLATab() {
               {order.slaStatus === 'red' && <span style={{ color: 'var(--color-danger)', fontSize: '0.85rem' }}>🚨 Grace period expired! Return recommended.</span>}
             </div>
             {order.slaStatus === 'red' && (
-              <button className="btn btn-danger" onClick={() => handleReturn(order.id)}>
+              <button className="btn btn-danger" style={{ flex: '1 1 auto', justifyContent: 'center' }} onClick={() => handleReturn(order.id)}>
                 <RefreshCcw size={16} /> Return Order
               </button>
             )}

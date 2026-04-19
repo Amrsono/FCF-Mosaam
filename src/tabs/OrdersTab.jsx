@@ -90,27 +90,27 @@ export default function OrdersTab() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         
         {/* Search & Filters */}
-        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', flex: 1 }}>
-          <div style={{ position: 'relative', width: '250px' }}>
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', flex: '1 1 300px' }}>
+          <div style={{ position: 'relative', width: '100%', maxWidth: '250px', flex: '1 1 200px' }}>
              <Search size={18} style={{ position: 'absolute', left: '10px', top: '10px', color: 'var(--text-muted)' }} />
              <input 
                type="text" 
                className="input-field" 
-               placeholder="Search Order or Phone..." 
+               placeholder="Search..." 
                style={{ paddingLeft: '2.5rem', width: '100%' }}
                value={searchTerm}
                onChange={e => setSearchTerm(e.target.value)}
              />
           </div>
           
-          <select className="input-field" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+          <select className="input-field" style={{ flex: '1 1 140px' }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
             <option value="All">All Statuses</option>
             <option value="Inventory">In Inventory</option>
             <option value="Picked Up">Picked Up</option>
             <option value="Returned">Returned</option>
           </select>
 
-          <select className="input-field" value={filterCategory} onChange={e => setFilterCategory(e.target.value)}>
+          <select className="input-field" style={{ flex: '1 1 120px' }} value={filterCategory} onChange={e => setFilterCategory(e.target.value)}>
              <option value="All">All Categories</option>
              <option value="Electronics">Electronics</option>
              <option value="Apparel">Apparel</option>
@@ -118,7 +118,7 @@ export default function OrdersTab() {
              <option value="Groceries">Groceries</option>
           </select>
 
-          <select className="input-field" value={filterTier} onChange={e => setFilterTier(e.target.value)}>
+          <select className="input-field" style={{ flex: '1 1 100px' }} value={filterTier} onChange={e => setFilterTier(e.target.value)}>
              <option value="All">All Tiers</option>
              <option value="New">New</option>
              <option value="Bronze">Bronze</option>
@@ -127,21 +127,21 @@ export default function OrdersTab() {
           </select>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <button className="btn btn-outline" onClick={() => setShowImportWizard(true)} style={{ color: 'var(--color-primary)', borderColor: 'var(--color-primary)' }}>
-            <FileUp size={18} /> Import from Excel
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <button className="btn btn-outline" onClick={() => setShowImportWizard(true)} style={{ color: 'var(--color-primary)', borderColor: 'var(--color-primary)', flex: '1 1 auto' }}>
+            <FileUp size={18} /> Import Excel
           </button>
-          <button className="btn btn-primary" onClick={() => setShowSimulateModal(true)}>
-            <Plus size={18} /> Receive / Add Order
+          <button className="btn btn-primary" onClick={() => setShowSimulateModal(true)} style={{ flex: '1 1 auto' }}>
+            <Plus size={18} /> Add Order
           </button>
         </div>
       </div>
 
       {/* Summary Chips & Export */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-         <div style={{ display: 'flex', gap: '1rem' }}>
-           <div className="badge badge-neutral">Showing: {orderList.length} Orders</div>
-           <div className="badge badge-warning">Penalties Accumulated: {orderList.reduce((acc, o) => acc + (o.penalty || 0), 0)} EGP</div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+           <div className="badge badge-neutral">Showing: {orderList.length}</div>
+           <div className="badge badge-warning">Total Penalties: {orderList.reduce((acc, o) => acc + (o.penalty || 0), 0)} EGP</div>
          </div>
          <ExportActions data={orderList} headers={exportHeaders} filename="Orders_Export" title="Orders Inventory Dashboard" />
       </div>
@@ -214,8 +214,8 @@ export default function OrdersTab() {
 
       {/* Simple Modal Simulation */}
       {showSimulateModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-          <div className="glass-panel" style={{ width: '400px', background: 'var(--bg-main)' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '1rem' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '400px', background: 'var(--bg-main)' }}>
             <h3 style={{ marginBottom: '1.5rem', color: 'white' }}>Receive New Order</h3>
             <form onSubmit={handleSimulateReceive}>
               <div className="input-group">

@@ -35,19 +35,21 @@ export default function ParkedPenaltiesTab() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: '100%' }}>
       
       {/* Top Banner */}
-      <div className="glass-panel" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(135deg, rgba(var(--hue-warning), 90%, 15%, 0.8), rgba(var(--hue-danger), 80%, 10%, 0.8))' }}>
-        <div>
-          <h2 style={{ color: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+      <div className="glass-panel" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(135deg, rgba(245,158,11,0.15), rgba(239,68,68,0.1))', flexWrap: 'wrap', gap: '1.5rem', padding: '1.5rem' }}>
+        <div style={{ flex: '1 1 200px' }}>
+          <h2 style={{ color: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.25rem' }}>
             <Banknote size={24} color="var(--color-warning)" /> 
-            Total Pending Penalties
+            Pending Penalties
           </h2>
-          <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem' }}>Accrued from orders parked (5 EGP / Day)</p>
+          <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem', fontSize: '0.9rem' }}>Accrued from orders parked (5 EGP / Day)</p>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
-          <div style={{ fontSize: '3rem', fontWeight: 700, color: 'var(--color-warning)', textShadow: '0 0 20px rgba(255, 180, 50, 0.4)', lineHeight: 1 }}>
-            {totalPenalties} <span style={{ fontSize: '1.5rem', color: 'var(--text-muted)' }}>EGP</span>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem', flex: '1 1 auto' }}>
+          <div style={{ fontSize: 'clamp(2rem, 8vw, 3rem)', fontWeight: 700, color: 'var(--color-warning)', textShadow: '0 0 20px rgba(255, 180, 50, 0.4)', lineHeight: 1 }}>
+            {totalPenalties} <span style={{ fontSize: '0.5em', color: 'var(--text-muted)' }}>EGP</span>
           </div>
-          <ExportActions data={penalizedOrders} headers={exportHeaders} filename="Pending_Penalties_Export" title="Jumia Parked Penalties" />
+          <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
+            <ExportActions data={penalizedOrders} headers={exportHeaders} filename="Pending_Penalties_Export" title="Jumia Parked Penalties" />
+          </div>
         </div>
       </div>
 

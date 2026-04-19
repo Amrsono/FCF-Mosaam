@@ -59,4 +59,10 @@ model BostaOrder {
   customer      Customer  @relation(fields: [customerPhone], references: [phone])
 }
 
-
+model Admin {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  passwordHash String
+  role         String   @default("staff") // "admin" | "staff"
+  createdAt    DateTime @default(now())
+}

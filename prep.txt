@@ -1,0 +1,81 @@
+sunday teusday and Thursday the goods get distributed to points , customer receive notification  , also send customers from points
+
+
+customer choose the pickup station when he is checking out , when order gets dispatched notification gets sent 
+
+sunday teusday Thursday the orders gets received in station and scan qr code from Jumia to confirm receiving and call the customer to pickup his order
+
+
+estelam men Jumia dashboard  esm rakam eltelephone description of order , value of order , address , email , customer tier for loyality prog later 
+
+
+
+dashboard for every station , products categories , orders  , customers tiering  , 
+
+
+
+
+18    -   feeh kalam     - 45
+small -    medium -    large            are the orders tiers depending on money  
+
+
+
+customer when receiving i have to cross sale (koroot meza el la7eya for ahly bank  activation / creation of ahly bank account and activation  )  , give him voucher    if taken needs scanning to confirm consuming 
+
+cash in & cashout  basata    tracking the daily income 
+
+
+updating customer data if missing
+
+
+
+if order not picked up , 3 days we try to reach customer and on 4th  the order will be returned with the delivery car on same day so needs counting days popup and red when 4 days consumed extra charge 5 pounds per day will be added for parked order not picked up  
+
+
+orders tab will need to show the penalties for delayed deliveries
+
+
+tab for analytics pulling orders figures and profits performance per station , number of phone calls , whatsapp chats , 
+
+
+tracking money in & out and closure of billing cycle  
+
+FCF MOSAAM
+
+
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------
+
+As a pickup station for Jumia i want to create an inventory tracking dashboard , Sunday Tuesday and Thursday the packages gets received in station from jumia warehouse and pickup station employee scan qr code from Jumia to confirm receiving and call the customer to pickup his order or send him a message
+
+Data taken from Jumia by QR code should be Customer name , phone number , description of order , total value of order , customer address , email , customer tier (for loyalty program at a later stage)
+
+
+
+dashboard should include orders tab where you can filter by  products categories  customers tiering  , order value , and you can also search with order number or customer phone number
+
+
+Customers tab: 
+this tab should have all customers data for this station , data are Customer name , phone number , total orders delivered for this customer , customer address , email , customer tier (for loyalty program at a later stage)
+
+station employee should be able to add any missing data from the customer data 
+
+
+another tab Named (SLA) should be added for tracking the delay in pickups by customers caused by customer not picking up his order from station 
+ 
+the order not picked up process will be:  3 days we try to reach customer by calling him and on 4th  the order will be returned to warehouse with the delivery car on same day so needs counting days mechanism from the day we recieve it in inventory till it gets picked up by customer or returned , and order should be marked red when 4 days consumed , orange if delayed for 2 days, green if not delayed yet,  extra charge 5 pounds per day will be added for parked order not picked up and charges will be showing on a seperate tab we can name the tab Parked penalties  
+
+
+orders tab will also need to show the penalties for delayed deliveries
+
+
+I also need an analytics tab that shows top art analytics for orders picked up , penalties , new customers registered , cash collected , orders returned after 4 days grace period , and i need those annalytics to be daily , weekly and monthly
+
+ 
+
+
+
+
+

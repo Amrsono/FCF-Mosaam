@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Customer {
+  id         String   @id @default(uuid())
+  phone      String   @unique
+  name       String
+  email      String?
+  address    String?
+  tier       String   @default("New")
+  deliveries Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  orders     Order[]
+}
+
+model Order {
+  id            String    @id
+  customerPhone String
+  description   String
+  totalValue    Float     // Using Float for typical DB precision without needing Decimal.js locally 
+  category      String
+  status        String    @default("Inventory") // "Inventory", "Picked_Up", "Returned"
+  receivedAt    DateTime  @default(now())
+  pickedUpAt    DateTime?
+  returnedAt    DateTime?
+
+  customer      Customer  @relation(fields: [customerPhone], references: [phone])
+}
+
+model BasataTransaction {
+  id              String   @id @default(uuid())
+  category        String   // "Mobile", "Internet", "Utilities", "Government", "Other"
+  serviceProvider String   // e.g. "Vodafone Top-up", "WE ADSL", "Electricity NFC"
+  amount          Float
+  referenceNumber String?  // Optional Reference / Receipt Number
+  performedAt     DateTime @default(now())
+}
+

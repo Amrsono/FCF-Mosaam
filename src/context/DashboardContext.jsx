@@ -1,0 +1,142 @@
+import React, { createContext, useContext, useState, useEffect } from 'react';
+
+const DashboardContext = createContext();
+
+export const getDaysDifference = (fromDate) => {
+  const diffTime = Math.abs(new Date() - new Date(fromDate));
+  return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+};
+
+export const DashboardProvider = ({ children }) => {
+  const [orders, setOrders] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [basataTransactions, setBasataTransactions] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+      const [oRes, cRes, bRes] = await Promise.all([
+        fetch('/api/orders'),
+        fetch('/api/customers'),
+        fetch('/api/basata')
+      ]);
+
+      if (oRes.ok) setOrders(await oRes.json());
+      if (cRes.ok) setCustomers(await cRes.json());
+      if (bRes.ok) setBasataTransactions(await bRes.json());
+
+    } catch (error) {
+      console.warn("Could not fetch from database. Ensure you are running via 'vercel dev' or have configured PostgreSQL correctly.", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const receiveOrder = async (orderData) => {
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData)
+      });
+      if (res.ok) await fetchData();
+      else {
+        const errData = await res.text();
+        alert("Database Connection Error: Could not save to Vercel Postgres. Ensure you are running 'vercel dev' and have pushed your Prisma schema. Error details: " + errData);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Network Error: Could not reach backend API. Are you running 'vercel dev'?");
+    }
+  };
+
+  const updateCustomer = async (phone, updatedData) => {
+    try {
+      const res = await fetch('/api/customers', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, data: updatedData })
+      });
+      if (res.ok) await fetchData(); // Resync
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const markOrderPickedUp = async (orderId) => {
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: orderId, action: 'PICK_UP' })
+      });
+      if (res.ok) await fetchData(); // Resync
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const returnOrder = async (orderId) => {
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: orderId, action: 'RETURN' })
+      });
+      if (res.ok) await fetchData(); // Resync
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const calculatePenalty = (order) => {
+    // "Inventory" in DB is either "Inventory" or "Picked_Up" (Prisma default is Inventory)
+    if (order.status !== 'Inventory') return 0;
+    const days = getDaysDifference(order.receivedAt);
+    return days * 5; 
+  };
+
+  const logBasataService = async (category, serviceProvider, amount, referenceNumber) => {
+    try {
+      const res = await fetch('/api/basata', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category, serviceProvider, amount, referenceNumber })
+      });
+      if (res.ok) {
+        await fetchData(); // Resync Basata
+        alert("Successfully logged to Database!");
+      } else {
+        const errData = await res.text();
+        alert("Database Logging Error: " + errData + "\nMake sure you are running 'vercel dev' and have connected the Postgres DB.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Network Error: /api/basata not reachable.");
+    }
+  };
+
+  return (
+    <DashboardContext.Provider value={{ 
+      orders, 
+      customers, 
+      basataTransactions,
+      isLoading,
+      receiveOrder, 
+      markOrderPickedUp, 
+      returnOrder,
+      updateCustomer,
+      calculatePenalty,
+      logBasataService
+    }}>
+      {children}
+    </DashboardContext.Provider>
+  );
+};
+
+export const useDashboard = () => useContext(DashboardContext);

@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { useDashboard, getDaysDifference } from '../context/DashboardContext';
-import { Search, Filter, Plus, UserCheck, RefreshCw } from 'lucide-react';
+import { Search, Filter, Plus, UserCheck, RefreshCw, FileUp } from 'lucide-react';
 import ExportActions from '../components/ExportActions';
+import ImportWizard from '../components/ImportWizard';
 
 const exportHeaders = [
   { label: 'Order ID', accessor: 'id' },
@@ -16,7 +17,7 @@ const exportHeaders = [
 ];
 
 export default function OrdersTab() {
-  const { orders, customers, receiveOrder, calculatePenalty, markOrderPickedUp, returnOrder } = useDashboard();
+  const { orders, customers, receiveOrder, bulkReceiveOrders, calculatePenalty, markOrderPickedUp, returnOrder } = useDashboard();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('All');
@@ -24,11 +25,21 @@ export default function OrdersTab() {
   const [filterStatus, setFilterStatus] = useState('Inventory');
 
   const [showSimulateModal, setShowSimulateModal] = useState(false);
+  const [showImportWizard, setShowImportWizard] = useState(false);
 
   // Form for new order simulation
   const [newOrder, setNewOrder] = useState({
     id: '', customerPhone: '', description: '', totalValue: '', category: 'Electronics', customerName: ''
   });
+
+  const importTargetFields = [
+    { key: 'id', label: 'Order ID', required: true },
+    { key: 'customerPhone', label: 'Customer Phone', required: true },
+    { key: 'customerName', label: 'Customer Name', required: false },
+    { key: 'description', label: 'Description/Items', required: false },
+    { key: 'totalValue', label: 'Total Value (EGP)', required: true },
+    { key: 'category', label: 'Category', required: false }
+  ];
 
   // Derived Data
   const orderList = useMemo(() => {
@@ -116,9 +127,14 @@ export default function OrdersTab() {
           </select>
         </div>
 
-        <button className="btn btn-primary" onClick={() => setShowSimulateModal(true)}>
-          <Plus size={18} /> Receive / Add Order
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button className="btn btn-outline" onClick={() => setShowImportWizard(true)} style={{ color: 'var(--color-primary)', borderColor: 'var(--color-primary)' }}>
+            <FileUp size={18} /> Import from Excel
+          </button>
+          <button className="btn btn-primary" onClick={() => setShowSimulateModal(true)}>
+            <Plus size={18} /> Receive / Add Order
+          </button>
+        </div>
       </div>
 
       {/* Summary Chips & Export */}
@@ -241,6 +257,15 @@ export default function OrdersTab() {
           </div>
         </div>
       )}
+
+      {/* Import Wizard */}
+      <ImportWizard 
+        isOpen={showImportWizard}
+        onClose={() => setShowImportWizard(false)}
+        targetFields={importTargetFields}
+        onImport={bulkReceiveOrders}
+        title="Import Jumia Orders"
+      />
 
     </div>
   );

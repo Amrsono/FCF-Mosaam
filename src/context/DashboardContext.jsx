@@ -58,6 +58,34 @@ export const DashboardProvider = ({ children }) => {
     }
   };
 
+  const bulkReceiveOrders = async (mappedOrdersList, onProgressRow = () => {}) => {
+    let successCount = 0;
+    for (let i = 0; i < mappedOrdersList.length; i++) {
+        const row = mappedOrdersList[i];
+        try {
+            // Send each row individually to reuse the upsert customer/order business logic.
+            const res = await fetch('/api/orders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: row.id || `ORD-IMP-${Math.floor(Math.random()*100000)}`,
+                    customerPhone: row.customerPhone || '000000',
+                    customerName: row.customerName || 'Imported Customer',
+                    description: row.description || 'Imported Items',
+                    totalValue: Number(row.totalValue) || 0,
+                    category: row.category || 'General'
+                })
+            });
+            if (res.ok) successCount++;
+        } catch (e) {
+            console.error("Bulk import row failed", e);
+        }
+        onProgressRow(i + 1);
+    }
+    await fetchData();
+    return successCount;
+  };
+
   const updateCustomer = async (phone, updatedData) => {
     try {
       const res = await fetch('/api/customers', {
@@ -194,6 +222,7 @@ export const DashboardProvider = ({ children }) => {
       basataTransactions,
       isLoading,
       receiveOrder, 
+      bulkReceiveOrders,
       markOrderPickedUp, 
       returnOrder,
       receiveBostaOrder,

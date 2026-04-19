@@ -235,7 +235,7 @@ export default function OrdersTab() {
               </div>
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
                 <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>Receive Order</button>
-                <button type="button" className="btn btn-outline" onClick={() => setShowSimulateModal(false)}>Cancel</button>
+                <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowSimulateModal(false)}>Cancel</button>
               </div>
             </form>
           </div>

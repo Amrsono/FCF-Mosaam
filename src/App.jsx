@@ -36,7 +36,7 @@ function AppContent() {
     { id: 'basata', label: 'Basata POS', icon: <Zap size={20} /> },
     { id: 'bosta', label: 'Bosta Orders', icon: <Package size={20} /> },
     { id: 'returned', label: 'Returned to Jumia', icon: <Package size={20} /> },
-    { id: 'analytics', label: 'Analytics Insights', icon: <BarChart3 size={20} /> },
+    ...(user?.role === 'admin' ? [{ id: 'analytics', label: 'Analytics Insights', icon: <BarChart3 size={20} /> }] : []),
   ];
 
   return (
@@ -104,7 +104,7 @@ function AppContent() {
           {activeTab === 'basata' && <BasataTab />}
           {activeTab === 'bosta' && <BostaTab />}
           {activeTab === 'returned' && <ReturnedTab />}
-          {activeTab === 'analytics' && <AnalyticsTab />}
+          {activeTab === 'analytics' && user?.role === 'admin' && <AnalyticsTab />}
         </section>
       </main>
     </div>

@@ -117,7 +117,7 @@ export default function OrdersTab() {
         </div>
 
         <button className="btn btn-primary" onClick={() => setShowSimulateModal(true)}>
-          <Plus size={18} /> Simulate QR Scan
+          <Plus size={18} /> Receive / Add Order
         </button>
       </div>
 
@@ -200,7 +200,7 @@ export default function OrdersTab() {
       {showSimulateModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
           <div className="glass-panel" style={{ width: '400px', background: 'var(--bg-main)' }}>
-            <h3 style={{ marginBottom: '1.5rem', color: 'white' }}>Simulate Jumia QR Scan</h3>
+            <h3 style={{ marginBottom: '1.5rem', color: 'white' }}>Receive New Order</h3>
             <form onSubmit={handleSimulateReceive}>
               <div className="input-group">
                 <label className="input-label">Order ID</label>
@@ -234,7 +234,7 @@ export default function OrdersTab() {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
-                <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>Scan Received</button>
+                <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>Receive Order</button>
                 <button type="button" className="btn btn-outline" onClick={() => setShowSimulateModal(false)}>Cancel</button>
               </div>
             </form>

@@ -10,6 +10,33 @@ export default async function handler(req, res) {
       return res.status(200).json(customers);
     }
 
+    // POST: Manually create a new customer
+    if (req.method === 'POST') {
+      const { phone, name, email, address, tier } = req.body;
+
+      if (!phone || !name) {
+        return res.status(400).json({ error: 'Phone and Name are required.' });
+      }
+
+      // Check if exists
+      const existing = await prisma.customer.findUnique({ where: { phone } });
+      if (existing) {
+        return res.status(409).json({ error: 'Customer with this phone number already exists.' });
+      }
+
+      const newCustomer = await prisma.customer.create({
+        data: {
+          phone,
+          name,
+          email: email || null,
+          address: address || null,
+          tier: tier || 'New'
+        }
+      });
+
+      return res.status(201).json(newCustomer);
+    }
+
     // PATCH: Update customer details (like Address, Email, Tier)
     if (req.method === 'PATCH') {
       const { phone, data } = req.body;

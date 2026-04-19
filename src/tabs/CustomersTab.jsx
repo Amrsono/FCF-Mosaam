@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useDashboard } from '../context/DashboardContext';
-import { Edit2, Save, X } from 'lucide-react';
+import { Edit2, Save, X, Plus, UserPlus } from 'lucide-react';
 import ExportActions from '../components/ExportActions';
 
 const exportHeaders = [
@@ -15,9 +15,14 @@ const exportHeaders = [
 ];
 
 export default function CustomersTab() {
-  const { customers, updateCustomer } = useDashboard();
+  const { customers, updateCustomer, addCustomer } = useDashboard();
   const [editingPhone, setEditingPhone] = useState(null);
   const [editForm, setEditForm] = useState({});
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newCustomer, setNewCustomer] = useState({
+    phone: '', name: '', email: '', address: '', tier: 'New'
+  });
+  const [error, setError] = useState('');
 
   const startEdit = (customer) => {
     setEditingPhone(customer.phone);
@@ -29,12 +34,27 @@ export default function CustomersTab() {
     setEditingPhone(null);
   };
 
+  const handleAddSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    const res = await addCustomer(newCustomer);
+    if (res.success) {
+      setShowAddModal(false);
+      setNewCustomer({ phone: '', name: '', email: '', address: '', tier: 'New' });
+    } else {
+      setError(res.error || 'Failed to add customer');
+    }
+  };
+
   return (
     <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: '100%' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h3 style={{ color: 'white', margin: 0 }}>Registered Station Customers</h3>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <div className="badge badge-primary">Total Customers: {customers.length}</div>
+          <button className="btn btn-primary" onClick={() => { setShowAddModal(true); setError(''); }}>
+            <UserPlus size={18} /> Register New Customer
+          </button>
           <ExportActions data={customers} headers={exportHeaders} filename="Customers_Export" title="FCF Mosaam Station Customers" />
         </div>
       </div>
@@ -118,6 +138,61 @@ export default function CustomersTab() {
           </tbody>
         </table>
       </div>
+
+      {/* Add Customer Modal */}
+      {showAddModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div className="glass-panel" style={{ width: '450px', background: 'var(--bg-main)', border: '1px solid var(--color-primary)' }}>
+            <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <UserPlus color="var(--color-primary)" /> Register New Customer
+            </h2>
+            
+            {error && (
+              <div className="badge badge-danger" style={{ marginBottom: '1rem', width: '100%', padding: '0.8rem' }}>
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleAddSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <div className="input-group" style={{ flex: 1 }}>
+                  <label className="input-label">Phone Number</label>
+                  <input required className="input-field" value={newCustomer.phone} onChange={e => setNewCustomer({...newCustomer, phone: e.target.value})} placeholder="01..." />
+                </div>
+                <div className="input-group" style={{ flex: 1 }}>
+                  <label className="input-label">Full Name</label>
+                  <input required className="input-field" value={newCustomer.name} onChange={e => setNewCustomer({...newCustomer, name: e.target.value})} placeholder="Name" />
+                </div>
+              </div>
+
+              <div className="input-group">
+                <label className="input-label">Email Address (Optional)</label>
+                <input type="email" className="input-field" value={newCustomer.email} onChange={e => setNewCustomer({...newCustomer, email: e.target.value})} placeholder="customer@example.com" />
+              </div>
+
+              <div className="input-group">
+                <label className="input-label">Home Address</label>
+                <input className="input-field" value={newCustomer.address} onChange={e => setNewCustomer({...newCustomer, address: e.target.value})} placeholder="Area, Street, Building..." />
+              </div>
+
+              <div className="input-group">
+                <label className="input-label">Assigned Tier</label>
+                <select className="input-field" value={newCustomer.tier} onChange={e => setNewCustomer({...newCustomer, tier: e.target.value})}>
+                  <option>New</option>
+                  <option>Bronze</option>
+                  <option>Silver</option>
+                  <option>Gold</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>Complete Registration</button>
+                <button type="button" className="btn btn-outline" onClick={() => setShowAddModal(false)}>Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

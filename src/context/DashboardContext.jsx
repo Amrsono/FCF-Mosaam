@@ -71,6 +71,26 @@ export const DashboardProvider = ({ children }) => {
     }
   };
 
+  const addCustomer = async (customerData) => {
+    try {
+      const res = await fetch('/api/customers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(customerData)
+      });
+      if (res.ok) {
+        await fetchData();
+        return { success: true };
+      } else {
+        const err = await res.json();
+        return { success: false, error: err.error };
+      }
+    } catch (err) {
+      console.error(err);
+      return { success: false, error: 'Network error' };
+    }
+  };
+
   const markOrderPickedUp = async (orderId) => {
     try {
       const res = await fetch('/api/orders', {
@@ -180,6 +200,7 @@ export const DashboardProvider = ({ children }) => {
       markBostaOrderPickedUp,
       returnBostaOrder,
       updateCustomer,
+      addCustomer,
       calculatePenalty,
       logBasataService
     }}>

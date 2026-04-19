@@ -76,6 +76,6 @@ I also need an analytics tab that shows top art analytics for orders picked up ,
  
 
 
-
+i will need to track in it the sla for delivery window which will also be the 4 days but no penalties for now  , and for total deliveries for basata packages we need it to be tracked seperately and anlytics seperately and reports also seperately
 
 

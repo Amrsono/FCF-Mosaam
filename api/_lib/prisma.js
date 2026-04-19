@@ -1,26 +1,16 @@
+import pkg from 'pg';
+const { Pool } = pkg;
 import { PrismaClient } from '@prisma/client';
-import { PrismaNeon } from '@prisma/adapter-neon';
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import ws from 'ws';
+import { PrismaPg } from '@prisma/adapter-pg';
 
-// Stability flags for Neon in Serverless
-neonConfig.webSocketConstructor = ws;
-neonConfig.useSecureWebSocket = true;
-neonConfig.pipelineConnect = false; // Prevents some 'terminated unexpectedly' errors
+// Standard PG Driver is more stable for Prisma in local dev and standard Vercel functions
+const connectionString = process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL;
 
-const connectionString = process.env.DATABASE_URL;
-
-// Prevent multiple instances of Prisma Client in development
 const globalForPrisma = globalThis;
 
 if (!globalForPrisma.prisma) {
-  const pool = new Pool({ 
-    connectionString,
-    connectionTimeoutMillis: 10000,
-    idleTimeoutMillis: 30000,
-    max: 10 // Limit connections in serverless to avoid exhaustion
-  });
-  const adapter = new PrismaNeon(pool);
+  const pool = new Pool({ connectionString });
+  const adapter = new PrismaPg(pool);
   globalForPrisma.prisma = new PrismaClient({ adapter });
 }
 

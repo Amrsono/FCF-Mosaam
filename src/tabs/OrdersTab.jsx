@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useDashboard, getDaysDifference } from '../context/DashboardContext';
-import { Search, Filter, Plus, UserCheck, RefreshCw, FileUp, CreditCard, Gift, AlertCircle } from 'lucide-react';
+import { Search, Filter, Plus, UserCheck, RefreshCw, FileUp, CreditCard, Gift, AlertCircle, Flag } from 'lucide-react';
 import ExportActions from '../components/ExportActions';
 import ImportWizard from '../components/ImportWizard';
 import { useLanguage } from '../context/LanguageContext';
@@ -327,8 +327,20 @@ export default function OrdersTab() {
                 <td>
                   {order.status === 'Inventory' ? (
                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                       <span style={{ color: order.daysParked >= 4 ? 'var(--color-danger)' : 'inherit' }}>{order.daysParked} {language === 'ar' ? 'أيام في المخزن' : 'Days Parked'}</span>
-                       <span style={{ fontWeight: 600, color: order.penalty > 0 ? 'var(--color-danger)' : 'var(--text-secondary)' }}>{order.penalty} EGP {t('penalty')}</span>
+                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                         <span style={{ color: order.daysParked >= 4 ? 'var(--color-danger)' : 'inherit', fontWeight: order.daysParked >= 4 ? 800 : 400 }}>
+                           {order.daysParked} {language === 'ar' ? 'أيام في المخزن' : 'Days Parked'}
+                         </span>
+                         {order.daysParked >= 4 && <Flag size={14} className="animate-pulse" color="var(--color-danger)" />}
+                       </div>
+                       <span style={{ fontWeight: 600, color: order.penalty > 0 ? 'var(--color-danger)' : 'var(--text-secondary)' }}>
+                         {order.penalty} EGP {t('penalty')}
+                       </span>
+                       {order.daysParked >= 4 && (
+                         <div className="badge badge-danger" style={{ fontSize: '0.6rem', padding: '2px 6px' }}>
+                           {language === 'ar' ? 'يجب الارجاع' : 'RETURN REQ'}
+                         </div>
+                       )}
                      </div>
                   ) : <span style={{ color: 'var(--text-muted)' }}>-</span>}
                 </td>

@@ -157,11 +157,13 @@ export const DashboardProvider = ({ children }) => {
   };
 
   const calculateStorageFee = (order) => {
-    // S: 18, M: 30, L: 45
+    const days = Math.max(1, getDaysDifference(order.receivedAt)); // At least 1 day if received today
     const size = (order.size || 'M').toUpperCase();
-    if (size === 'S') return 18;
-    if (size === 'L') return 45;
-    return 30; // Default Medium
+    let dailyRate = 30;
+    if (size === 'S') dailyRate = 18;
+    if (size === 'L') dailyRate = 45;
+    
+    return dailyRate * days;
   };
 
   const receiveBostaOrder = async (orderData) => {

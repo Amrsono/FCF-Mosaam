@@ -6,7 +6,7 @@ import ImportWizard from '../components/ImportWizard';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function OrdersTab() {
-  const { orders, customers, receiveOrder, bulkReceiveOrders, calculatePenalty, calculateStorageFee, markOrderPickedUp, returnOrder } = useDashboard();
+  const { orders, customers, receiveOrder, bulkReceiveOrders, calculatePenalty, calculateStorageFee, markOrderPickedUp, returnOrder, updateCustomer } = useDashboard();
   const { t, language } = useLanguage();
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -18,6 +18,7 @@ export default function OrdersTab() {
   const [showImportWizard, setShowImportWizard] = useState(false);
   const [showCrossSellModal, setShowCrossSellModal] = useState(false);
   const [pendingOrderId, setPendingOrderId] = useState(null);
+  const [customerUpdateData, setCustomerUpdateData] = useState({ name: '', email: '', address: '', phone: '' });
 
   // Form for new order simulation
   const [newOrder, setNewOrder] = useState({
@@ -334,7 +335,17 @@ export default function OrdersTab() {
                 <td>
                    {order.status === 'Inventory' && (
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button className="btn btn-outline" style={{ padding: '0.4rem', color: 'var(--color-success)' }} title={t('markPickedUp')} onClick={() => { setPendingOrderId(order.id); setShowCrossSellModal(true); }}>
+                        <button className="btn btn-outline" style={{ padding: '0.4rem', color: 'var(--color-success)' }} title={t('markPickedUp')} onClick={() => { 
+                          const cust = customers.find(c => c.phone === order.customerPhone);
+                          setCustomerUpdateData({
+                            phone: cust?.phone || order.customerPhone,
+                            name: cust?.name || '',
+                            email: cust?.email || '',
+                            address: cust?.address || ''
+                          });
+                          setPendingOrderId(order.id); 
+                          setShowCrossSellModal(true); 
+                        }}>
                           <UserCheck size={16} />
                         </button>
                         <button className="btn btn-outline" style={{ padding: '0.4rem', color: 'var(--color-danger)' }} title={t('markReturned')} onClick={() => returnOrder(order.id)}>
@@ -436,17 +447,54 @@ export default function OrdersTab() {
                <CreditCard size={32} color="var(--color-primary)" />
             </div>
             <h3 style={{ marginBottom: '1rem', color: 'white' }}>{language === 'ar' ? 'عرض كارت ميزة' : 'Meeza Card Offer'}</h3>
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', lineHeight: '1.6' }}>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', lineHeight: '1.6' }}>
               {language === 'ar' 
                 ? 'هل قمت بعرض "كارت ميزة اللحظي" والخدمات المصرفية للبنك الأهلي على العميل قبل الاستلام؟' 
                 : 'Did you offer the "Meeza Instant Card" and Ahly Bank services to the customer before pickup?'}
             </p>
+
+            {/* Missing Data Fields */}
+            <div className="glass-panel" style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', marginBottom: '1.5rem', textAlign: 'right' }}>
+               <h4 style={{ fontSize: '0.9rem', marginBottom: '1rem', color: 'var(--color-primary)' }}>
+                 {language === 'ar' ? 'تحديث بيانات العميل' : 'Update Customer Data'}
+               </h4>
+               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  <div className="input-group">
+                    <label className="input-label" style={{ fontSize: '0.75rem' }}>{t('name')}</label>
+                    <input 
+                      className="input-field" 
+                      style={{ fontSize: '0.85rem', borderColor: !customerUpdateData.name ? 'var(--color-warning)' : '' }} 
+                      value={customerUpdateData.name} 
+                      onChange={e => setCustomerUpdateData({...customerUpdateData, name: e.target.value})} 
+                    />
+                  </div>
+                  <div className="input-group">
+                    <label className="input-label" style={{ fontSize: '0.75rem' }}>{language === 'ar' ? 'البريد الإلكتروني' : 'Email'}</label>
+                    <input 
+                      className="input-field" 
+                      style={{ fontSize: '0.85rem', borderColor: !customerUpdateData.email ? 'var(--color-warning)' : '' }} 
+                      value={customerUpdateData.email} 
+                      onChange={e => setCustomerUpdateData({...customerUpdateData, email: e.target.value})} 
+                    />
+                  </div>
+                  <div className="input-group">
+                    <label className="input-label" style={{ fontSize: '0.75rem' }}>{language === 'ar' ? 'العنوان' : 'Address'}</label>
+                    <input 
+                      className="input-field" 
+                      style={{ fontSize: '0.85rem', borderColor: !customerUpdateData.address ? 'var(--color-warning)' : '' }} 
+                      value={customerUpdateData.address} 
+                      onChange={e => setCustomerUpdateData({...customerUpdateData, address: e.target.value})} 
+                    />
+                  </div>
+               </div>
+            </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                <button 
                  className="btn btn-primary" 
                  style={{ width: '100%', padding: '1rem' }}
-                 onClick={() => {
+                 onClick={async () => {
+                   if (updateCustomer) await updateCustomer(customerUpdateData);
                    markOrderPickedUp(pendingOrderId);
                    setShowCrossSellModal(false);
                    setPendingOrderId(null);

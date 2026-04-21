@@ -1,17 +1,20 @@
 import React, { useState, useMemo } from 'react';
 import { useDashboard, getDaysDifference } from '../context/DashboardContext';
-import { Search, Plus, UserCheck, RefreshCw, Package } from 'lucide-react';
+import { Search, Plus, UserCheck, RefreshCw, Package, CreditCard, Gift, AlertCircle } from 'lucide-react';
 import ExportActions from '../components/ExportActions';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function BostaTab() {
-  const { bostaOrders, customers, receiveBostaOrder, markBostaOrderPickedUp, returnBostaOrder } = useDashboard();
+  const { bostaOrders, customers, receiveBostaOrder, markBostaOrderPickedUp, returnBostaOrder, updateCustomer } = useDashboard();
   const { t, language } = useLanguage();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('Inventory');
   const [filterCategory, setFilterCategory] = useState('All');
   const [showModal, setShowModal] = useState(false);
+  const [showCrossSellModal, setShowCrossSellModal] = useState(false);
+  const [pendingOrderId, setPendingOrderId] = useState(null);
+  const [customerUpdateData, setCustomerUpdateData] = useState({ name: '', email: '', address: '', phone: '' });
 
   const [newOrder, setNewOrder] = useState({
     id: '', customerPhone: '', customerName: '', description: '', totalValue: '', category: 'Electronics'
@@ -215,7 +218,17 @@ export default function BostaTab() {
                         className="btn btn-outline"
                         style={{ padding: '0.4rem', color: 'var(--color-success)' }}
                         title={t('markPickedUp')}
-                        onClick={() => markBostaOrderPickedUp(order.id)}
+                        onClick={() => { 
+                          const cust = customers.find(c => c.phone === order.customerPhone);
+                          setCustomerUpdateData({
+                            phone: cust?.phone || order.customerPhone,
+                            name: cust?.name || '',
+                            email: cust?.email || '',
+                            address: cust?.address || ''
+                          });
+                          setPendingOrderId(order.id); 
+                          setShowCrossSellModal(true); 
+                        }}
                       >
                         <UserCheck size={16} />
                       </button>
@@ -287,6 +300,96 @@ export default function BostaTab() {
                 <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowModal(false)}>{t('cancel')}</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Cross-Sell Confirmation Modal */}
+      {showCrossSellModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: '1rem' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '450px', background: 'var(--bg-main)', textAlign: 'center', border: '1px solid #6366f1' }}>
+            <div style={{ width: '64px', height: '64px', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+               <CreditCard size={32} color="#6366f1" />
+            </div>
+            <h3 style={{ marginBottom: '1rem', color: 'white' }}>{language === 'ar' ? 'عرض كارت ميزة (بوسطة)' : 'Meeza Card Offer (Bosta)'}</h3>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', lineHeight: '1.6' }}>
+              {language === 'ar' 
+                ? 'هل قمت بعرض "كارت ميزة اللحظي" والخدمات المصرفية للبنك الأهلي على العميل قبل استلام طرد بوسطة؟' 
+                : 'Did you offer the "Meeza Instant Card" and Ahly Bank services to the customer before Bosta pickup?'}
+            </p>
+
+            {/* Missing Data Fields */}
+            <div className="glass-panel" style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', marginBottom: '1.5rem', textAlign: 'right' }}>
+               <h4 style={{ fontSize: '0.9rem', marginBottom: '1rem', color: '#6366f1' }}>
+                 {language === 'ar' ? 'تحديث بيانات العميل' : 'Update Customer Data'}
+               </h4>
+               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  <div className="input-group">
+                    <label className="input-label" style={{ fontSize: '0.75rem' }}>{t('name')}</label>
+                    <input 
+                      className="input-field" 
+                      style={{ fontSize: '0.85rem', borderColor: !customerUpdateData.name ? 'var(--color-warning)' : '' }} 
+                      value={customerUpdateData.name} 
+                      onChange={e => setCustomerUpdateData({...customerUpdateData, name: e.target.value})} 
+                    />
+                  </div>
+                  <div className="input-group">
+                    <label className="input-label" style={{ fontSize: '0.75rem' }}>{language === 'ar' ? 'البريد الإلكتروني' : 'Email'}</label>
+                    <input 
+                      className="input-field" 
+                      style={{ fontSize: '0.85rem', borderColor: !customerUpdateData.email ? 'var(--color-warning)' : '' }} 
+                      value={customerUpdateData.email} 
+                      onChange={e => setCustomerUpdateData({...customerUpdateData, email: e.target.value})} 
+                    />
+                  </div>
+                  <div className="input-group">
+                    <label className="input-label" style={{ fontSize: '0.75rem' }}>{language === 'ar' ? 'العنوان' : 'Address'}</label>
+                    <input 
+                      className="input-field" 
+                      style={{ fontSize: '0.85rem', borderColor: !customerUpdateData.address ? 'var(--color-warning)' : '' }} 
+                      value={customerUpdateData.address} 
+                      onChange={e => setCustomerUpdateData({...customerUpdateData, address: e.target.value})} 
+                    />
+                  </div>
+               </div>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+               <button 
+                 className="btn btn-primary" 
+                 style={{ width: '100%', padding: '1rem', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
+                 onClick={async () => {
+                   if (updateCustomer) await updateCustomer(customerUpdateData);
+                   markBostaOrderPickedUp(pendingOrderId);
+                   setShowCrossSellModal(false);
+                   setPendingOrderId(null);
+                 }}
+               >
+                 {language === 'ar' ? 'نعم، تم العرض (تأكيد الاستلام)' : 'Yes, Offered (Confirm Pickup)'}
+               </button>
+               
+               <button 
+                 className="btn btn-outline" 
+                 style={{ width: '100%' }}
+                 onClick={() => {
+                   markBostaOrderPickedUp(pendingOrderId);
+                   setShowCrossSellModal(false);
+                   setPendingOrderId(null);
+                 }}
+               >
+                 {language === 'ar' ? 'تخطي والعرض لاحقاً' : 'Skip and Offer Later'}
+               </button>
+               
+               <button 
+                 className="btn btn-outline" 
+                 style={{ width: '100%', border: 'none', color: 'var(--text-muted)' }}
+                 onClick={() => {
+                   setShowCrossSellModal(false);
+                   setPendingOrderId(null);
+                 }}
+               >
+                 {t('cancel')}
+               </button>
+            </div>
           </div>
         </div>
       )}

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useDashboard, getDaysDifference } from '../context/DashboardContext';
-import { Search, Filter, Plus, UserCheck, RefreshCw, FileUp } from 'lucide-react';
+import { Search, Filter, Plus, UserCheck, RefreshCw, FileUp, CreditCard, Gift, AlertCircle } from 'lucide-react';
 import ExportActions from '../components/ExportActions';
 import ImportWizard from '../components/ImportWizard';
 import { useLanguage } from '../context/LanguageContext';
@@ -16,6 +16,8 @@ export default function OrdersTab() {
 
   const [showSimulateModal, setShowSimulateModal] = useState(false);
   const [showImportWizard, setShowImportWizard] = useState(false);
+  const [showCrossSellModal, setShowCrossSellModal] = useState(false);
+  const [pendingOrderId, setPendingOrderId] = useState(null);
 
   // Form for new order simulation
   const [newOrder, setNewOrder] = useState({
@@ -331,14 +333,14 @@ export default function OrdersTab() {
                 </td>
                 <td>
                    {order.status === 'Inventory' && (
-                     <div style={{ display: 'flex', gap: '0.5rem' }}>
-                       <button className="btn btn-outline" style={{ padding: '0.4rem', color: 'var(--color-success)' }} title={t('markPickedUp')} onClick={() => markOrderPickedUp(order.id)}>
-                         <UserCheck size={16} />
-                       </button>
-                       <button className="btn btn-outline" style={{ padding: '0.4rem', color: 'var(--color-danger)' }} title={t('markReturned')} onClick={() => returnOrder(order.id)}>
-                         <RefreshCw size={16} />
-                       </button>
-                     </div>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button className="btn btn-outline" style={{ padding: '0.4rem', color: 'var(--color-success)' }} title={t('markPickedUp')} onClick={() => { setPendingOrderId(order.id); setShowCrossSellModal(true); }}>
+                          <UserCheck size={16} />
+                        </button>
+                        <button className="btn btn-outline" style={{ padding: '0.4rem', color: 'var(--color-danger)' }} title={t('markReturned')} onClick={() => returnOrder(order.id)}>
+                          <RefreshCw size={16} />
+                        </button>
+                      </div>
                    )}
                 </td>
               </tr>
@@ -422,6 +424,60 @@ export default function OrdersTab() {
                 <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowSimulateModal(false)}>{t('cancel')}</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Cross-Sell Confirmation Modal */}
+      {showCrossSellModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: '1rem' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '450px', background: 'var(--bg-main)', textAlign: 'center', border: '1px solid var(--color-primary)' }}>
+            <div style={{ width: '64px', height: '64px', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+               <CreditCard size={32} color="var(--color-primary)" />
+            </div>
+            <h3 style={{ marginBottom: '1rem', color: 'white' }}>{language === 'ar' ? 'عرض كارت ميزة' : 'Meeza Card Offer'}</h3>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', lineHeight: '1.6' }}>
+              {language === 'ar' 
+                ? 'هل قمت بعرض "كارت ميزة اللحظي" والخدمات المصرفية للبنك الأهلي على العميل قبل الاستلام؟' 
+                : 'Did you offer the "Meeza Instant Card" and Ahly Bank services to the customer before pickup?'}
+            </p>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+               <button 
+                 className="btn btn-primary" 
+                 style={{ width: '100%', padding: '1rem' }}
+                 onClick={() => {
+                   markOrderPickedUp(pendingOrderId);
+                   setShowCrossSellModal(false);
+                   setPendingOrderId(null);
+                 }}
+               >
+                 {language === 'ar' ? 'نعم، تم العرض (تأكيد الاستلام)' : 'Yes, Offered (Confirm Pickup)'}
+               </button>
+               
+               <button 
+                 className="btn btn-outline" 
+                 style={{ width: '100%' }}
+                 onClick={() => {
+                   markOrderPickedUp(pendingOrderId);
+                   setShowCrossSellModal(false);
+                   setPendingOrderId(null);
+                 }}
+               >
+                 {language === 'ar' ? 'تخطي والعرض لاحقاً' : 'Skip and Offer Later'}
+               </button>
+               
+               <button 
+                 className="btn btn-outline" 
+                 style={{ width: '100%', border: 'none', color: 'var(--text-muted)' }}
+                 onClick={() => {
+                   setShowCrossSellModal(false);
+                   setPendingOrderId(null);
+                 }}
+               >
+                 {t('cancel')}
+               </button>
+            </div>
           </div>
         </div>
       )}

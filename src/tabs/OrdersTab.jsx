@@ -20,7 +20,7 @@ export default function OrdersTab() {
   // Form for new order simulation
   const [newOrder, setNewOrder] = useState({
     id: '', customerPhone: '', description: '', totalValue: '', category: 'Electronics', customerName: '',
-    outlet: 'وبور الثلج', size: 'M', paymentMethod: 'Cash', orderCost: ''
+    outlet: 'وبور الثلج', size: 'M', paymentMethod: 'Cash'
   });
 
   const exportHeaders = [
@@ -46,8 +46,7 @@ export default function OrdersTab() {
     { key: 'category', label: t('category'), required: false },
     { key: 'outlet', label: language === 'ar' ? 'المنفذ' : 'Outlet', required: false },
     { key: 'size', label: language === 'ar' ? 'المقاس' : 'Size', required: false },
-    { key: 'paymentMethod', label: language === 'ar' ? 'طريقة الدفع' : 'Payment Method', required: false },
-    { key: 'orderCost', label: language === 'ar' ? 'ثمن الأوردر' : 'Order Cost', required: false }
+    { key: 'paymentMethod', label: language === 'ar' ? 'طريقة الدفع' : 'Payment Method', required: false }
   ];
 
   // Aggregated Summary Data
@@ -69,10 +68,6 @@ export default function OrdersTab() {
       // JumiaPay: include all jumiapay orders
       const jumiaPay = outletOrders.filter(o => o.status !== 'Returned' && o.paymentMethod?.toLowerCase().includes('jumiapay')).reduce((sum, o) => sum + o.totalValue, 0);
       
-      // Net After Cost: Total Money - Total Cost
-      const totalCost = outletOrders.filter(o => o.status !== 'Returned').reduce((sum, o) => sum + (o.orderCost || 0), 0);
-      const netAfterCost = totalMoney - totalCost;
-      
       const sCount = outletOrders.filter(o => o.size === 'S').length;
       const mCount = outletOrders.filter(o => o.size === 'M').length;
       const lCount = outletOrders.filter(o => o.size === 'L').length;
@@ -86,7 +81,6 @@ export default function OrdersTab() {
         totalMoney,
         paid,
         jumiaPay,
-        netAfterCost,
         sCount,
         mCount,
         lCount
@@ -133,13 +127,12 @@ export default function OrdersTab() {
       category: newOrder.category,
       outlet: newOrder.outlet,
       size: newOrder.size,
-      paymentMethod: newOrder.paymentMethod,
-      orderCost: Number(newOrder.orderCost)
+      paymentMethod: newOrder.paymentMethod
     });
     setShowSimulateModal(false);
     setNewOrder({ 
       id: '', customerPhone: '', description: '', totalValue: '', category: 'Electronics', customerName: '',
-      outlet: 'وبور الثلج', size: 'M', paymentMethod: 'Cash', orderCost: ''
+      outlet: 'وبور الثلج', size: 'M', paymentMethod: 'Cash'
     });
   };
 
@@ -232,7 +225,6 @@ export default function OrdersTab() {
                 <th>{language === 'ar' ? 'اجمالي الفلوس' : 'Total Money'}</th>
                 <th>{language === 'ar' ? 'تم سداد' : 'Paid'}</th>
                 <th>jumiapay</th>
-                <th style={{ color: 'var(--color-success)' }}>{language === 'ar' ? 'صافي الأرباح' : 'Net After Cost'}</th>
                 <th>S</th>
                 <th>M</th>
                 <th>L</th>
@@ -249,7 +241,6 @@ export default function OrdersTab() {
                   <td>{row.totalMoney.toLocaleString()}</td>
                   <td>{row.paid.toLocaleString()}</td>
                   <td style={{ color: 'var(--color-primary)' }}>{row.jumiaPay.toLocaleString()}</td>
-                  <td style={{ fontWeight: 700, color: 'var(--color-success)' }}>{row.netAfterCost.toLocaleString()}</td>
                   <td>{row.sCount}</td>
                   <td>{row.mCount}</td>
                   <td>{row.lCount}</td>
@@ -264,7 +255,6 @@ export default function OrdersTab() {
                 <td>{summaryByOutlet.reduce((s, r) => s + r.totalMoney, 0).toLocaleString()}</td>
                 <td>{summaryByOutlet.reduce((s, r) => s + r.paid, 0).toLocaleString()}</td>
                 <td>{summaryByOutlet.reduce((s, r) => s + r.jumiaPay, 0).toLocaleString()}</td>
-                <td>{summaryByOutlet.reduce((s, r) => s + r.netAfterCost, 0).toLocaleString()}</td>
                 <td>{summaryByOutlet.reduce((s, r) => s + r.sCount, 0)}</td>
                 <td>{summaryByOutlet.reduce((s, r) => s + r.mCount, 0)}</td>
                 <td>{summaryByOutlet.reduce((s, r) => s + r.lCount, 0)}</td>
@@ -407,10 +397,6 @@ export default function OrdersTab() {
                      <option value="Cash">Cash</option>
                      <option value="JumiaPay">JumiaPay</option>
                   </select>
-                </div>
-                <div className="input-group" style={{ flex: 1 }}>
-                  <label className="input-label">{language === 'ar' ? 'ثمن الأوردر (سعر الشراء)' : 'Order Cost (Purchase Price)'}</label>
-                  <input type="number" className="input-field" value={newOrder.orderCost} onChange={e => setNewOrder({...newOrder, orderCost: e.target.value})} placeholder="0.00" />
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>

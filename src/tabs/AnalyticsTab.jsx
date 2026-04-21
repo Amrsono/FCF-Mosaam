@@ -2,20 +2,15 @@ import React, { useState } from 'react';
 import { useDashboard } from '../context/DashboardContext';
 import {
   TrendingUp, PackageCheck, AlertOctagon, Users, DollarSign,
-  RefreshCcw, Zap, BarChart2, Briefcase, Activity, Package,
+  Zap, BarChart2, Activity,
   ArrowUpRight, ArrowDownRight, ShieldAlert, Clock
 } from 'lucide-react';
 import ExportActions from '../components/ExportActions';
 import {
-  BarChart, Bar, PieChart, Pie, Cell, LineChart, Line,
-  XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, RadialBarChart, RadialBar
+  BarChart, Bar, PieChart, Pie, Cell,
+  XAxis, YAxis, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
-
-const exportHeaders = [
-  { label: 'Stream', accessor: 'group' },
-  { label: 'KPI', accessor: 'metric' },
-  { label: 'Value', accessor: 'value' }
-];
+import { useLanguage } from '../context/LanguageContext';
 
 const CHART_COLORS = {
   jumia: '#f97316',
@@ -26,10 +21,17 @@ const CHART_COLORS = {
   warning: '#f59e0b',
 };
 
-const CustomTooltip = ({ active, payload, label }) => {
+const CustomTooltip = ({ active, payload, label, language }) => {
   if (active && payload && payload.length) {
     return (
-      <div style={{ background: 'rgba(15,15,30,0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '0.75rem 1rem' }}>
+      <div style={{ 
+        background: 'rgba(15,15,30,0.95)', 
+        border: '1px solid rgba(255,255,255,0.1)', 
+        borderRadius: '8px', 
+        padding: '0.75rem 1rem',
+        textAlign: language === 'ar' ? 'right' : 'left',
+        direction: language === 'ar' ? 'rtl' : 'ltr'
+      }}>
         {label && <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.8rem', marginBottom: '0.4rem' }}>{label}</div>}
         {payload.map((p, i) => (
           <div key={i} style={{ color: p.color, fontWeight: 600, fontSize: '0.9rem' }}>
@@ -44,7 +46,14 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 export default function AnalyticsTab() {
   const { orders, customers, basataTransactions, bostaOrders } = useDashboard();
+  const { t, language } = useLanguage();
   const [timeframe, setTimeframe] = useState('daily');
+
+  const exportHeaders = [
+    { label: t('stream'), accessor: 'group' },
+    { label: 'KPI', accessor: 'metric' },
+    { label: t('value'), accessor: 'value' }
+  ];
 
   // Time boundary
   const now = new Date();
@@ -89,27 +98,24 @@ export default function AnalyticsTab() {
     acc[t.serviceProvider] = (acc[t.serviceProvider] || 0) + 1;
     return acc;
   }, {});
-  const topService = Object.keys(basataProviders).length > 0
-    ? Object.keys(basataProviders).reduce((a, b) => basataProviders[a] > basataProviders[b] ? a : b)
-    : 'None';
 
   // --- GRAND TOTAL ---
   const grandTotal = jumiaCash + bostaCash + basataVolume;
 
   // --- CHART DATA ---
   const revenueStreamData = [
-    { name: 'Jumia', value: jumiaCash, color: CHART_COLORS.jumia },
-    { name: 'Bosta', value: bostaCash, color: CHART_COLORS.bosta },
-    { name: 'Basata', value: basataVolume, color: CHART_COLORS.basata },
+    { name: t('jumia'), value: jumiaCash, color: CHART_COLORS.jumia },
+    { name: t('bosta'), value: bostaCash, color: CHART_COLORS.bosta },
+    { name: t('basata'), value: basataVolume, color: CHART_COLORS.basata },
   ];
 
   const ordersStatusData = [
-    { name: 'Jumia Picked Up', value: jumiaPickedUp.length, color: CHART_COLORS.success },
-    { name: 'Jumia In Inventory', value: jumiaInventory.length, color: CHART_COLORS.warning },
-    { name: 'Jumia Returned', value: jumiaReturned.length, color: CHART_COLORS.danger },
-    { name: 'Bosta Picked Up', value: bostaPickedUp.length, color: CHART_COLORS.bosta },
-    { name: 'Bosta In Inventory', value: bostaInventory.length, color: '#a5b4fc' },
-    { name: 'Bosta Returned', value: bostaReturned.length, color: '#f87171' },
+    { name: `${t('jumia')} ${t('pickedUpStatus')}`, value: jumiaPickedUp.length, color: CHART_COLORS.success },
+    { name: `${t('jumia')} ${t('inventoryStatus')}`, value: jumiaInventory.length, color: CHART_COLORS.warning },
+    { name: `${t('jumia')} ${t('returnedStatus')}`, value: jumiaReturned.length, color: CHART_COLORS.danger },
+    { name: `${t('bosta')} ${t('pickedUpStatus')}`, value: bostaPickedUp.length, color: CHART_COLORS.bosta },
+    { name: `${t('bosta')} ${t('inventoryStatus')}`, value: bostaInventory.length, color: '#a5b4fc' },
+    { name: `${t('bosta')} ${t('returnedStatus')}`, value: bostaReturned.length, color: '#f87171' },
   ].filter(d => d.value > 0);
 
   const basataCatData = Object.keys(basataCategories).map(cat => ({
@@ -122,21 +128,15 @@ export default function AnalyticsTab() {
     .slice(0, 6)
     .map(p => ({ name: p, count: basataProviders[p] }));
 
-  const slaHealthData = [
-    { name: 'Jumia Critical', value: jumiaSlaCritical, fill: CHART_COLORS.danger },
-    { name: 'Jumia Near', value: jumiaSlaNear, fill: CHART_COLORS.warning },
-    { name: 'Jumia OK', value: Math.max(0, jumiaInventory.length - jumiaSlaCritical - jumiaSlaNear), fill: CHART_COLORS.success },
-  ];
-
   const comparisonData = [
-    { name: 'Orders In', jumia: jumiaInventory.length, bosta: bostaInventory.length },
-    { name: 'Picked Up', jumia: jumiaPickedUp.length, bosta: bostaPickedUp.length },
-    { name: 'Returned', jumia: jumiaReturned.length, bosta: bostaReturned.length },
+    { name: language === 'ar' ? 'المدخلات' : 'Inventory', jumia: jumiaInventory.length, bosta: bostaInventory.length },
+    { name: t('pickedUpStatus'), jumia: jumiaPickedUp.length, bosta: bostaPickedUp.length },
+    { name: t('returnedStatus'), jumia: jumiaReturned.length, bosta: bostaReturned.length },
   ];
 
   // Metric Card
   const MetricCard = ({ title, value, sub, icon, color, trend, trendDir }) => (
-    <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', borderLeft: `3px solid ${color || 'var(--border-color)'}` }}>
+    <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', [language === 'ar' ? 'borderRight' : 'borderLeft']: `3px solid ${color || 'var(--border-color)'}` }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{icon}{title}</div>
         {trendDir && (
@@ -161,22 +161,22 @@ export default function AnalyticsTab() {
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: '100%', overflowY: 'auto', paddingRight: '0.5rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: '100%', overflowY: 'auto', [language === 'ar' ? 'paddingLeft' : 'paddingRight']: '0.5rem' }}>
 
       {/* Sticky Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10, background: 'var(--bg-main)', paddingBottom: '0.75rem', flexWrap: 'wrap', gap: '1rem' }}>
         <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'white', margin: 0, fontSize: '1.25rem' }}>
-          <TrendingUp size={22} color="var(--color-primary)" /> Performance
+          <TrendingUp size={22} color="var(--color-primary)" /> {t('analytics')}
         </h2>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'var(--bg-panel)', borderRadius: 'var(--radius-md)', padding: '0.4rem', border: '1px solid var(--border-color)', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', gap: '0.15rem', flexWrap: 'wrap' }}>
             {['daily', 'weekly', 'monthly'].map(tf => (
               <button key={tf} className={`btn ${timeframe === tf ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none', padding: '0.4rem 0.8rem', fontSize: '0.85rem' }} onClick={() => setTimeframe(tf)}>
-                {tf.charAt(0).toUpperCase()}
+                {tf === 'daily' ? (language === 'ar' ? 'يومي' : 'Daily') : tf === 'weekly' ? (language === 'ar' ? 'أسبوعي' : 'Weekly') : (language === 'ar' ? 'شهري' : 'Monthly')}
               </button>
             ))}
           </div>
-          <div style={{ paddingLeft: '0.5rem', borderLeft: '1px solid var(--border-color)' }}>
+          <div style={{ [language === 'ar' ? 'paddingRight' : 'paddingLeft']: '0.5rem', [language === 'ar' ? 'borderRight' : 'borderLeft']: '1px solid var(--border-color)' }}>
             <ExportActions
               data={[
                 { group: 'Overview', metric: 'Grand Total Revenue', value: `${grandTotal} EGP` },
@@ -192,7 +192,7 @@ export default function AnalyticsTab() {
               ]}
               headers={exportHeaders}
               filename={`Analytics_${timeframe}`}
-              title={`FCF Mosaam Analytics (${timeframe.toUpperCase()})`}
+              title={`${t('analytics')} (${timeframe.toUpperCase()})`}
             />
           </div>
         </div>
@@ -203,18 +203,18 @@ export default function AnalyticsTab() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
           <div style={{ flex: '1 1 300px' }}>
             <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem' }}>
-              <Activity size={14} /> Total Station Revenue
+              <Activity size={14} /> {language === 'ar' ? 'إجمالي إيرادات المحطة' : 'Total Station Revenue'}
             </div>
             <div style={{ fontSize: 'clamp(2.5rem, 10vw, 3.5rem)', fontWeight: 800, color: 'white', lineHeight: 1 }}>
               {grandTotal.toLocaleString()}
-              <span style={{ fontSize: '0.4em', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>EGP</span>
+              <span style={{ fontSize: '0.4em', color: 'var(--text-muted)', [language === 'ar' ? 'marginRight' : 'marginLeft']: '0.5rem' }}>EGP</span>
             </div>
           </div>
           <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', flex: '1 1 auto' }}>
             {[
-              { label: 'Jumia', value: jumiaCash, color: CHART_COLORS.jumia },
-              { label: 'Bosta', value: bostaCash, color: CHART_COLORS.bosta },
-              { label: 'Basata', value: basataVolume, color: CHART_COLORS.basata },
+              { label: t('jumia'), value: jumiaCash, color: CHART_COLORS.jumia },
+              { label: t('bosta'), value: bostaCash, color: CHART_COLORS.bosta },
+              { label: t('basata'), value: basataVolume, color: CHART_COLORS.basata },
             ].map(s => (
               <div key={s.label} style={{ flex: '1 1 auto', minWidth: '80px', textAlign: 'center' }}>
                 <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: s.color, margin: '0 auto 0.4rem' }} />
@@ -228,17 +228,17 @@ export default function AnalyticsTab() {
 
       {/* Row 1: Key Metrics */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
-        <MetricCard title="Jumia Cash" value={`${jumiaCash.toLocaleString()} EGP`} icon={<DollarSign size={14} />} color={CHART_COLORS.jumia} sub={`${jumiaPickedUp.length} orders picked up`} />
-        <MetricCard title="Bosta Cash" value={`${bostaCash.toLocaleString()} EGP`} icon={<DollarSign size={14} />} color={CHART_COLORS.bosta} sub={`${bostaPickedUp.length} orders picked up`} />
-        <MetricCard title="Basata POS" value={`${basataVolume.toLocaleString()} EGP`} icon={<Zap size={14} />} color={CHART_COLORS.basata} sub={`${activeBasata.length} transactions`} />
-        <MetricCard title="Penalties Pool" value={`${activePenalties} EGP`} icon={<AlertOctagon size={14} />} color={CHART_COLORS.warning} sub={`${jumiaInventory.length} parked orders`} />
-        <MetricCard title="SLA Critical" value={jumiaSlaCritical} icon={<ShieldAlert size={14} />} color={CHART_COLORS.danger} sub="Jumia 4+ days overdue" />
-        <MetricCard title="Customers" value={customers.length} icon={<Users size={14} />} color="var(--color-primary)" sub="Registered at station" />
+        <MetricCard title={`${t('jumia')} ${t('cash')}`} value={`${jumiaCash.toLocaleString()} EGP`} icon={<DollarSign size={14} />} color={CHART_COLORS.jumia} sub={language === 'ar' ? `${jumiaPickedUp.length} طلب مستلم` : `${jumiaPickedUp.length} orders picked up`} />
+        <MetricCard title={`${t('bosta')} ${t('cash')}`} value={`${bostaCash.toLocaleString()} EGP`} icon={<DollarSign size={14} />} color={CHART_COLORS.bosta} sub={language === 'ar' ? `${bostaPickedUp.length} طلب مستلم` : `${bostaPickedUp.length} orders picked up`} />
+        <MetricCard title={`${t('basata')} POS`} value={`${basataVolume.toLocaleString()} EGP`} icon={<Zap size={14} />} color={CHART_COLORS.basata} sub={language === 'ar' ? `${activeBasata.length} عملية` : `${activeBasata.length} transactions`} />
+        <MetricCard title={t('parkedPenalties')} value={`${activePenalties} EGP`} icon={<AlertOctagon size={14} />} color={CHART_COLORS.warning} sub={language === 'ar' ? `${jumiaInventory.length} طلب مخزن` : `${jumiaInventory.length} parked orders`} />
+        <MetricCard title={language === 'ar' ? 'حالة SLA حرجة' : 'SLA Critical'} value={jumiaSlaCritical} icon={<ShieldAlert size={14} />} color={CHART_COLORS.danger} sub={language === 'ar' ? 'جميا 4+ أيام تأخير' : 'Jumia 4+ days overdue'} />
+        <MetricCard title={t('customers')} value={customers.length} icon={<Users size={14} />} color="var(--color-primary)" sub={language === 'ar' ? 'مسجلين في المحطة' : 'Registered at station'} />
       </div>
 
       {/* Row 2: Revenue Streams Pie + Orders Comparison Bar */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 350px), 1fr))', gap: '1rem' }}>
-        <ChartCard title="Revenue Streams Breakdown" icon={<Activity size={16} color="var(--color-primary)" />}>
+        <ChartCard title={language === 'ar' ? 'تحليل مصادر الإيرادات' : 'Revenue Streams Breakdown'} icon={<Activity size={16} color="var(--color-primary)" />}>
           <ResponsiveContainer width="100%" height={260}>
             <PieChart>
               <Pie
@@ -252,7 +252,7 @@ export default function AnalyticsTab() {
                   <Cell key={i} fill={entry.color} stroke="transparent" />
                 ))}
               </Pie>
-              <Tooltip content={<CustomTooltip />} formatter={(v) => `${v.toLocaleString()} EGP`} />
+              <Tooltip content={<CustomTooltip language={language} />} formatter={(v) => `${v.toLocaleString()} EGP`} />
               <Legend
                 formatter={(val, entry) => <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem' }}>{val}</span>}
               />
@@ -260,15 +260,15 @@ export default function AnalyticsTab() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Jumia vs Bosta Orders Comparison" icon={<BarChart2 size={16} color={CHART_COLORS.bosta} />}>
+        <ChartCard title={language === 'ar' ? 'مقارنة طلبات جميا وبوسطة' : 'Jumia vs Bosta Orders Comparison'} icon={<BarChart2 size={16} color={CHART_COLORS.bosta} />}>
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={comparisonData} barGap={4}>
               <XAxis dataKey="name" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} axisLine={false} tickLine={false} />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+              <YAxis orientation={language === 'ar' ? 'right' : 'left'} tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} axisLine={false} tickLine={false} />
+              <Tooltip content={<CustomTooltip language={language} />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
               <Legend formatter={(val) => <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem', textTransform: 'capitalize' }}>{val}</span>} />
-              <Bar dataKey="jumia" name="Jumia" fill={CHART_COLORS.jumia} radius={[6, 6, 0, 0]} />
-              <Bar dataKey="bosta" name="Bosta" fill={CHART_COLORS.bosta} radius={[6, 6, 0, 0]} />
+              <Bar dataKey="jumia" name={t('jumia')} fill={CHART_COLORS.jumia} radius={[6, 6, 0, 0]} />
+              <Bar dataKey="bosta" name={t('bosta')} fill={CHART_COLORS.bosta} radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -276,13 +276,13 @@ export default function AnalyticsTab() {
 
       {/* Row 3: Orders Status Pie + SLA Health */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 350px), 1fr))', gap: '1rem' }}>
-        <ChartCard title="Full Orders Status Distribution" icon={<PackageCheck size={16} color={CHART_COLORS.success} />}>
+        <ChartCard title={language === 'ar' ? 'توزيع حالة الطلبات الكاملة' : 'Full Orders Status Distribution'} icon={<PackageCheck size={16} color={CHART_COLORS.success} />}>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={ordersStatusData} layout="vertical">
               <XAxis type="number" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis type="category" dataKey="name" tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 11 }} axisLine={false} tickLine={false} width={140} />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
-              <Bar dataKey="value" radius={[0, 6, 6, 0]}>
+              <YAxis type="category" dataKey="name" orientation={language === 'ar' ? 'right' : 'left'} tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 11 }} axisLine={false} tickLine={false} width={140} />
+              <Tooltip content={<CustomTooltip language={language} />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+              <Bar dataKey="value" radius={language === 'ar' ? [6, 0, 0, 6] : [0, 6, 6, 0]}>
                 {ordersStatusData.map((entry, i) => (
                   <Cell key={i} fill={entry.color} />
                 ))}
@@ -291,12 +291,12 @@ export default function AnalyticsTab() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Jumia SLA Health" icon={<Clock size={16} color={CHART_COLORS.warning} />}>
+        <ChartCard title={language === 'ar' ? 'صحة Jumia SLA' : 'Jumia SLA Health'} icon={<Clock size={16} color={CHART_COLORS.warning} />}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', justifyContent: 'center', height: '100%' }}>
             {[
-              { label: 'On Track (0-1 days)', value: Math.max(0, jumiaInventory.length - jumiaSlaCritical - jumiaSlaNear), color: CHART_COLORS.success },
-              { label: 'Warning (2-3 days)', value: jumiaSlaNear, color: CHART_COLORS.warning },
-              { label: 'Critical (4+ days)', value: jumiaSlaCritical, color: CHART_COLORS.danger },
+              { label: `${t('onTrack')} (0-1 ${language === 'ar' ? 'أيام' : 'days'})`, value: Math.max(0, jumiaInventory.length - jumiaSlaCritical - jumiaSlaNear), color: CHART_COLORS.success },
+              { label: `${language === 'ar' ? 'تنبيه' : 'Warning'} (2-3 ${language === 'ar' ? 'أيام' : 'days'})`, value: jumiaSlaNear, color: CHART_COLORS.warning },
+              { label: `${t('critical4Days')} (4+ ${language === 'ar' ? 'أيام' : 'days'})`, value: jumiaSlaCritical, color: CHART_COLORS.danger },
             ].map(s => (
               <div key={s.label}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem' }}>
@@ -316,7 +316,7 @@ export default function AnalyticsTab() {
               </div>
             ))}
             <div style={{ marginTop: '0.5rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-              {jumiaInventory.length} total in Jumia inventory
+              {language === 'ar' ? `إجمالي ${jumiaInventory.length} في مخزون جميا` : `${jumiaInventory.length} total in Jumia inventory`}
             </div>
           </div>
         </ChartCard>
@@ -324,22 +324,22 @@ export default function AnalyticsTab() {
 
       {/* Row 4: Basata Category Bar + Top Providers */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 350px), 1fr))', gap: '1rem' }}>
-        <ChartCard title="Basata Revenue by Category" icon={<Zap size={16} color={CHART_COLORS.basata} />}>
+        <ChartCard title={language === 'ar' ? 'إيرادات بساطة حسب الفئة' : 'Basata Revenue by Category'} icon={<Zap size={16} color={CHART_COLORS.basata} />}>
           {basataCatData.length > 0 ? (
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={basataCatData}>
                 <XAxis dataKey="name" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }} axisLine={false} tickLine={false} />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
-                <Bar dataKey="amount" name="Revenue (EGP)" fill={CHART_COLORS.basata} radius={[6, 6, 0, 0]} />
+                <YAxis orientation={language === 'ar' ? 'right' : 'left'} tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <Tooltip content={<CustomTooltip language={language} />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+                <Bar dataKey="amount" name={t('amount')} fill={CHART_COLORS.basata} radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '180px', color: 'var(--text-muted)' }}>No Basata data for this period.</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '180px', color: 'var(--text-muted)' }}>{t('noData')}</div>
           )}
         </ChartCard>
 
-        <ChartCard title="Top Basata Services by Volume" icon={<BarChart2 size={16} color={CHART_COLORS.basata} />}>
+        <ChartCard title={language === 'ar' ? 'أفضل خدمات بساطة حسب الحجم' : 'Top Basata Services by Volume'} icon={<BarChart2 size={16} color={CHART_COLORS.basata} />}>
           {basataProviderData.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1, justifyContent: 'center' }}>
               {basataProviderData.map((p, i) => {
@@ -364,28 +364,28 @@ export default function AnalyticsTab() {
               })}
             </div>
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '180px', color: 'var(--text-muted)' }}>No Basata transactions yet.</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '180px', color: 'var(--text-muted)' }}>{t('noData')}</div>
           )}
         </ChartCard>
       </div>
 
       {/* Row 5: Financial Summary Table */}
-      <ChartCard title="Full Financial Summary" icon={<DollarSign size={16} color="var(--color-success)" />}>
+      <ChartCard title={language === 'ar' ? 'الملخص المالي الكامل' : 'Full Financial Summary'} icon={<DollarSign size={16} color="var(--color-success)" />}>
         <div className="table-container">
           <table className="data-table">
             <thead>
               <tr>
-                <th>Stream</th>
-                <th>Revenue</th>
-                <th>Orders Handled</th>
-                <th>Returns</th>
-                <th>Return Amount</th>
-                <th>Net Position</th>
+                <th>{t('stream')}</th>
+                <th>{language === 'ar' ? 'الإيرادات' : 'Revenue'}</th>
+                <th>{language === 'ar' ? 'الطلبات المعالجة' : 'Orders Handled'}</th>
+                <th>{t('returnedStatus')}</th>
+                <th>{language === 'ar' ? 'مبلغ المرتجع' : 'Return Amount'}</th>
+                <th>{language === 'ar' ? 'صافي المركز' : 'Net Position'}</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td><span style={{ color: CHART_COLORS.jumia, fontWeight: 700 }}>Jumia</span></td>
+                <td><span style={{ color: CHART_COLORS.jumia, fontWeight: 700 }}>{t('jumia')}</span></td>
                 <td style={{ color: CHART_COLORS.success, fontWeight: 600 }}>{jumiaCash.toLocaleString()} EGP</td>
                 <td>{jumiaPickedUp.length}</td>
                 <td><span style={{ color: CHART_COLORS.danger }}>{jumiaReturned.length}</span></td>
@@ -395,7 +395,7 @@ export default function AnalyticsTab() {
                 </td>
               </tr>
               <tr>
-                <td><span style={{ color: CHART_COLORS.bosta, fontWeight: 700 }}>Bosta</span></td>
+                <td><span style={{ color: CHART_COLORS.bosta, fontWeight: 700 }}>{t('bosta')}</span></td>
                 <td style={{ color: CHART_COLORS.success, fontWeight: 600 }}>{bostaCash.toLocaleString()} EGP</td>
                 <td>{bostaPickedUp.length}</td>
                 <td><span style={{ color: CHART_COLORS.danger }}>{bostaReturned.length}</span></td>
@@ -405,15 +405,15 @@ export default function AnalyticsTab() {
                 </td>
               </tr>
               <tr>
-                <td><span style={{ color: CHART_COLORS.basata, fontWeight: 700 }}>Basata POS</span></td>
+                <td><span style={{ color: CHART_COLORS.basata, fontWeight: 700 }}>{t('basata')} POS</span></td>
                 <td style={{ color: CHART_COLORS.success, fontWeight: 600 }}>{basataVolume.toLocaleString()} EGP</td>
-                <td>{activeBasata.length} trx</td>
+                <td>{activeBasata.length} {language === 'ar' ? 'عملية' : 'trx'}</td>
                 <td>—</td>
                 <td>—</td>
                 <td style={{ color: CHART_COLORS.success, fontWeight: 700 }}>{basataVolume.toLocaleString()} EGP</td>
               </tr>
               <tr style={{ borderTop: '2px solid var(--border-color)' }}>
-                <td style={{ color: 'white', fontWeight: 800 }}>TOTAL</td>
+                <td style={{ color: 'white', fontWeight: 800 }}>{language === 'ar' ? 'الإجمالي' : 'TOTAL'}</td>
                 <td style={{ color: 'white', fontWeight: 800 }}>{grandTotal.toLocaleString()} EGP</td>
                 <td style={{ fontWeight: 700 }}>{jumiaPickedUp.length + bostaPickedUp.length + activeBasata.length}</td>
                 <td style={{ color: CHART_COLORS.danger, fontWeight: 700 }}>{jumiaReturned.length + bostaReturned.length}</td>

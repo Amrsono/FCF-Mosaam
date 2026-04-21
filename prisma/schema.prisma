@@ -40,7 +40,10 @@ model BasataTransaction {
   category        String   // "Mobile", "Internet", "Utilities", "Government", "Other"
   serviceProvider String   // e.g. "Vodafone Top-up", "WE ADSL", "Electricity NFC"
   amount          Float
-  referenceNumber String?  // Optional Reference / Receipt Number
+  transactionId   String?  // The POS Transaction ID
+  paymentMethod   String   @default("Cash") // Cash, Card, etc.
+  percentage      Float    @default(0) // Commission or Fee percentage
+  referenceNumber String?  // Keep for backward compatibility or legacy
   performedAt     DateTime @default(now())
 }
 

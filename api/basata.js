@@ -12,7 +12,7 @@ export default async function handler(req, res) {
 
     // POST: Log a new Basata Transaction
     if (req.method === 'POST') {
-      const { category, serviceProvider, amount, referenceNumber } = req.body;
+      const { category, serviceProvider, amount, transactionId, paymentMethod, percentage, performedAt } = req.body;
 
       if (!category || !serviceProvider || amount === undefined) {
         return res.status(400).json({ error: 'Missing required transaction fields.' });
@@ -23,7 +23,10 @@ export default async function handler(req, res) {
           category,
           serviceProvider,
           amount: parseFloat(amount),
-          referenceNumber: referenceNumber || null
+          transactionId: transactionId || null,
+          paymentMethod: paymentMethod || "Cash",
+          percentage: parseFloat(percentage || 0),
+          performedAt: performedAt ? new Date(performedAt) : new Date()
         }
       });
 

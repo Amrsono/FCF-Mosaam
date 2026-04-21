@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Lock, User, Eye, EyeOff, AlertCircle, Shield } from 'lucide-react';
+import { Lock, User, Eye, EyeOff, AlertCircle, Shield, Languages } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function LoginPage() {
   const { login } = useAuth();
+  const { t, language, toggleLanguage } = useLanguage();
   const [form, setForm] = useState({ username: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -30,8 +32,21 @@ export default function LoginPage() {
       alignItems: 'center',
       justifyContent: 'center',
       position: 'relative',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      direction: language === 'ar' ? 'rtl' : 'ltr'
     }}>
+
+      {/* Language Toggle in Corner */}
+      <div style={{ position: 'absolute', top: '2rem', [language === 'ar' ? 'left' : 'right']: '2rem', zIndex: 10 }}>
+        <button 
+          className="btn btn-outline" 
+          onClick={toggleLanguage}
+          style={{ gap: '0.5rem', background: 'rgba(255,255,255,0.05)' }}
+        >
+          <Languages size={18} />
+          {language === 'en' ? 'العربية' : 'English'}
+        </button>
+      </div>
 
       {/* Background Glow Effects */}
       <div style={{ position: 'absolute', top: '-20%', left: '-10%', width: '600px', height: '600px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(249,115,22,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
@@ -55,10 +70,10 @@ export default function LoginPage() {
           </div>
 
           <div style={{ fontSize: '1.6rem', fontWeight: 800, color: 'white', letterSpacing: '0.5px' }}>
-            FCF <span style={{ color: 'var(--color-accent)' }}>Mosaam</span>
+            {t('fcf')} <span style={{ color: 'var(--color-accent)' }}>{t('mosaam')}</span>
           </div>
           <div style={{ color: 'var(--text-secondary)', marginTop: '0.25rem', fontSize: '0.9rem' }}>
-            Station Management Dashboard
+            {language === 'ar' ? 'لوحة إدارة المحطة' : 'Station Management Dashboard'}
           </div>
 
           <div style={{
@@ -70,9 +85,9 @@ export default function LoginPage() {
         </div>
 
         {/* Sign In Label */}
-        <div style={{ marginBottom: '1.5rem' }}>
-          <h2 style={{ color: 'white', margin: 0, fontSize: '1.1rem', fontWeight: 600 }}>Sign in to your account</h2>
-          <p style={{ color: 'var(--text-muted)', margin: '0.25rem 0 0', fontSize: '0.85rem' }}>Enter your credentials to access the dashboard</p>
+        <div style={{ marginBottom: '1.5rem', textAlign: language === 'ar' ? 'right' : 'left' }}>
+          <h2 style={{ color: 'white', margin: 0, fontSize: '1.1rem', fontWeight: 600 }}>{language === 'ar' ? 'تسجيل الدخول إلى حسابك' : 'Sign in to your account'}</h2>
+          <p style={{ color: 'var(--text-muted)', margin: '0.25rem 0 0', fontSize: '0.85rem' }}>{language === 'ar' ? 'أدخل بياناتك للوصول إلى لوحة التحكم' : 'Enter your credentials to access the dashboard'}</p>
         </div>
 
         {/* Error Banner */}
@@ -99,16 +114,16 @@ export default function LoginPage() {
 
           {/* Username */}
           <div className="input-group">
-            <label className="input-label">Username</label>
+            <label className="input-label" style={{ textAlign: language === 'ar' ? 'right' : 'left' }}>{language === 'ar' ? 'اسم المستخدم' : 'Username'}</label>
             <div style={{ position: 'relative' }}>
-              <User size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <User size={16} style={{ position: 'absolute', [language === 'ar' ? 'right' : 'left']: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
               <input
                 required
                 autoFocus
                 type="text"
                 className="input-field"
-                style={{ paddingLeft: '2.5rem' }}
-                placeholder="Enter username"
+                style={{ [language === 'ar' ? 'paddingRight' : 'paddingLeft']: '2.5rem' }}
+                placeholder={language === 'ar' ? 'أدخل اسم المستخدم' : 'Enter username'}
                 value={form.username}
                 onChange={e => setForm({ ...form, username: e.target.value })}
               />
@@ -117,22 +132,22 @@ export default function LoginPage() {
 
           {/* Password */}
           <div className="input-group">
-            <label className="input-label">Password</label>
+            <label className="input-label" style={{ textAlign: language === 'ar' ? 'right' : 'left' }}>{language === 'ar' ? 'كلمة المرور' : 'Password'}</label>
             <div style={{ position: 'relative' }}>
-              <Lock size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <Lock size={16} style={{ position: 'absolute', [language === 'ar' ? 'right' : 'left']: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
               <input
                 required
                 type={showPassword ? 'text' : 'password'}
                 className="input-field"
-                style={{ paddingLeft: '2.5rem', paddingRight: '3rem' }}
-                placeholder="Enter password"
+                style={{ [language === 'ar' ? 'paddingRight' : 'paddingLeft']: '2.5rem', [language === 'ar' ? 'paddingLeft' : 'paddingRight']: '3rem' }}
+                placeholder={language === 'ar' ? 'أدخل كلمة المرور' : 'Enter password'}
                 value={form.password}
                 onChange={e => setForm({ ...form, password: e.target.value })}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 0, display: 'flex' }}
+                style={{ position: 'absolute', [language === 'ar' ? 'left' : 'right']: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 0, display: 'flex' }}
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -163,16 +178,16 @@ export default function LoginPage() {
                   borderTop: '2px solid white', borderRadius: '50%',
                   animation: 'spin 0.8s linear infinite', display: 'inline-block'
                 }} />
-                Signing In...
+                {t('loading')}...
               </span>
-            ) : 'Sign In'}
+            ) : (language === 'ar' ? 'تسجيل الدخول' : 'Sign In')}
           </button>
         </form>
 
         {/* Footer Note */}
         <div style={{ marginTop: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.78rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.25rem' }}>
-          <Lock size={12} style={{ marginRight: '0.3rem', verticalAlign: 'middle' }} />
-          Secured by JWT Authentication — FCF Mosaam © 2024
+          <Lock size={12} style={{ [language === 'ar' ? 'marginLeft' : 'marginRight']: '0.3rem', verticalAlign: 'middle' }} />
+          {language === 'ar' ? 'مؤمن بواسطة JWT Authentication — FCF Mosaam © 2024' : 'Secured by JWT Authentication — FCF Mosaam © 2024'}
         </div>
       </div>
 

@@ -194,23 +194,33 @@ export const DashboardProvider = ({ children }) => {
     }
   };
 
-  const logBasataService = async (category, serviceProvider, amount, referenceNumber) => {
+  const logBasataService = async (category, serviceProvider, amount, extras = {}) => {
     try {
+      const { transactionId, paymentMethod, percentage, performedAt } = extras;
       const res = await fetch('/api/basata', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ category, serviceProvider, amount, referenceNumber })
+        body: JSON.stringify({ 
+          category, 
+          serviceProvider, 
+          amount,
+          transactionId,
+          paymentMethod,
+          percentage,
+          performedAt
+        })
       });
       if (res.ok) {
         await fetchData(); // Resync Basata
-        alert("Successfully logged to Database!");
+        return { success: true };
       } else {
         const errData = await res.text();
-        alert("Database Logging Error: " + errData + "\nMake sure you are running 'vercel dev' and have connected the Postgres DB.");
+        console.error("Database Logging Error:", errData);
+        return { success: false, error: errData };
       }
     } catch (err) {
       console.error(err);
-      alert("Network Error: /api/basata not reachable.");
+      return { success: false, error: "Network Error" };
     }
   };
 

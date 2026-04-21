@@ -2,21 +2,11 @@ import React, { useState, useMemo } from 'react';
 import { useDashboard, getDaysDifference } from '../context/DashboardContext';
 import { Search, Plus, UserCheck, RefreshCw, Package } from 'lucide-react';
 import ExportActions from '../components/ExportActions';
-
-const exportHeaders = [
-  { label: 'Order ID', accessor: 'id' },
-  { label: 'Customer Name', accessor: 'customerName' },
-  { label: 'Phone', accessor: 'customerPhone' },
-  { label: 'Description', accessor: 'description' },
-  { label: 'Category', accessor: 'category' },
-  { label: 'Value (EGP)', accessor: 'totalValue' },
-  { label: 'Status', accessor: 'status' },
-  { label: 'Days Parked', accessor: 'daysParked' },
-  { label: 'SLA Status', accessor: o => o.daysParked >= 4 ? 'EXPIRED' : o.daysParked >= 2 ? 'WARNING' : 'ON TRACK' }
-];
+import { useLanguage } from '../context/LanguageContext';
 
 export default function BostaTab() {
   const { bostaOrders, customers, receiveBostaOrder, markBostaOrderPickedUp, returnBostaOrder } = useDashboard();
+  const { t, language } = useLanguage();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('Inventory');
@@ -27,14 +17,26 @@ export default function BostaTab() {
     id: '', customerPhone: '', customerName: '', description: '', totalValue: '', category: 'Electronics'
   });
 
+  const exportHeaders = [
+    { label: t('orderId'), accessor: 'id' },
+    { label: t('customer'), accessor: 'customerName' },
+    { label: t('phone'), accessor: 'customerPhone' },
+    { label: t('description'), accessor: 'description' },
+    { label: t('category'), accessor: 'category' },
+    { label: t('value'), accessor: 'totalValue' },
+    { label: t('status'), accessor: 'status' },
+    { label: t('daysInInv'), accessor: 'daysParked' },
+    { label: 'SLA Status', accessor: o => o.daysParked >= 4 ? t('critical4Days') : o.daysParked >= 2 ? t('warning2Days') : t('onTrack') }
+  ];
+
   const orderList = useMemo(() => {
     return bostaOrders.map(order => {
       const cust = customers.find(c => c.phone === order.customerPhone);
       const daysParked = order.status === 'Inventory' ? getDaysDifference(order.receivedAt) : 0;
       return {
         ...order,
-        customerName: cust?.name || 'Unknown',
-        tier: cust?.tier || 'New',
+        customerName: cust?.name || (language === 'ar' ? 'غير معروف' : 'Unknown'),
+        tier: cust?.tier || (language === 'ar' ? 'جديد' : 'New'),
         daysParked
       };
     }).filter(o => {
@@ -44,7 +46,7 @@ export default function BostaTab() {
       const matchesCategory = filterCategory === 'All' || o.category === filterCategory;
       return matchesSearch && matchesStatus && matchesCategory;
     }).sort((a, b) => new Date(b.receivedAt) - new Date(a.receivedAt));
-  }, [bostaOrders, customers, searchTerm, filterStatus, filterCategory]);
+  }, [bostaOrders, customers, searchTerm, filterStatus, filterCategory, language]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -68,9 +70,18 @@ export default function BostaTab() {
   };
 
   const getSlaLabel = (days) => {
-    if (days >= 4) return 'EXPIRED';
-    if (days >= 2) return 'WARNING';
-    return 'ON TRACK';
+    if (days >= 4) return t('critical4Days');
+    if (days >= 2) return t('warning2Days');
+    return t('onTrack');
+  };
+
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case 'Inventory': return t('inventoryStatus');
+      case 'Picked Up': return t('pickedUpStatus');
+      case 'Returned': return t('returnedStatus');
+      default: return status;
+    }
   };
 
   const inventoryCount = bostaOrders.filter(o => o.status === 'Inventory').length;
@@ -82,16 +93,16 @@ export default function BostaTab() {
 
       {/* Header Summary Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
-        <div className="glass-panel" style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.15), transparent)', borderLeft: '3px solid #6366f1', padding: '1rem' }}>
-          <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>In Inventory</div>
+        <div className="glass-panel" style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.15), transparent)', [language === 'ar' ? 'borderRight' : 'borderLeft']: '3px solid #6366f1', padding: '1rem' }}>
+          <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{t('inventoryStatus')}</div>
           <div style={{ fontSize: '2rem', fontWeight: 700, color: 'white' }}>{inventoryCount}</div>
         </div>
-        <div className="glass-panel" style={{ background: 'linear-gradient(135deg, rgba(34,197,94,0.15), transparent)', borderLeft: '3px solid var(--color-success)', padding: '1rem' }}>
-          <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Picked Up</div>
+        <div className="glass-panel" style={{ background: 'linear-gradient(135deg, rgba(34,197,94,0.15), transparent)', [language === 'ar' ? 'borderRight' : 'borderLeft']: '3px solid var(--color-success)', padding: '1rem' }}>
+          <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{t('pickedUpStatus')}</div>
           <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--color-success)' }}>{pickedUpCount}</div>
         </div>
-        <div className="glass-panel" style={{ background: 'linear-gradient(135deg, rgba(239,68,68,0.15), transparent)', borderLeft: '3px solid var(--color-danger)', padding: '1rem' }}>
-          <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Returned to Bosta</div>
+        <div className="glass-panel" style={{ background: 'linear-gradient(135deg, rgba(239,68,68,0.15), transparent)', [language === 'ar' ? 'borderRight' : 'borderLeft']: '3px solid var(--color-danger)', padding: '1rem' }}>
+          <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{language === 'ar' ? 'المرتجع لبوسطة' : 'Returned to Bosta'}</div>
           <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--color-danger)' }}>{returnedCount}</div>
         </div>
       </div>
@@ -100,39 +111,39 @@ export default function BostaTab() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', flex: '1 1 300px' }}>
           <div style={{ position: 'relative', width: '100%', maxWidth: '250px', flex: '1 1 200px' }}>
-            <Search size={18} style={{ position: 'absolute', left: '10px', top: '10px', color: 'var(--text-muted)' }} />
+            <Search size={18} style={{ position: 'absolute', [language === 'ar' ? 'right' : 'left']: '10px', top: '10px', color: 'var(--text-muted)' }} />
             <input
               type="text"
               className="input-field"
-              placeholder="Search Order ID or Phone..."
-              style={{ paddingLeft: '2.5rem', width: '100%' }}
+              placeholder={t('search')}
+              style={{ [language === 'ar' ? 'paddingRight' : 'paddingLeft']: '2.5rem', width: '100%' }}
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
             />
           </div>
           <select className="input-field" style={{ flex: '1 1 140px' }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
-            <option value="All">All Statuses</option>
-            <option value="Inventory">In Inventory</option>
-            <option value="Picked Up">Picked Up</option>
-            <option value="Returned">Returned</option>
+            <option value="All">{language === 'ar' ? 'جميع الحالات' : 'All Statuses'}</option>
+            <option value="Inventory">{t('inventoryStatus')}</option>
+            <option value="Picked Up">{t('pickedUpStatus')}</option>
+            <option value="Returned">{t('returnedStatus')}</option>
           </select>
           <select className="input-field" style={{ flex: '1 1 120px' }} value={filterCategory} onChange={e => setFilterCategory(e.target.value)}>
-            <option value="All">All Categories</option>
-            <option value="Electronics">Electronics</option>
-            <option value="Apparel">Apparel</option>
-            <option value="Home">Home</option>
-            <option value="Groceries">Groceries</option>
+             <option value="All">{language === 'ar' ? 'جميع الفئات' : 'All Categories'}</option>
+             <option value="Electronics">{language === 'ar' ? 'إلكترونيات' : 'Electronics'}</option>
+             <option value="Apparel">{language === 'ar' ? 'ملابس' : 'Apparel'}</option>
+             <option value="Home">{language === 'ar' ? 'منزل' : 'Home'}</option>
+             <option value="Groceries">{language === 'ar' ? 'بقاليات' : 'Groceries'}</option>
           </select>
         </div>
         <button className="btn btn-primary" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', flex: '1 1 auto' }} onClick={() => setShowModal(true)}>
-          <Plus size={18} /> Receive Bosta Package
+          <Plus size={18} /> {t('receiveBostaOrder')}
         </button>
       </div>
 
       {/* Export bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-        <div className="badge badge-neutral">Showing: {orderList.length} Bosta Orders</div>
-        <ExportActions data={orderList} headers={exportHeaders} filename="Bosta_Orders_Export" title="Bosta Orders Dashboard" />
+        <div className="badge badge-neutral">{language === 'ar' ? `عرض: ${orderList.length} طلب بوسطة` : `Showing: ${orderList.length} Bosta Orders`}</div>
+        <ExportActions data={orderList} headers={exportHeaders} filename="Bosta_Orders_Export" title={t('bosta')} />
       </div>
 
       {/* Table */}
@@ -140,12 +151,12 @@ export default function BostaTab() {
         <table className="data-table">
           <thead>
             <tr>
-              <th>Bosta Order ID</th>
-              <th>Customer</th>
-              <th>Details</th>
-              <th>Status</th>
-              <th>SLA / Days Parked</th>
-              <th>Actions</th>
+              <th>{language === 'ar' ? 'رقم طلب بوسطة' : 'Bosta Order ID'}</th>
+              <th>{t('customer')}</th>
+              <th>{t('description')}</th>
+              <th>{t('status')}</th>
+              <th>{language === 'ar' ? 'معلومات SLA' : 'SLA / Days Parked'}</th>
+              <th>{t('actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -161,7 +172,7 @@ export default function BostaTab() {
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
                     <span>{order.customerName}</span>
                     <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{order.customerPhone}</span>
-                    <span className="badge badge-neutral" style={{ marginTop: '0.3rem', alignSelf: 'flex-start', fontSize: '0.65rem' }}>Tier: {order.tier}</span>
+                    <span className="badge badge-neutral" style={{ marginTop: '0.3rem', alignSelf: 'flex-start', fontSize: '0.65rem' }}>{t('tier')}: {order.tier}</span>
                   </div>
                 </td>
                 <td>
@@ -173,13 +184,13 @@ export default function BostaTab() {
                 </td>
                 <td>
                   <span className={`badge ${order.status === 'Inventory' ? 'badge-warning' : order.status === 'Picked Up' ? 'badge-success' : 'badge-danger'}`}>
-                    {order.status}
+                    {getStatusLabel(order.status)}
                   </span>
                 </td>
                 <td>
                   {order.status === 'Inventory' ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                      <span style={{ color: getSlaColor(order.daysParked), fontWeight: 600 }}>{order.daysParked} Days Parked</span>
+                      <span style={{ color: getSlaColor(order.daysParked), fontWeight: 600 }}>{order.daysParked} {language === 'ar' ? 'أيام في المخزن' : 'Days Parked'}</span>
                       <span style={{
                         fontSize: '0.75rem',
                         fontWeight: 600,
@@ -192,7 +203,7 @@ export default function BostaTab() {
                         {getSlaLabel(order.daysParked)}
                       </span>
                       {order.daysParked >= 4 && (
-                        <span style={{ color: 'var(--color-danger)', fontSize: '0.75rem' }}>⚠ Return to Bosta recommended</span>
+                        <span style={{ color: 'var(--color-danger)', fontSize: '0.75rem' }}>{language === 'ar' ? '⚠ ينصح بالإرجاع لبوسطة' : '⚠ Return to Bosta recommended'}</span>
                       )}
                     </div>
                   ) : <span style={{ color: 'var(--text-muted)' }}>-</span>}
@@ -203,7 +214,7 @@ export default function BostaTab() {
                       <button
                         className="btn btn-outline"
                         style={{ padding: '0.4rem', color: 'var(--color-success)' }}
-                        title="Mark Picked Up"
+                        title={t('markPickedUp')}
                         onClick={() => markBostaOrderPickedUp(order.id)}
                       >
                         <UserCheck size={16} />
@@ -211,7 +222,7 @@ export default function BostaTab() {
                       <button
                         className="btn btn-outline"
                         style={{ padding: '0.4rem', color: 'var(--color-danger)' }}
-                        title="Return to Bosta"
+                        title={language === 'ar' ? 'إرجاع لبوسطة' : 'Return to Bosta'}
                         onClick={() => returnBostaOrder(order.id)}
                       >
                         <RefreshCw size={16} />
@@ -223,7 +234,7 @@ export default function BostaTab() {
             )) : (
               <tr>
                 <td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                  No Bosta orders found. Receive a package to get started.
+                  {language === 'ar' ? 'لم يتم العثور على طلبات بوسطة. استلم طرداً للبدء.' : 'No Bosta orders found. Receive a package to get started.'}
                 </td>
               </tr>
             )}
@@ -236,44 +247,44 @@ export default function BostaTab() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '1rem' }}>
           <div className="glass-panel" style={{ width: '100%', maxWidth: '440px', background: 'var(--bg-main)', borderTop: '3px solid #6366f1' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h3 style={{ color: 'white', margin: 0 }}>Receive Bosta Package</h3>
+              <h3 style={{ color: 'white', margin: 0 }}>{t('receiveBostaOrder')}</h3>
               <Package color="#6366f1" size={24} />
             </div>
             <form onSubmit={handleSubmit}>
               <div className="input-group">
-                <label className="input-label">Bosta Order ID</label>
+                <label className="input-label">{language === 'ar' ? 'رقم طلب بوسطة' : 'Bosta Order ID'}</label>
                 <input required className="input-field" value={newOrder.id} onChange={e => setNewOrder({ ...newOrder, id: e.target.value })} placeholder="e.g. BST-001" />
               </div>
               <div className="input-group">
-                <label className="input-label">Customer Phone</label>
+                <label className="input-label">{t('phone')}</label>
                 <input required className="input-field" value={newOrder.customerPhone} onChange={e => setNewOrder({ ...newOrder, customerPhone: e.target.value })} placeholder="01..." />
               </div>
               <div className="input-group">
-                <label className="input-label">Customer Name</label>
-                <input className="input-field" value={newOrder.customerName} onChange={e => setNewOrder({ ...newOrder, customerName: e.target.value })} placeholder="Name" />
+                <label className="input-label">{t('customer')}</label>
+                <input className="input-field" value={newOrder.customerName} onChange={e => setNewOrder({ ...newOrder, customerName: e.target.value })} placeholder={t('name')} />
               </div>
               <div className="input-group">
-                <label className="input-label">Description</label>
+                <label className="input-label">{t('description')}</label>
                 <input required className="input-field" value={newOrder.description} onChange={e => setNewOrder({ ...newOrder, description: e.target.value })} placeholder="Items..." />
               </div>
               <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                 <div className="input-group" style={{ flex: '1 1 150px' }}>
-                  <label className="input-label">Total Value (EGP)</label>
+                  <label className="input-label">{t('value')} (EGP)</label>
                   <input required type="number" className="input-field" value={newOrder.totalValue} onChange={e => setNewOrder({ ...newOrder, totalValue: e.target.value })} placeholder="0.00" />
                 </div>
                 <div className="input-group" style={{ flex: '1 1 150px' }}>
-                  <label className="input-label">Category</label>
+                  <label className="input-label">{t('category')}</label>
                   <select className="input-field" value={newOrder.category} onChange={e => setNewOrder({ ...newOrder, category: e.target.value })}>
-                    <option>Electronics</option>
-                    <option>Apparel</option>
-                    <option>Home</option>
-                    <option>Groceries</option>
+                     <option value="Electronics">{language === 'ar' ? 'إلكترونيات' : 'Electronics'}</option>
+                     <option value="Apparel">{language === 'ar' ? 'ملابس' : 'Apparel'}</option>
+                     <option value="Home">{language === 'ar' ? 'منزل' : 'Home'}</option>
+                     <option value="Groceries">{language === 'ar' ? 'بقاليات' : 'Groceries'}</option>
                   </select>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
-                <button type="submit" className="btn btn-primary" style={{ flex: 1, background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>Confirm Receipt</button>
-                <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary" style={{ flex: 1, background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>{t('confirm')}</button>
+                <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowModal(false)}>{t('cancel')}</button>
               </div>
             </form>
           </div>

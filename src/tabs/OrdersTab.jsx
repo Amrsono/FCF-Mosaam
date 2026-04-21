@@ -3,21 +3,11 @@ import { useDashboard, getDaysDifference } from '../context/DashboardContext';
 import { Search, Filter, Plus, UserCheck, RefreshCw, FileUp } from 'lucide-react';
 import ExportActions from '../components/ExportActions';
 import ImportWizard from '../components/ImportWizard';
-
-const exportHeaders = [
-  { label: 'Order ID', accessor: 'id' },
-  { label: 'Customer Name', accessor: 'customerName' },
-  { label: 'Phone', accessor: 'customerPhone' },
-  { label: 'Items', accessor: 'description' },
-  { label: 'Category', accessor: 'category' },
-  { label: 'Value (EGP)', accessor: 'totalValue' },
-  { label: 'Status', accessor: 'status' },
-  { label: 'Days Parked', accessor: 'daysParked' },
-  { label: 'Penalty (EGP)', accessor: 'penalty' },
-];
+import { useLanguage } from '../context/LanguageContext';
 
 export default function OrdersTab() {
   const { orders, customers, receiveOrder, bulkReceiveOrders, calculatePenalty, markOrderPickedUp, returnOrder } = useDashboard();
+  const { t, language } = useLanguage();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('All');
@@ -32,13 +22,25 @@ export default function OrdersTab() {
     id: '', customerPhone: '', description: '', totalValue: '', category: 'Electronics', customerName: ''
   });
 
+  const exportHeaders = [
+    { label: t('orderId'), accessor: 'id' },
+    { label: t('customer'), accessor: 'customerName' },
+    { label: t('phone'), accessor: 'customerPhone' },
+    { label: t('description'), accessor: 'description' },
+    { label: t('category'), accessor: 'category' },
+    { label: t('value'), accessor: 'totalValue' },
+    { label: t('status'), accessor: 'status' },
+    { label: t('daysInInv'), accessor: 'daysParked' },
+    { label: t('penalty'), accessor: 'penalty' },
+  ];
+
   const importTargetFields = [
-    { key: 'id', label: 'Order ID', required: true },
-    { key: 'customerPhone', label: 'Customer Phone', required: true },
-    { key: 'customerName', label: 'Customer Name', required: false },
-    { key: 'description', label: 'Description/Items', required: false },
-    { key: 'totalValue', label: 'Total Value (EGP)', required: true },
-    { key: 'category', label: 'Category', required: false }
+    { key: 'id', label: t('orderId'), required: true },
+    { key: 'customerPhone', label: t('phone'), required: true },
+    { key: 'customerName', label: t('customer'), required: false },
+    { key: 'description', label: t('description'), required: false },
+    { key: 'totalValue', label: t('value'), required: true },
+    { key: 'category', label: t('category'), required: false }
   ];
 
   // Derived Data
@@ -47,8 +49,8 @@ export default function OrdersTab() {
       const cust = customers.find(c => c.phone === order.customerPhone);
       return {
         ...order,
-        customerName: cust?.name || 'Unknown',
-        tier: cust?.tier || 'New',
+        customerName: cust?.name || (language === 'ar' ? 'غير معروف' : 'Unknown'),
+        tier: cust?.tier || (language === 'ar' ? 'جديد' : 'New'),
         penalty: calculatePenalty(order),
         daysParked: order.status === 'Inventory' ? getDaysDifference(order.receivedAt) : 0
       };
@@ -65,7 +67,7 @@ export default function OrdersTab() {
 
       return matchesSearch && matchesCategory && matchesTier && matchesStatus;
     }).sort((a, b) => new Date(b.receivedAt) - new Date(a.receivedAt));
-  }, [orders, customers, searchTerm, filterCategory, filterTier, filterStatus, calculatePenalty]);
+  }, [orders, customers, searchTerm, filterCategory, filterTier, filterStatus, calculatePenalty, language]);
 
   const handleSimulateReceive = (e) => {
     e.preventDefault();
@@ -83,6 +85,15 @@ export default function OrdersTab() {
     setNewOrder({ id: '', customerPhone: '', description: '', totalValue: '', category: 'Electronics', customerName: '' });
   };
 
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case 'Inventory': return t('inventoryStatus');
+      case 'Picked Up': return t('pickedUpStatus');
+      case 'Returned': return t('returnedStatus');
+      default: return status;
+    }
+  };
+
   return (
     <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: '100%' }}>
       
@@ -92,35 +103,35 @@ export default function OrdersTab() {
         {/* Search & Filters */}
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', flex: '1 1 300px' }}>
           <div style={{ position: 'relative', width: '100%', maxWidth: '250px', flex: '1 1 200px' }}>
-             <Search size={18} style={{ position: 'absolute', left: '10px', top: '10px', color: 'var(--text-muted)' }} />
+             <Search size={18} style={{ position: 'absolute', [language === 'ar' ? 'right' : 'left']: '10px', top: '10px', color: 'var(--text-muted)' }} />
              <input 
                type="text" 
                className="input-field" 
-               placeholder="Search..." 
-               style={{ paddingLeft: '2.5rem', width: '100%' }}
+               placeholder={t('search')} 
+               style={{ [language === 'ar' ? 'paddingRight' : 'paddingLeft']: '2.5rem', width: '100%' }}
                value={searchTerm}
                onChange={e => setSearchTerm(e.target.value)}
              />
           </div>
           
           <select className="input-field" style={{ flex: '1 1 140px' }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
-            <option value="All">All Statuses</option>
-            <option value="Inventory">In Inventory</option>
-            <option value="Picked Up">Picked Up</option>
-            <option value="Returned">Returned</option>
+            <option value="All">{language === 'ar' ? 'جميع الحالات' : 'All Statuses'}</option>
+            <option value="Inventory">{t('inventoryStatus')}</option>
+            <option value="Picked Up">{t('pickedUpStatus')}</option>
+            <option value="Returned">{t('returnedStatus')}</option>
           </select>
 
           <select className="input-field" style={{ flex: '1 1 120px' }} value={filterCategory} onChange={e => setFilterCategory(e.target.value)}>
-             <option value="All">All Categories</option>
-             <option value="Electronics">Electronics</option>
-             <option value="Apparel">Apparel</option>
-             <option value="Home">Home</option>
-             <option value="Groceries">Groceries</option>
+             <option value="All">{language === 'ar' ? 'جميع الفئات' : 'All Categories'}</option>
+             <option value="Electronics">{language === 'ar' ? 'إلكترونيات' : 'Electronics'}</option>
+             <option value="Apparel">{language === 'ar' ? 'ملابس' : 'Apparel'}</option>
+             <option value="Home">{language === 'ar' ? 'منزل' : 'Home'}</option>
+             <option value="Groceries">{language === 'ar' ? 'بقاليات' : 'Groceries'}</option>
           </select>
 
           <select className="input-field" style={{ flex: '1 1 100px' }} value={filterTier} onChange={e => setFilterTier(e.target.value)}>
-             <option value="All">All Tiers</option>
-             <option value="New">New</option>
+             <option value="All">{language === 'ar' ? 'جميع المستويات' : 'All Tiers'}</option>
+             <option value="New">{t('newCustomer')}</option>
              <option value="Bronze">Bronze</option>
              <option value="Silver">Silver</option>
              <option value="Gold">Gold</option>
@@ -129,10 +140,10 @@ export default function OrdersTab() {
 
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
           <button className="btn btn-outline" onClick={() => setShowImportWizard(true)} style={{ color: 'var(--color-primary)', borderColor: 'var(--color-primary)', flex: '1 1 auto' }}>
-            <FileUp size={18} /> Import Excel
+            <FileUp size={18} /> {t('importData')}
           </button>
           <button className="btn btn-primary" onClick={() => setShowSimulateModal(true)} style={{ flex: '1 1 auto' }}>
-            <Plus size={18} /> Add Order
+            <Plus size={18} /> {t('receiveNewOrder')}
           </button>
         </div>
       </div>
@@ -140,10 +151,10 @@ export default function OrdersTab() {
       {/* Summary Chips & Export */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-           <div className="badge badge-neutral">Showing: {orderList.length}</div>
-           <div className="badge badge-warning">Total Penalties: {orderList.reduce((acc, o) => acc + (o.penalty || 0), 0)} EGP</div>
+           <div className="badge badge-neutral">{language === 'ar' ? `عرض: ${orderList.length}` : `Showing: ${orderList.length}`}</div>
+           <div className="badge badge-warning">{t('totalPenalties')}: {orderList.reduce((acc, o) => acc + (o.penalty || 0), 0)} EGP</div>
          </div>
-         <ExportActions data={orderList} headers={exportHeaders} filename="Orders_Export" title="Orders Inventory Dashboard" />
+         <ExportActions data={orderList} headers={exportHeaders} filename="Orders_Export" title={t('inventory')} />
       </div>
 
       {/* Table */}
@@ -151,12 +162,12 @@ export default function OrdersTab() {
         <table className="data-table">
           <thead>
             <tr>
-              <th>Order ID</th>
-              <th>Customer</th>
-              <th>Details</th>
-              <th>Status</th>
-              <th>Parked Info</th>
-              <th>Actions</th>
+              <th>{t('orderId')}</th>
+              <th>{t('customer')}</th>
+              <th>{t('description')}</th>
+              <th>{t('status')}</th>
+              <th>{language === 'ar' ? 'معلومات التوقف' : 'Parked Info'}</th>
+              <th>{t('actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -167,7 +178,7 @@ export default function OrdersTab() {
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
                     <span>{order.customerName}</span>
                     <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{order.customerPhone}</span>
-                    <span className={`badge badge-neutral`} style={{ marginTop: '0.3rem', alignSelf: 'flex-start', fontSize: '0.65rem' }}>Tier: {order.tier}</span>
+                    <span className={`badge badge-neutral`} style={{ marginTop: '0.3rem', alignSelf: 'flex-start', fontSize: '0.65rem' }}>{t('tier')}: {order.tier}</span>
                   </div>
                 </td>
                 <td>
@@ -179,24 +190,24 @@ export default function OrdersTab() {
                 </td>
                 <td>
                   <span className={`badge ${order.status === 'Inventory' ? 'badge-warning' : order.status === 'Picked Up' ? 'badge-success' : 'badge-danger'}`}>
-                    {order.status}
+                    {getStatusLabel(order.status)}
                   </span>
                 </td>
                 <td>
                   {order.status === 'Inventory' ? (
                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                       <span style={{ color: order.daysParked >= 4 ? 'var(--color-danger)' : 'inherit' }}>{order.daysParked} Days Parked</span>
-                       <span style={{ fontWeight: 600, color: order.penalty > 0 ? 'var(--color-danger)' : 'var(--text-secondary)' }}>{order.penalty} EGP Penalty</span>
+                       <span style={{ color: order.daysParked >= 4 ? 'var(--color-danger)' : 'inherit' }}>{order.daysParked} {language === 'ar' ? 'أيام في المخزن' : 'Days Parked'}</span>
+                       <span style={{ fontWeight: 600, color: order.penalty > 0 ? 'var(--color-danger)' : 'var(--text-secondary)' }}>{order.penalty} EGP {t('penalty')}</span>
                      </div>
                   ) : <span style={{ color: 'var(--text-muted)' }}>-</span>}
                 </td>
                 <td>
                    {order.status === 'Inventory' && (
                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                       <button className="btn btn-outline" style={{ padding: '0.4rem', color: 'var(--color-success)' }} title="Mark Picked Up" onClick={() => markOrderPickedUp(order.id)}>
+                       <button className="btn btn-outline" style={{ padding: '0.4rem', color: 'var(--color-success)' }} title={t('markPickedUp')} onClick={() => markOrderPickedUp(order.id)}>
                          <UserCheck size={16} />
                        </button>
-                       <button className="btn btn-outline" style={{ padding: '0.4rem', color: 'var(--color-danger)' }} title="Return to Warehouse" onClick={() => returnOrder(order.id)}>
+                       <button className="btn btn-outline" style={{ padding: '0.4rem', color: 'var(--color-danger)' }} title={t('markReturned')} onClick={() => returnOrder(order.id)}>
                          <RefreshCw size={16} />
                        </button>
                      </div>
@@ -205,7 +216,7 @@ export default function OrdersTab() {
               </tr>
             )) : (
               <tr>
-                <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>No orders found matching the criteria.</td>
+                <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>{t('noData')}</td>
               </tr>
             )}
           </tbody>
@@ -216,42 +227,42 @@ export default function OrdersTab() {
       {showSimulateModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '1rem' }}>
           <div className="glass-panel" style={{ width: '100%', maxWidth: '400px', background: 'var(--bg-main)' }}>
-            <h3 style={{ marginBottom: '1.5rem', color: 'white' }}>Receive New Order</h3>
+            <h3 style={{ marginBottom: '1.5rem', color: 'white' }}>{t('receiveNewOrder')}</h3>
             <form onSubmit={handleSimulateReceive}>
               <div className="input-group">
-                <label className="input-label">Order ID</label>
+                <label className="input-label">{t('orderId')}</label>
                 <input required className="input-field" value={newOrder.id} onChange={e => setNewOrder({...newOrder, id: e.target.value})} placeholder="e.g. ORD-9999" />
               </div>
               <div className="input-group">
-                <label className="input-label">Customer Phone</label>
+                <label className="input-label">{t('phone')}</label>
                 <input required className="input-field" value={newOrder.customerPhone} onChange={e => setNewOrder({...newOrder, customerPhone: e.target.value})} placeholder="01..." />
               </div>
               <div className="input-group">
-                 <label className="input-label">Customer Name</label>
-                 <input className="input-field" value={newOrder.customerName} onChange={e => setNewOrder({...newOrder, customerName: e.target.value})} placeholder="Name" />
+                 <label className="input-label">{t('customer')}</label>
+                 <input className="input-field" value={newOrder.customerName} onChange={e => setNewOrder({...newOrder, customerName: e.target.value})} placeholder={t('name')} />
               </div>
               <div className="input-group">
-                <label className="input-label">Order Description</label>
+                <label className="input-label">{t('description')}</label>
                 <input required className="input-field" value={newOrder.description} onChange={e => setNewOrder({...newOrder, description: e.target.value})} placeholder="Items..." />
               </div>
               <div style={{ display: 'flex', gap: '1rem' }}>
                 <div className="input-group" style={{ flex: 1 }}>
-                  <label className="input-label">Total Value (EGP)</label>
+                  <label className="input-label">{t('value')} (EGP)</label>
                   <input required type="number" className="input-field" value={newOrder.totalValue} onChange={e => setNewOrder({...newOrder, totalValue: e.target.value})} placeholder="0.00" />
                 </div>
                 <div className="input-group" style={{ flex: 1 }}>
-                  <label className="input-label">Category</label>
+                  <label className="input-label">{t('category')}</label>
                   <select className="input-field" value={newOrder.category} onChange={e => setNewOrder({...newOrder, category: e.target.value})}>
-                     <option>Electronics</option>
-                     <option>Apparel</option>
-                     <option>Home</option>
-                     <option>Groceries</option>
+                     <option value="Electronics">{language === 'ar' ? 'إلكترونيات' : 'Electronics'}</option>
+                     <option value="Apparel">{language === 'ar' ? 'ملابس' : 'Apparel'}</option>
+                     <option value="Home">{language === 'ar' ? 'منزل' : 'Home'}</option>
+                     <option value="Groceries">{language === 'ar' ? 'بقاليات' : 'Groceries'}</option>
                   </select>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
-                <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>Receive Order</button>
-                <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowSimulateModal(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>{t('confirm')}</button>
+                <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowSimulateModal(false)}>{t('cancel')}</button>
               </div>
             </form>
           </div>
@@ -264,7 +275,7 @@ export default function OrdersTab() {
         onClose={() => setShowImportWizard(false)}
         targetFields={importTargetFields}
         onImport={bulkReceiveOrders}
-        title="Import Jumia Orders"
+        title={language === 'ar' ? 'استيراد طلبات جميا' : 'Import Jumia Orders'}
       />
 
     </div>

@@ -114,7 +114,7 @@ export default function CustomersTab() {
                   <td>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                       <span style={{ fontWeight: 700, color: 'var(--color-primary)' }}>{customer.deliveries || 0}</span>
-                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{language === 'ar' ? 'جميا' : 'Jumia'}</span>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{language === 'ar' ? 'جوميا' : 'Jumia'}</span>
                     </div>
                   </td>
                   <td>

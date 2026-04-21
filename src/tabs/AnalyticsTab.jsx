@@ -232,7 +232,7 @@ export default function AnalyticsTab() {
         <MetricCard title={`${t('bosta')} ${t('cash')}`} value={`${bostaCash.toLocaleString()} EGP`} icon={<DollarSign size={14} />} color={CHART_COLORS.bosta} sub={language === 'ar' ? `${bostaPickedUp.length} طلب مستلم` : `${bostaPickedUp.length} orders picked up`} />
         <MetricCard title={`${t('basata')} POS`} value={`${basataVolume.toLocaleString()} EGP`} icon={<Zap size={14} />} color={CHART_COLORS.basata} sub={language === 'ar' ? `${activeBasata.length} عملية` : `${activeBasata.length} transactions`} />
         <MetricCard title={t('parkedPenalties')} value={`${activePenalties} EGP`} icon={<AlertOctagon size={14} />} color={CHART_COLORS.warning} sub={language === 'ar' ? `${jumiaInventory.length} طلب مخزن` : `${jumiaInventory.length} parked orders`} />
-        <MetricCard title={language === 'ar' ? 'حالة SLA حرجة' : 'SLA Critical'} value={jumiaSlaCritical} icon={<ShieldAlert size={14} />} color={CHART_COLORS.danger} sub={language === 'ar' ? 'جميا 4+ أيام تأخير' : 'Jumia 4+ days overdue'} />
+        <MetricCard title={language === 'ar' ? 'حالة SLA حرجة' : 'SLA Critical'} value={jumiaSlaCritical} icon={<ShieldAlert size={14} />} color={CHART_COLORS.danger} sub={language === 'ar' ? 'جوميا 4+ أيام تأخير' : 'Jumia 4+ days overdue'} />
         <MetricCard title={t('customers')} value={customers.length} icon={<Users size={14} />} color="var(--color-primary)" sub={language === 'ar' ? 'مسجلين في المحطة' : 'Registered at station'} />
       </div>
 
@@ -260,7 +260,7 @@ export default function AnalyticsTab() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title={language === 'ar' ? 'مقارنة طلبات جميا وبوسطة' : 'Jumia vs Bosta Orders Comparison'} icon={<BarChart2 size={16} color={CHART_COLORS.bosta} />}>
+        <ChartCard title={language === 'ar' ? 'مقارنة طلبات جوميا وبوسطة' : 'Jumia vs Bosta Orders Comparison'} icon={<BarChart2 size={16} color={CHART_COLORS.bosta} />}>
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={comparisonData} barGap={4}>
               <XAxis dataKey="name" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} axisLine={false} tickLine={false} />
@@ -316,7 +316,7 @@ export default function AnalyticsTab() {
               </div>
             ))}
             <div style={{ marginTop: '0.5rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-              {language === 'ar' ? `إجمالي ${jumiaInventory.length} في مخزون جميا` : `${jumiaInventory.length} total in Jumia inventory`}
+              {language === 'ar' ? `إجمالي ${jumiaInventory.length} في مخزون جوميا` : `${jumiaInventory.length} total in Jumia inventory`}
             </div>
           </div>
         </ChartCard>

@@ -93,7 +93,7 @@ export default function SLATab() {
           style={{ border: 'none', gap: '0.5rem', flex: '1 1 auto' }}
           onClick={() => setActiveSource('jumia')}
         >
-          <Package size={16} /> {language === 'ar' ? 'SLA لجميا' : 'Jumia SLA'}
+          <Package size={16} /> {language === 'ar' ? 'SLA لجوميا' : 'Jumia SLA'}
           <span style={{ background: 'rgba(255,255,255,0.15)', borderRadius: '999px', padding: '0.1rem 0.5rem', fontSize: '0.8rem' }}>{jumiaInventory.length}</span>
         </button>
         <button
@@ -112,7 +112,7 @@ export default function SLATab() {
       <div className="glass-panel" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
           <h3 style={{ color: 'white', margin: 0, fontSize: '1.2rem' }}>
-            {language === 'ar' ? `الجدول الزمني لـ ${activeSource === 'jumia' ? 'جميا' : 'بوسطة'}` : `${activeSource === 'jumia' ? 'Jumia' : 'Bosta'} Tracking Timeline`}
+            {language === 'ar' ? `الجدول الزمني لـ ${activeSource === 'jumia' ? 'جوميا' : 'بوسطة'}` : `${activeSource === 'jumia' ? 'Jumia' : 'Bosta'} Tracking Timeline`}
           </h3>
           <ExportActions
             data={inventoryOrders}
@@ -145,7 +145,7 @@ export default function SLATab() {
 
         {inventoryOrders.length === 0 && (
           <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-            {language === 'ar' ? `لا توجد طلبات لـ ${activeSource === 'jumia' ? 'جميا' : 'بوسطة'} قيد التتبع حالياً.` : `No ${activeSource === 'jumia' ? 'Jumia' : 'Bosta'} inventory currently tracked for SLA.`}
+            {language === 'ar' ? `لا توجد طلبات لـ ${activeSource === 'jumia' ? 'جوميا' : 'بوسطة'} قيد التتبع حالياً.` : `No ${activeSource === 'jumia' ? 'Jumia' : 'Bosta'} inventory currently tracked for SLA.`}
           </div>
         )}
       </div>

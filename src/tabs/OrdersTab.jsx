@@ -275,7 +275,7 @@ export default function OrdersTab() {
         onClose={() => setShowImportWizard(false)}
         targetFields={importTargetFields}
         onImport={bulkReceiveOrders}
-        title={language === 'ar' ? 'استيراد طلبات جميا' : 'Import Jumia Orders'}
+        title={language === 'ar' ? 'استيراد طلبات جوميا' : 'Import Jumia Orders'}
       />
 
     </div>

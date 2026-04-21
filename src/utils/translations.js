@@ -133,10 +133,10 @@ export const translations = {
     penalties: "غرامات التأخير",
     basata: "بساطة POS",
     bosta: "طلبات بوسطة",
-    returned: "المرتجع لجميا",
+    returned: "المرتجع لجوميا",
     analytics: "التحليلات",
     signOut: "تسجيل الخروج",
-    jumiaStation: "محطة جميا",
+    jumiaStation: "محطة جوميا",
     fcf: "اف سي اف",
     mosaam: "موسم",
     admin: "مدير",
@@ -189,7 +189,7 @@ export const translations = {
     email: "البريد الإلكتروني",
     address: "العنوان",
     tier: "الفئة",
-    deliveries: "تسليمات جميا",
+    deliveries: "تسليمات جوميا",
     bostaDeliveries: "تسليمات بوسطة",
     newCustomer: "عميل جديد",
     loyaltyTier: "فئة الولاء",
@@ -229,7 +229,7 @@ export const translations = {
     parkedDescription: "نظرة عامة على الطلبات المتوقفة حالياً في المحطة وغرامات تأخير الاستلام المتراكمة.",
 
     // Returned Tab
-    returnedOrders: "المرتجع لجميا",
+    returnedOrders: "المرتجع لجوميا",
     returnDate: "تاريخ الارجاع",
 
     // Analytics Tab
@@ -239,9 +239,9 @@ export const translations = {
     monthly: "شهري",
     totalStationRevenue: "إجمالي إيرادات المحطة",
     revenueStreams: "تحليل مصادر الإيرادات",
-    ordersComparison: "مقارنة طلبات جميا وبوسطة",
+    ordersComparison: "مقارنة طلبات جوميا وبوسطة",
     ordersStatusDist: "توزيع حالة الطلبات بالكامل",
-    slaHealth: "صحة SLA لجميا",
+    slaHealth: "صحة SLA لجوميا",
     basataRevenueCat: "إيرادات بساطة حسب الفئة",
     topBasataServices: "أعلى خدمات بساطة حسب الحجم",
     financialSummary: "الملخص المالي الكامل",

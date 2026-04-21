@@ -6,10 +6,21 @@ import pg from 'pg';
 
 // Use TCP `pg` for local/CI seeding — avoids Neon serverless WebSocket Pool issues in Node scripts.
 // Vercel API routes keep using `@prisma/adapter-neon` in `api/_lib/prisma.js`.
-const connectionString =
+let connectionString =
   process.env.DIRECT_URL ||
   process.env.DATABASE_URL_UNPOOLED ||
   process.env.DATABASE_URL;
+
+// To silence the pg warning about SSL aliases, ensure sslmode=verify-full is present
+if (connectionString) {
+  if (!connectionString.includes('sslmode=')) {
+    const separator = connectionString.includes('?') ? '&' : '?';
+    connectionString += `${separator}sslmode=verify-full`;
+  } else {
+    // Replace weaker SSL modes with verify-full to maintain current behavior and silence warnings
+    connectionString = connectionString.replace(/sslmode=(require|prefer|verify-ca)/, 'sslmode=verify-full');
+  }
+}
 
 if (!connectionString) {
   console.error(

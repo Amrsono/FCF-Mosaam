@@ -36,8 +36,7 @@ export default function OrdersTab() {
     { label: language === 'ar' ? 'المنفذ' : 'Outlet', accessor: 'outlet' },
     { label: language === 'ar' ? 'المقاس' : 'Size', accessor: 'size' },
     { label: t('status'), accessor: 'status' },
-    { label: t('daysInInv'), accessor: 'daysParked' },
-    { label: t('penalty'), accessor: 'penalty' },
+    { label: t('daysInInv'), accessor: 'daysParked' }
   ];
 
   const importTargetFields = [
@@ -75,11 +74,9 @@ export default function OrdersTab() {
       const mCount = outletOrders.filter(o => o.size === 'M').length;
       const lCount = outletOrders.filter(o => o.size === 'L').length;
 
-      // Service Revenue (Warehouse Income)
-      // Storage Fee is charged for every order received (except returned ones maybe, but usually per item handled)
+      // Storage Fee is charged for every order received
       const storageFees = outletOrders.filter(o => o.status !== 'Returned').reduce((sum, o) => sum + calculateStorageFee(o), 0);
-      const penaltyFees = outletOrders.reduce((sum, o) => sum + calculatePenalty(o), 0);
-      const totalIncome = storageFees + penaltyFees;
+      const totalIncome = storageFees;
 
       return {
         outlet: outletName,
@@ -91,7 +88,6 @@ export default function OrdersTab() {
         paid,
         jumiaPay,
         storageFees,
-        penaltyFees,
         totalIncome,
         sCount,
         mCount,
@@ -215,7 +211,6 @@ export default function OrdersTab() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
            <div className="badge badge-neutral">{language === 'ar' ? `عرض: ${orderList.length}` : `Showing: ${orderList.length}`}</div>
-           <div className="badge badge-warning">{t('totalPenalties')}: {orderList.reduce((acc, o) => acc + (o.penalty || 0), 0)} EGP</div>
          </div>
          <ExportActions data={orderList} headers={exportHeaders} filename="Orders_Export" title={t('inventory')} />
       </div>
@@ -238,7 +233,6 @@ export default function OrdersTab() {
                 <th>{language === 'ar' ? 'تم سداد' : 'Paid'}</th>
                 <th>jumiapay</th>
                 <th style={{ color: 'var(--color-primary)' }}>{language === 'ar' ? 'رسوم التخزين' : 'Storage Fees'}</th>
-                <th style={{ color: 'var(--color-warning)' }}>{language === 'ar' ? 'الغرامات' : 'Penalties'}</th>
                 <th style={{ color: 'var(--color-success)' }}>{language === 'ar' ? 'دخل المخزن' : 'WH Income'}</th>
                 <th>S</th>
                 <th>M</th>
@@ -257,7 +251,6 @@ export default function OrdersTab() {
                   <td>{row.paid.toLocaleString()}</td>
                   <td style={{ color: 'var(--color-primary)' }}>{row.jumiaPay.toLocaleString()}</td>
                   <td style={{ fontWeight: 600 }}>{row.storageFees.toLocaleString()}</td>
-                  <td style={{ fontWeight: 600 }}>{row.penaltyFees.toLocaleString()}</td>
                   <td style={{ fontWeight: 700, color: 'var(--color-success)' }}>{row.totalIncome.toLocaleString()}</td>
                   <td>{row.sCount}</td>
                   <td>{row.mCount}</td>
@@ -274,7 +267,6 @@ export default function OrdersTab() {
                 <td>{summaryByOutlet.reduce((s, r) => s + r.paid, 0).toLocaleString()}</td>
                 <td>{summaryByOutlet.reduce((s, r) => s + r.jumiaPay, 0).toLocaleString()}</td>
                 <td>{summaryByOutlet.reduce((s, r) => s + r.storageFees, 0).toLocaleString()}</td>
-                <td>{summaryByOutlet.reduce((s, r) => s + r.penaltyFees, 0).toLocaleString()}</td>
                 <td style={{ color: 'var(--color-success)' }}>{summaryByOutlet.reduce((s, r) => s + r.totalIncome, 0).toLocaleString()}</td>
                 <td>{summaryByOutlet.reduce((s, r) => s + r.sCount, 0)}</td>
                 <td>{summaryByOutlet.reduce((s, r) => s + r.mCount, 0)}</td>
@@ -333,9 +325,6 @@ export default function OrdersTab() {
                          </span>
                          {order.daysParked >= 4 && <Flag size={14} className="animate-pulse" color="var(--color-danger)" />}
                        </div>
-                       <span style={{ fontWeight: 600, color: order.penalty > 0 ? 'var(--color-danger)' : 'var(--text-secondary)' }}>
-                         {order.penalty} EGP {t('penalty')}
-                       </span>
                        {order.daysParked >= 4 && (
                          <div className="badge badge-danger" style={{ fontSize: '0.6rem', padding: '2px 6px' }}>
                            {language === 'ar' ? 'يجب الارجاع' : 'RETURN REQ'}

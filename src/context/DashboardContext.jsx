@@ -150,10 +150,8 @@ export const DashboardProvider = ({ children }) => {
   };
 
   const calculatePenalty = (order) => {
-    if (order.status !== 'Inventory') return 0;
-    const days = getDaysDifference(order.receivedAt);
-    // 3 days free, 5 EGP per day starting from day 4
-    return Math.max(0, (days - 3) * 5); 
+    // Disabled for now: Math.max(0, (days - 3) * 5)
+    return 0; 
   };
 
   const calculateStorageFee = (order) => {

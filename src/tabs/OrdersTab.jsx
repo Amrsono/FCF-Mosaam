@@ -59,10 +59,18 @@ export default function OrdersTab() {
       const delivered = outletOrders.filter(o => o.status === 'Picked Up').length;
       const returned = outletOrders.filter(o => o.status === 'Returned').length;
       const available = outletOrders.filter(o => o.status === 'Inventory').length;
-      const totalMoney = outletOrders.filter(o => o.status === 'Picked Up').reduce((sum, o) => sum + o.totalValue, 0);
-      const paid = totalMoney; 
-      const jumiaPay = outletOrders.filter(o => o.status === 'Picked Up' && o.paymentMethod?.toLowerCase().includes('jumiapay')).reduce((sum, o) => sum + o.totalValue, 0);
-      const totalCost = outletOrders.filter(o => o.status === 'Picked Up').reduce((sum, o) => sum + (o.orderCost || 0), 0);
+      
+      // Total Money: include all orders (except returned)
+      const totalMoney = outletOrders.filter(o => o.status !== 'Returned').reduce((sum, o) => sum + o.totalValue, 0);
+      
+      // Paid: only picked up orders
+      const paid = outletOrders.filter(o => o.status === 'Picked Up').reduce((sum, o) => sum + o.totalValue, 0);
+      
+      // JumiaPay: include all jumiapay orders
+      const jumiaPay = outletOrders.filter(o => o.status !== 'Returned' && o.paymentMethod?.toLowerCase().includes('jumiapay')).reduce((sum, o) => sum + o.totalValue, 0);
+      
+      // Net After Cost: Total Money - Total Cost
+      const totalCost = outletOrders.filter(o => o.status !== 'Returned').reduce((sum, o) => sum + (o.orderCost || 0), 0);
       const netAfterCost = totalMoney - totalCost;
       
       const sCount = outletOrders.filter(o => o.size === 'S').length;
@@ -359,7 +367,7 @@ export default function OrdersTab() {
               </div>
               <div style={{ display: 'flex', gap: '1rem' }}>
                 <div className="input-group" style={{ flex: 1 }}>
-                  <label className="input-label">{t('value')} (EGP)</label>
+                  <label className="input-label">{language === 'ar' ? 'اجمالي الفلوس (سعر البيع)' : 'Total Value (Selling Price)'} (EGP)</label>
                   <input required type="number" className="input-field" value={newOrder.totalValue} onChange={e => setNewOrder({...newOrder, totalValue: e.target.value})} placeholder="0.00" />
                 </div>
                 <div className="input-group" style={{ flex: 1 }}>
@@ -401,7 +409,7 @@ export default function OrdersTab() {
                   </select>
                 </div>
                 <div className="input-group" style={{ flex: 1 }}>
-                  <label className="input-label">{language === 'ar' ? 'ثمن الأوردر' : 'Order Cost'}</label>
+                  <label className="input-label">{language === 'ar' ? 'ثمن الأوردر (سعر الشراء)' : 'Order Cost (Purchase Price)'}</label>
                   <input type="number" className="input-field" value={newOrder.orderCost} onChange={e => setNewOrder({...newOrder, orderCost: e.target.value})} placeholder="0.00" />
                 </div>
               </div>

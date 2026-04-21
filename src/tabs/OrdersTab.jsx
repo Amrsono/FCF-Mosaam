@@ -19,7 +19,8 @@ export default function OrdersTab() {
 
   // Form for new order simulation
   const [newOrder, setNewOrder] = useState({
-    id: '', customerPhone: '', description: '', totalValue: '', category: 'Electronics', customerName: ''
+    id: '', customerPhone: '', description: '', totalValue: '', category: 'Electronics', customerName: '',
+    outlet: 'وبور الثلج', size: 'M', paymentMethod: 'Cash', orderCost: ''
   });
 
   const exportHeaders = [
@@ -29,6 +30,8 @@ export default function OrdersTab() {
     { label: t('description'), accessor: 'description' },
     { label: t('category'), accessor: 'category' },
     { label: t('value'), accessor: 'totalValue' },
+    { label: language === 'ar' ? 'المنفذ' : 'Outlet', accessor: 'outlet' },
+    { label: language === 'ar' ? 'المقاس' : 'Size', accessor: 'size' },
     { label: t('status'), accessor: 'status' },
     { label: t('daysInInv'), accessor: 'daysParked' },
     { label: t('penalty'), accessor: 'penalty' },
@@ -40,8 +43,48 @@ export default function OrdersTab() {
     { key: 'customerName', label: t('customer'), required: false },
     { key: 'description', label: t('description'), required: false },
     { key: 'totalValue', label: t('value'), required: true },
-    { key: 'category', label: t('category'), required: false }
+    { key: 'category', label: t('category'), required: false },
+    { key: 'outlet', label: language === 'ar' ? 'المنفذ' : 'Outlet', required: false },
+    { key: 'size', label: language === 'ar' ? 'المقاس' : 'Size', required: false },
+    { key: 'paymentMethod', label: language === 'ar' ? 'طريقة الدفع' : 'Payment Method', required: false },
+    { key: 'orderCost', label: language === 'ar' ? 'ثمن الأوردر' : 'Order Cost', required: false }
   ];
+
+  // Aggregated Summary Data
+  const summaryByOutlet = useMemo(() => {
+    const outlets = ['وبور الثلج', 'تجاره', 'المستشفى'];
+    return outlets.map(outletName => {
+      const outletOrders = orders.filter(o => (o.outlet || "وبور الثلج") === outletName);
+      const received = outletOrders.length;
+      const delivered = outletOrders.filter(o => o.status === 'Picked Up').length;
+      const returned = outletOrders.filter(o => o.status === 'Returned').length;
+      const available = outletOrders.filter(o => o.status === 'Inventory').length;
+      const totalMoney = outletOrders.filter(o => o.status === 'Picked Up').reduce((sum, o) => sum + o.totalValue, 0);
+      const paid = totalMoney; 
+      const jumiaPay = outletOrders.filter(o => o.status === 'Picked Up' && o.paymentMethod?.toLowerCase().includes('jumiapay')).reduce((sum, o) => sum + o.totalValue, 0);
+      const totalCost = outletOrders.filter(o => o.status === 'Picked Up').reduce((sum, o) => sum + (o.orderCost || 0), 0);
+      const netAfterCost = totalMoney - totalCost;
+      
+      const sCount = outletOrders.filter(o => o.size === 'S').length;
+      const mCount = outletOrders.filter(o => o.size === 'M').length;
+      const lCount = outletOrders.filter(o => o.size === 'L').length;
+
+      return {
+        outlet: outletName,
+        received,
+        delivered,
+        returned,
+        available,
+        totalMoney,
+        paid,
+        jumiaPay,
+        netAfterCost,
+        sCount,
+        mCount,
+        lCount
+      };
+    });
+  }, [orders]);
 
   // Derived Data
   const orderList = useMemo(() => {
@@ -79,10 +122,17 @@ export default function OrdersTab() {
       customerName: newOrder.customerName,
       description: newOrder.description,
       totalValue: Number(newOrder.totalValue),
-      category: newOrder.category
+      category: newOrder.category,
+      outlet: newOrder.outlet,
+      size: newOrder.size,
+      paymentMethod: newOrder.paymentMethod,
+      orderCost: Number(newOrder.orderCost)
     });
     setShowSimulateModal(false);
-    setNewOrder({ id: '', customerPhone: '', description: '', totalValue: '', category: 'Electronics', customerName: '' });
+    setNewOrder({ 
+      id: '', customerPhone: '', description: '', totalValue: '', category: 'Electronics', customerName: '',
+      outlet: 'وبور الثلج', size: 'M', paymentMethod: 'Cash', orderCost: ''
+    });
   };
 
   const getStatusLabel = (status) => {
@@ -157,6 +207,65 @@ export default function OrdersTab() {
          <ExportActions data={orderList} headers={exportHeaders} filename="Orders_Export" title={t('inventory')} />
       </div>
 
+      {/* Inventory Summary Table */}
+      <div className="glass-panel" style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+        <h4 style={{ color: 'var(--color-primary)', marginBottom: '1rem', fontSize: '1rem', fontWeight: 700 }}>
+          {language === 'ar' ? 'ملخص مخزون الطلبات' : 'Orders Inventory Summary'}
+        </h4>
+        <div className="table-container">
+          <table className="data-table" style={{ fontSize: '0.85rem' }}>
+            <thead>
+              <tr style={{ background: 'rgba(255,255,255,0.03)' }}>
+                <th>{language === 'ar' ? 'المنفذ' : 'Outlet'}</th>
+                <th>{language === 'ar' ? 'تم استلام' : 'Received'}</th>
+                <th>{language === 'ar' ? 'تم التسليم' : 'Delivered'}</th>
+                <th>{language === 'ar' ? 'تم الالغاء' : 'Cancelled'}</th>
+                <th style={{ color: 'var(--color-warning)' }}>{language === 'ar' ? 'متاح في المنفذ' : 'In Stock'}</th>
+                <th>{language === 'ar' ? 'اجمالي الفلوس' : 'Total Money'}</th>
+                <th>{language === 'ar' ? 'تم سداد' : 'Paid'}</th>
+                <th>jumiapay</th>
+                <th style={{ color: 'var(--color-success)' }}>{language === 'ar' ? 'صافي الأرباح' : 'Net After Cost'}</th>
+                <th>S</th>
+                <th>M</th>
+                <th>L</th>
+              </tr>
+            </thead>
+            <tbody>
+              {summaryByOutlet.map((row, i) => (
+                <tr key={i}>
+                  <td style={{ fontWeight: 700, color: 'white' }}>{row.outlet}</td>
+                  <td>{row.received}</td>
+                  <td style={{ color: 'var(--color-success)' }}>{row.delivered}</td>
+                  <td style={{ color: 'var(--color-danger)' }}>{row.returned}</td>
+                  <td style={{ fontWeight: 700 }}>{row.available}</td>
+                  <td>{row.totalMoney.toLocaleString()}</td>
+                  <td>{row.paid.toLocaleString()}</td>
+                  <td style={{ color: 'var(--color-primary)' }}>{row.jumiaPay.toLocaleString()}</td>
+                  <td style={{ fontWeight: 700, color: 'var(--color-success)' }}>{row.netAfterCost.toLocaleString()}</td>
+                  <td>{row.sCount}</td>
+                  <td>{row.mCount}</td>
+                  <td>{row.lCount}</td>
+                </tr>
+              ))}
+              <tr style={{ background: 'rgba(255,255,255,0.05)', fontWeight: 800 }}>
+                <td>{language === 'ar' ? 'الإجمالي العام' : 'GRAND TOTAL'}</td>
+                <td>{summaryByOutlet.reduce((s, r) => s + r.received, 0)}</td>
+                <td>{summaryByOutlet.reduce((s, r) => s + r.delivered, 0)}</td>
+                <td>{summaryByOutlet.reduce((s, r) => s + r.returned, 0)}</td>
+                <td>{summaryByOutlet.reduce((s, r) => s + r.available, 0)}</td>
+                <td>{summaryByOutlet.reduce((s, r) => s + r.totalMoney, 0).toLocaleString()}</td>
+                <td>{summaryByOutlet.reduce((s, r) => s + r.paid, 0).toLocaleString()}</td>
+                <td>{summaryByOutlet.reduce((s, r) => s + r.jumiaPay, 0).toLocaleString()}</td>
+                <td>{summaryByOutlet.reduce((s, r) => s + r.netAfterCost, 0).toLocaleString()}</td>
+                <td>{summaryByOutlet.reduce((s, r) => s + r.sCount, 0)}</td>
+                <td>{summaryByOutlet.reduce((s, r) => s + r.mCount, 0)}</td>
+                <td>{summaryByOutlet.reduce((s, r) => s + r.lCount, 0)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       {/* Table */}
       <div className="table-container" style={{ flex: 1 }}>
         <table className="data-table">
@@ -184,8 +293,11 @@ export default function OrdersTab() {
                 <td>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
                     <span>{order.description}</span>
-                    <span style={{ fontSize: '0.85rem', color: 'var(--color-primary)' }}>{order.totalValue} EGP</span>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{order.category}</span>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.85rem', color: 'var(--color-primary)', fontWeight: 700 }}>{order.totalValue} EGP</span>
+                      <span className="badge badge-neutral" style={{ fontSize: '0.65rem' }}>{order.size}</span>
+                    </div>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{order.category} • {order.outlet}</span>
                   </div>
                 </td>
                 <td>
@@ -258,6 +370,39 @@ export default function OrdersTab() {
                      <option value="Home">{language === 'ar' ? 'منزل' : 'Home'}</option>
                      <option value="Groceries">{language === 'ar' ? 'بقاليات' : 'Groceries'}</option>
                   </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <div className="input-group" style={{ flex: 1 }}>
+                  <label className="input-label">{language === 'ar' ? 'المنفذ' : 'Outlet'}</label>
+                  <select className="input-field" value={newOrder.outlet} onChange={e => setNewOrder({...newOrder, outlet: e.target.value})}>
+                     <option value="وبور الثلج">وبور الثلج</option>
+                     <option value="تجاره">تجاره</option>
+                     <option value="المستشفى">المستشفى</option>
+                  </select>
+                </div>
+                <div className="input-group" style={{ flex: 1 }}>
+                  <label className="input-label">{language === 'ar' ? 'المقاس' : 'Size'}</label>
+                  <select className="input-field" value={newOrder.size} onChange={e => setNewOrder({...newOrder, size: e.target.value})}>
+                     <option value="S">S</option>
+                     <option value="M">M</option>
+                     <option value="L">L</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <div className="input-group" style={{ flex: 1 }}>
+                  <label className="input-label">{language === 'ar' ? 'طريقة الدفع' : 'Payment Method'}</label>
+                  <select className="input-field" value={newOrder.paymentMethod} onChange={e => setNewOrder({...newOrder, paymentMethod: e.target.value})}>
+                     <option value="Cash">Cash</option>
+                     <option value="JumiaPay">JumiaPay</option>
+                  </select>
+                </div>
+                <div className="input-group" style={{ flex: 1 }}>
+                  <label className="input-label">{language === 'ar' ? 'ثمن الأوردر' : 'Order Cost'}</label>
+                  <input type="number" className="input-field" value={newOrder.orderCost} onChange={e => setNewOrder({...newOrder, orderCost: e.target.value})} placeholder="0.00" />
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>

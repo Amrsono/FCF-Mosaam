@@ -73,7 +73,11 @@ export const DashboardProvider = ({ children }) => {
                     customerName: row.customerName || 'Imported Customer',
                     description: row.description || 'Imported Items',
                     totalValue: Number(row.totalValue) || 0,
-                    category: row.category || 'General'
+                    category: row.category || 'General',
+                    outlet: row.outlet || "وبور الثلج",
+                    size: row.size || "M",
+                    paymentMethod: row.paymentMethod || "Cash",
+                    orderCost: Number(row.orderCost) || 0
                 })
             });
             if (res.ok) successCount++;

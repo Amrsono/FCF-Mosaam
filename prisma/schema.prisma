@@ -32,6 +32,12 @@ model Order {
   pickedUpAt    DateTime?
   returnedAt    DateTime?
 
+  // New fields for detailed inventory reporting
+  outlet        String    @default("وبور الثلج")
+  size          String    @default("M")
+  paymentMethod String    @default("Cash")
+  orderCost     Float     @default(0)
+
   customer      Customer  @relation(fields: [customerPhone], references: [phone])
 }
 
@@ -57,6 +63,12 @@ model BostaOrder {
   receivedAt    DateTime  @default(now())
   pickedUpAt    DateTime?
   returnedAt    DateTime?
+
+  // New fields for detailed inventory reporting
+  outlet        String    @default("وبور الثلج")
+  size          String    @default("M")
+  paymentMethod String    @default("Cash")
+  orderCost     Float     @default(0)
 
   customer      Customer  @relation(fields: [customerPhone], references: [phone])
 }

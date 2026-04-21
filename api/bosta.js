@@ -12,7 +12,11 @@ export default async function handler(req, res) {
 
     // POST: Receive new Bosta order into inventory
     if (req.method === 'POST') {
-      const { id, customerPhone, customerName, description, totalValue, category, email, address, tier } = req.body;
+      const { 
+        id, customerPhone, customerName, description, totalValue, category, 
+        email, address, tier,
+        outlet, size, paymentMethod, orderCost 
+      } = req.body;
       
       // Upsert Customer logic: match by phone
       await prisma.customer.upsert({
@@ -34,7 +38,11 @@ export default async function handler(req, res) {
           customerPhone,
           description,
           totalValue: parseFloat(totalValue),
-          category
+          category,
+          outlet: outlet || "وبور الثلج",
+          size: size || "M",
+          paymentMethod: paymentMethod || "Cash",
+          orderCost: parseFloat(orderCost || 0)
         }
       });
 

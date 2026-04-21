@@ -13,18 +13,20 @@ import BostaTab from './tabs/BostaTab';
 import LoginPage from './pages/LoginPage';
 
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
-import { Languages } from 'lucide-react';
+import { ThemeProvider, useTheme } from './context/ThemeContext';
+import { Languages, Moon, Sun, Monitor } from 'lucide-react';
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState('orders');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, logout, isLoading } = useAuth();
   const { t, language, toggleLanguage } = useLanguage();
+  const { theme, toggleTheme } = useTheme();
 
   if (isLoading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-main)', flexDirection: 'column', gap: '1rem' }}>
-        <div style={{ width: '40px', height: '40px', border: '3px solid rgba(255,255,255,0.1)', borderTop: '3px solid var(--color-primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        <div style={{ width: '40px', height: '40px', border: '3px solid var(--border-color)', borderTop: '3px solid var(--color-primary)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
         <div style={{ color: 'var(--text-muted)' }}>{t('loading')}</div>
         <style>{`@keyframes spin { to { transform: rotate(360deg); }}`}</style>
       </div>
@@ -55,14 +57,14 @@ function AppContent() {
           <X size={24} />
         </button>
         <div style={{ padding: '1rem 0', marginBottom: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'white', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
             {t('fcf')} <span style={{ color: 'var(--color-accent)' }}>{t('mosaam')}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <div style={{ background: 'var(--color-primary)', padding: '0.5rem', borderRadius: 'var(--radius-md)' }}>
               <LayoutDashboard size={24} color="white" />
             </div>
-            <h1 style={{ fontSize: '1.25rem', color: 'white' }}>{t('jumiaStation')}</h1>
+            <h1 style={{ fontSize: '1.25rem', color: 'var(--text-primary)' }}>{t('jumiaStation')}</h1>
           </div>
         </div>
 
@@ -83,9 +85,36 @@ function AppContent() {
           ))}
         </nav>
 
-        {/* Language Switcher + User Info + Logout */}
+        {/* Theme + Language Switcher + User Info + Logout */}
         <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem', marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           
+          <div style={{ display: 'flex', background: 'var(--bg-main)', borderRadius: 'var(--radius-md)', padding: '0.25rem', border: '1px solid var(--border-color)' }}>
+            <button 
+              className={`btn ${theme === 'dark' ? 'btn-primary' : 'btn-outline'}`} 
+              style={{ flex: 1, padding: '0.4rem', border: 'none', background: theme === 'dark' ? undefined : 'transparent' }} 
+              onClick={() => toggleTheme('dark')}
+              title="Dark Theme"
+            >
+              <Moon size={14} />
+            </button>
+            <button 
+              className={`btn ${theme === 'medium' ? 'btn-primary' : 'btn-outline'}`} 
+              style={{ flex: 1, padding: '0.4rem', border: 'none', background: theme === 'medium' ? undefined : 'transparent' }} 
+              onClick={() => toggleTheme('medium')}
+              title="Medium Theme"
+            >
+              <Monitor size={14} />
+            </button>
+            <button 
+              className={`btn ${theme === 'light' ? 'btn-primary' : 'btn-outline'}`} 
+              style={{ flex: 1, padding: '0.4rem', border: 'none', background: theme === 'light' ? undefined : 'transparent' }} 
+              onClick={() => toggleTheme('light')}
+              title="Light Theme"
+            >
+              <Sun size={14} />
+            </button>
+          </div>
+
           <button 
             className="btn btn-outline" 
             onClick={toggleLanguage}
@@ -95,12 +124,12 @@ function AppContent() {
             {language === 'en' ? 'العربية' : 'English'}
           </button>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', borderRadius: 'var(--radius-md)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: 'var(--bg-main)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }}>
             <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Shield size={18} color="white" />
             </div>
             <div>
-              <div style={{ color: 'white', fontWeight: 600, fontSize: '0.9rem' }}>{user.username}</div>
+              <div style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: '0.9rem' }}>{user.username}</div>
               <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'capitalize' }}>{user.role === 'admin' ? t('admin') : t('staff')}</div>
             </div>
           </div>
@@ -142,9 +171,11 @@ export default function App() {
   return (
     <AuthProvider>
       <LanguageProvider>
-        <DashboardProvider>
-          <AppContent />
-        </DashboardProvider>
+        <ThemeProvider>
+          <DashboardProvider>
+            <AppContent />
+          </DashboardProvider>
+        </ThemeProvider>
       </LanguageProvider>
     </AuthProvider>
   );

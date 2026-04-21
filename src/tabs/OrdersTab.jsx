@@ -6,7 +6,7 @@ import ImportWizard from '../components/ImportWizard';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function OrdersTab() {
-  const { orders, customers, receiveOrder, bulkReceiveOrders, calculatePenalty, markOrderPickedUp, returnOrder } = useDashboard();
+  const { orders, customers, receiveOrder, bulkReceiveOrders, calculatePenalty, calculateStorageFee, markOrderPickedUp, returnOrder } = useDashboard();
   const { t, language } = useLanguage();
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -72,6 +72,12 @@ export default function OrdersTab() {
       const mCount = outletOrders.filter(o => o.size === 'M').length;
       const lCount = outletOrders.filter(o => o.size === 'L').length;
 
+      // Service Revenue (Warehouse Income)
+      // Storage Fee is charged for every order received (except returned ones maybe, but usually per item handled)
+      const storageFees = outletOrders.filter(o => o.status !== 'Returned').reduce((sum, o) => sum + calculateStorageFee(o), 0);
+      const penaltyFees = outletOrders.reduce((sum, o) => sum + calculatePenalty(o), 0);
+      const totalIncome = storageFees + penaltyFees;
+
       return {
         outlet: outletName,
         received,
@@ -81,6 +87,9 @@ export default function OrdersTab() {
         totalMoney,
         paid,
         jumiaPay,
+        storageFees,
+        penaltyFees,
+        totalIncome,
         sCount,
         mCount,
         lCount
@@ -225,6 +234,9 @@ export default function OrdersTab() {
                 <th>{language === 'ar' ? 'اجمالي الفلوس' : 'Total Money'}</th>
                 <th>{language === 'ar' ? 'تم سداد' : 'Paid'}</th>
                 <th>jumiapay</th>
+                <th style={{ color: 'var(--color-primary)' }}>{language === 'ar' ? 'رسوم التخزين' : 'Storage Fees'}</th>
+                <th style={{ color: 'var(--color-warning)' }}>{language === 'ar' ? 'الغرامات' : 'Penalties'}</th>
+                <th style={{ color: 'var(--color-success)' }}>{language === 'ar' ? 'دخل المخزن' : 'WH Income'}</th>
                 <th>S</th>
                 <th>M</th>
                 <th>L</th>
@@ -241,6 +253,9 @@ export default function OrdersTab() {
                   <td>{row.totalMoney.toLocaleString()}</td>
                   <td>{row.paid.toLocaleString()}</td>
                   <td style={{ color: 'var(--color-primary)' }}>{row.jumiaPay.toLocaleString()}</td>
+                  <td style={{ fontWeight: 600 }}>{row.storageFees.toLocaleString()}</td>
+                  <td style={{ fontWeight: 600 }}>{row.penaltyFees.toLocaleString()}</td>
+                  <td style={{ fontWeight: 700, color: 'var(--color-success)' }}>{row.totalIncome.toLocaleString()}</td>
                   <td>{row.sCount}</td>
                   <td>{row.mCount}</td>
                   <td>{row.lCount}</td>
@@ -255,6 +270,9 @@ export default function OrdersTab() {
                 <td>{summaryByOutlet.reduce((s, r) => s + r.totalMoney, 0).toLocaleString()}</td>
                 <td>{summaryByOutlet.reduce((s, r) => s + r.paid, 0).toLocaleString()}</td>
                 <td>{summaryByOutlet.reduce((s, r) => s + r.jumiaPay, 0).toLocaleString()}</td>
+                <td>{summaryByOutlet.reduce((s, r) => s + r.storageFees, 0).toLocaleString()}</td>
+                <td>{summaryByOutlet.reduce((s, r) => s + r.penaltyFees, 0).toLocaleString()}</td>
+                <td style={{ color: 'var(--color-success)' }}>{summaryByOutlet.reduce((s, r) => s + r.totalIncome, 0).toLocaleString()}</td>
                 <td>{summaryByOutlet.reduce((s, r) => s + r.sCount, 0)}</td>
                 <td>{summaryByOutlet.reduce((s, r) => s + r.mCount, 0)}</td>
                 <td>{summaryByOutlet.reduce((s, r) => s + r.lCount, 0)}</td>

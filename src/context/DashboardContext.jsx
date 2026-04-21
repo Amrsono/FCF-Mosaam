@@ -150,10 +150,18 @@ export const DashboardProvider = ({ children }) => {
   };
 
   const calculatePenalty = (order) => {
-    // "Inventory" in DB is either "Inventory" or "Picked_Up" (Prisma default is Inventory)
     if (order.status !== 'Inventory') return 0;
     const days = getDaysDifference(order.receivedAt);
-    return days * 5; 
+    // 3 days free, 5 EGP per day starting from day 4
+    return Math.max(0, (days - 3) * 5); 
+  };
+
+  const calculateStorageFee = (order) => {
+    // S: 18, M: 30, L: 45
+    const size = (order.size || 'M').toUpperCase();
+    if (size === 'S') return 18;
+    if (size === 'L') return 45;
+    return 30; // Default Medium
   };
 
   const receiveBostaOrder = async (orderData) => {
@@ -245,6 +253,7 @@ export const DashboardProvider = ({ children }) => {
       updateCustomer,
       addCustomer,
       calculatePenalty,
+      calculateStorageFee,
       logBasataService
     }}>
       {children}

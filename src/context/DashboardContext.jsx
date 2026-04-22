@@ -40,6 +40,23 @@ export const DashboardProvider = ({ children }) => {
     fetchData();
   }, []);
 
+  const logUserAction = async (action, details = null) => {
+    const token = localStorage.getItem('fcf_token');
+    if (!token) return;
+    try {
+      await fetch('/api/logs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ action, details })
+      });
+    } catch (e) {
+      console.warn("Could not log user action", e);
+    }
+  };
+
   const receiveOrder = async (orderData) => {
     try {
       const res = await fetch('/api/orders', {
@@ -47,8 +64,10 @@ export const DashboardProvider = ({ children }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderData)
       });
-      if (res.ok) await fetchData();
-      else {
+      if (res.ok) {
+        await fetchData();
+        logUserAction('Receive Order', { id: orderData.id, phone: orderData.customerPhone });
+      } else {
         const errData = await res.text();
         alert("Database Connection Error: Could not save to Vercel Postgres. Ensure you are running 'vercel dev' and have pushed your Prisma schema. Error details: " + errData);
       }
@@ -87,6 +106,7 @@ export const DashboardProvider = ({ children }) => {
         onProgressRow(i + 1);
     }
     await fetchData();
+    logUserAction('Bulk Import Orders', { successCount, totalCount: mappedOrdersList.length });
     return successCount;
   };
 
@@ -97,7 +117,10 @@ export const DashboardProvider = ({ children }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone, data: updatedData })
       });
-      if (res.ok) await fetchData(); // Resync
+      if (res.ok) {
+        await fetchData(); // Resync
+        logUserAction('Update Customer', { phone });
+      }
     } catch (err) {
       console.error(err);
     }
@@ -112,6 +135,7 @@ export const DashboardProvider = ({ children }) => {
       });
       if (res.ok) {
         await fetchData();
+        logUserAction('Add Customer', { phone: customerData.phone });
         return { success: true };
       } else {
         const err = await res.json();
@@ -130,7 +154,10 @@ export const DashboardProvider = ({ children }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: orderId, action: 'PICK_UP' })
       });
-      if (res.ok) await fetchData(); // Resync
+      if (res.ok) {
+        await fetchData(); // Resync
+        logUserAction('Pick Up Order', { id: orderId });
+      }
     } catch (err) {
       console.error(err);
     }
@@ -143,7 +170,10 @@ export const DashboardProvider = ({ children }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: orderId, action: 'RETURN' })
       });
-      if (res.ok) await fetchData(); // Resync
+      if (res.ok) {
+        await fetchData(); // Resync
+        logUserAction('Return Order', { id: orderId });
+      }
     } catch (err) {
       console.error(err);
     }
@@ -171,8 +201,10 @@ export const DashboardProvider = ({ children }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderData)
       });
-      if (res.ok) await fetchData();
-      else {
+      if (res.ok) {
+        await fetchData();
+        logUserAction('Receive Bosta Order', { id: orderData.id, phone: orderData.customerPhone });
+      } else {
         alert("Database Connection Error (Bosta API).");
       }
     } catch (err) {
@@ -187,7 +219,10 @@ export const DashboardProvider = ({ children }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: orderId, action: 'PICK_UP' })
       });
-      if (res.ok) await fetchData(); 
+      if (res.ok) {
+        await fetchData(); 
+        logUserAction('Pick Up Bosta Order', { id: orderId });
+      }
     } catch (err) {
       console.error(err);
     }
@@ -200,7 +235,10 @@ export const DashboardProvider = ({ children }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: orderId, action: 'RETURN' })
       });
-      if (res.ok) await fetchData(); 
+      if (res.ok) {
+        await fetchData(); 
+        logUserAction('Return Bosta Order', { id: orderId });
+      }
     } catch (err) {
       console.error(err);
     }
@@ -223,7 +261,8 @@ export const DashboardProvider = ({ children }) => {
         })
       });
       if (res.ok) {
-        await fetchData(); // Resync Basata
+        await fetchData(); // Resync
+        logUserAction('Log Basata Service', { category, serviceProvider, amount, transactionId: extras.transactionId });
         return { success: true };
       } else {
         const errData = await res.text();

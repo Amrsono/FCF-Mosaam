@@ -10,6 +10,7 @@ import AnalyticsTab from './tabs/AnalyticsTab';
 import ReturnedTab from './tabs/ReturnedTab';
 import BasataTab from './tabs/BasataTab';
 import BostaTab from './tabs/BostaTab';
+import LogsTab from './tabs/LogsTab';
 import LoginPage from './pages/LoginPage';
 
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
@@ -43,7 +44,10 @@ function AppContent() {
     { id: 'basata', label: t('basata'), icon: <Zap size={20} /> },
     { id: 'bosta', label: t('bosta'), icon: <Package size={20} /> },
     { id: 'returned', label: t('returned'), icon: <Package size={20} /> },
-    ...(user?.role === 'admin' ? [{ id: 'analytics', label: t('analytics'), icon: <BarChart3 size={20} /> }] : []),
+    ...(user?.role === 'admin' ? [
+      { id: 'analytics', label: t('analytics'), icon: <BarChart3 size={20} /> },
+      { id: 'logs', label: t('logs'), icon: <Shield size={20} /> }
+    ] : []),
   ];
 
   return (
@@ -161,6 +165,7 @@ function AppContent() {
           {activeTab === 'bosta' && <BostaTab />}
           {activeTab === 'returned' && <ReturnedTab />}
           {activeTab === 'analytics' && user?.role === 'admin' && <AnalyticsTab />}
+          {activeTab === 'logs' && user?.role === 'admin' && <LogsTab />}
         </section>
       </main>
     </div>

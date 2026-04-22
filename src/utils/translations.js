@@ -15,6 +15,12 @@ export const translations = {
     mosaam: "Mosaam",
     admin: "Admin",
     staff: "Staff",
+    logs: "System Logs",
+    user: "User",
+    action: "Action",
+    details: "Details",
+    allActions: "All Actions",
+    allUsers: "All Users",
 
     // Common
     confirm: "Confirm",
@@ -141,6 +147,12 @@ export const translations = {
     mosaam: "موسم",
     admin: "مدير",
     staff: "موظف",
+    logs: "سجلات النظام",
+    user: "المستخدم",
+    action: "الإجراء",
+    details: "التفاصيل",
+    allActions: "جميع الإجراءات",
+    allUsers: "جميع المستخدمين",
 
     // Common
     confirm: "تأكيد",

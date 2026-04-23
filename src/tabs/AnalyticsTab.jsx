@@ -248,6 +248,10 @@ export default function AnalyticsTab() {
                 { group: 'Bosta', metric: 'Returned', value: bostaReturned.length },
                 { group: 'Basata', metric: 'POS Volume', value: `${basataVolume} EGP` },
                 { group: 'Basata', metric: 'Transactions', value: activeBasata.length },
+                { group: 'Calls Log', metric: 'Total Calls Created', value: callsInPeriod.length },
+                { group: 'Calls Log', metric: 'Calls Resolved', value: callsResolved.length },
+                { group: 'Calls Log', metric: 'Calls Closed', value: callsClosed.length },
+                { group: 'Calls Log', metric: 'Coverage Rate', value: `${coveragePct}%` },
               ]}
               headers={exportHeaders}
               filename={`Analytics_${timeframe}`}

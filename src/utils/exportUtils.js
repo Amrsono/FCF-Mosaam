@@ -1,6 +1,6 @@
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 /**
  * Normalizes dataset to have matching columns for exporting
@@ -114,7 +114,7 @@ export const exportToPDF = async (data, headers, filename, title) => {
 
     const fontStyles = fontName ? { font: fontName } : {};
 
-    doc.autoTable({
+    autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
       startY: title ? 30 : 14,

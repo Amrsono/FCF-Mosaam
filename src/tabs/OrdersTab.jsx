@@ -1,12 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { useDashboard, getDaysDifference } from '../context/DashboardContext';
-import { Search, Filter, Plus, UserCheck, RefreshCw, FileUp, CreditCard, Gift, AlertCircle, Flag } from 'lucide-react';
+import { Search, Filter, Plus, UserCheck, RefreshCw, FileUp, CreditCard, Gift, AlertCircle, Flag, PackageX, RotateCcw, Check } from 'lucide-react';
 import ExportActions from '../components/ExportActions';
 import ImportWizard from '../components/ImportWizard';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function OrdersTab() {
-  const { orders, customers, receiveOrder, bulkReceiveOrders, calculatePenalty, calculateStorageFee, markOrderPickedUp, returnOrder, updateCustomer } = useDashboard();
+  const { orders, customers, receiveOrder, bulkReceiveOrders, calculatePenalty, calculateStorageFee, markOrderPickedUp, returnOrder, updateCustomer, customerReturns, receiveCustomerReturn, markReturnedToJumia } = useDashboard();
   const { t, language } = useLanguage();
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -19,6 +19,13 @@ export default function OrdersTab() {
   const [showCrossSellModal, setShowCrossSellModal] = useState(false);
   const [pendingOrderId, setPendingOrderId] = useState(null);
   const [customerUpdateData, setCustomerUpdateData] = useState({ name: '', email: '', address: '', phone: '' });
+
+  // Customer Returns state
+  const [showReturnModal, setShowReturnModal] = useState(false);
+  const [returnFilterStatus, setReturnFilterStatus] = useState('At Station');
+  const [newReturn, setNewReturn] = useState({
+    orderId: '', customerPhone: '', customerName: '', description: '', reason: ''
+  });
 
   // Form for new order simulation
   const [newOrder, setNewOrder] = useState({
@@ -527,6 +534,152 @@ export default function OrdersTab() {
                  {t('cancel')}
                </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════ Customer Returns Section ═══════════════════ */}
+      <div className="glass-panel" style={{ background: 'rgba(255,255,255,0.02)', padding: '1.5rem', border: '1px solid rgba(168,85,247,0.2)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+          <div style={{ flex: '1 1 200px' }}>
+            <h4 style={{ color: 'white', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.1rem' }}>
+              <RotateCcw size={20} color="#a855f7" /> {t('customerReturns')}
+            </h4>
+            <p style={{ color: 'var(--text-secondary)', margin: '0.3rem 0 0 0', fontSize: '0.8rem' }}>
+              {t('customerReturnsDesc')}
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <select className="input-field" style={{ fontSize: '0.85rem', padding: '0.4rem 0.8rem' }} value={returnFilterStatus} onChange={e => setReturnFilterStatus(e.target.value)}>
+              <option value="At Station">{t('atStation')}</option>
+              <option value="Returned to Jumia">{t('returnedToJumia')}</option>
+              <option value="All">{language === 'ar' ? 'الكل' : 'All'}</option>
+            </select>
+            <button className="btn btn-outline" style={{ color: '#a855f7', borderColor: 'rgba(168,85,247,0.4)', padding: '0.4rem 0.8rem', fontSize: '0.85rem' }} onClick={() => setShowReturnModal(true)}>
+              <PackageX size={16} /> {t('receiveCustomerReturn')}
+            </button>
+          </div>
+        </div>
+
+        {/* Pending count badge */}
+        <div style={{ marginBottom: '0.75rem' }}>
+          <span className="badge badge-warning" style={{ fontSize: '0.8rem' }}>
+            {t('pendingReturns')}: {(customerReturns || []).filter(r => r.status === 'At Station').length}
+          </span>
+        </div>
+
+        {/* Customer Returns Table */}
+        <div className="table-container">
+          <table className="data-table" style={{ fontSize: '0.85rem' }}>
+            <thead>
+              <tr style={{ background: 'rgba(168,85,247,0.08)' }}>
+                <th>{t('orderId')}</th>
+                <th>{t('customer')}</th>
+                <th>{t('description')}</th>
+                <th>{t('returnReason')}</th>
+                <th>{t('receivedAt')}</th>
+                <th>{t('status')}</th>
+                <th>{t('actions')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(customerReturns || []).filter(r => returnFilterStatus === 'All' || r.status === returnFilterStatus).length > 0 ?
+                (customerReturns || []).filter(r => returnFilterStatus === 'All' || r.status === returnFilterStatus).map(ret => (
+                  <tr key={ret.id}>
+                    <td style={{ fontWeight: 600, fontFamily: 'monospace' }}>{ret.orderId || '-'}</td>
+                    <td>
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span>{ret.customerName}</span>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{ret.customerPhone}</span>
+                      </div>
+                    </td>
+                    <td>{ret.description}</td>
+                    <td style={{ color: 'var(--text-secondary)' }}>{ret.reason || '-'}</td>
+                    <td style={{ fontSize: '0.8rem' }}>{new Date(ret.receivedAt).toLocaleString()}</td>
+                    <td>
+                      <span className={`badge ${ret.status === 'At Station' ? 'badge-warning' : 'badge-success'}`}>
+                        {ret.status === 'At Station' ? t('atStation') : t('returnedToJumia')}
+                      </span>
+                      {ret.returnedAt && (
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                          {new Date(ret.returnedAt).toLocaleDateString()}
+                        </div>
+                      )}
+                    </td>
+                    <td>
+                      {ret.status === 'At Station' && (
+                        <button
+                          className="btn btn-outline"
+                          style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', color: 'var(--color-success)', borderColor: 'rgba(34,197,94,0.3)', gap: '0.3rem' }}
+                          onClick={() => markReturnedToJumia(ret.id)}
+                          title={t('markReturnedToJumia')}
+                        >
+                          <Check size={14} /> {t('markReturnedToJumia')}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              : (
+                <tr>
+                  <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                    <PackageX size={30} style={{ margin: '0 auto 0.5rem', opacity: 0.4, display: 'block' }} />
+                    {language === 'ar' ? 'لا توجد مرتجعات عملاء.' : 'No customer returns found.'}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Customer Return Modal */}
+      {showReturnModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '1rem' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '440px', background: 'var(--bg-main)', borderTop: '3px solid #a855f7' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h3 style={{ color: 'white', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <RotateCcw size={20} color="#a855f7" /> {t('receiveCustomerReturn')}
+              </h3>
+            </div>
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              if (!newReturn.customerPhone || !newReturn.description) return;
+              const res = await receiveCustomerReturn(newReturn);
+              if (res.success) {
+                setShowReturnModal(false);
+                setNewReturn({ orderId: '', customerPhone: '', customerName: '', description: '', reason: '' });
+              } else {
+                alert(res.error || 'Failed to save');
+              }
+            }}>
+              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                <div className="input-group" style={{ flex: '1 1 180px' }}>
+                  <label className="input-label">{t('orderId')} ({language === 'ar' ? 'اختياري' : 'Optional'})</label>
+                  <input className="input-field" value={newReturn.orderId} onChange={e => setNewReturn({...newReturn, orderId: e.target.value})} placeholder="e.g. ORD-1234" />
+                </div>
+                <div className="input-group" style={{ flex: '1 1 180px' }}>
+                  <label className="input-label">{t('phone')} *</label>
+                  <input required className="input-field" value={newReturn.customerPhone} onChange={e => setNewReturn({...newReturn, customerPhone: e.target.value})} placeholder="01..." />
+                </div>
+              </div>
+              <div className="input-group">
+                <label className="input-label">{t('customer')}</label>
+                <input className="input-field" value={newReturn.customerName} onChange={e => setNewReturn({...newReturn, customerName: e.target.value})} placeholder={t('name')} />
+              </div>
+              <div className="input-group">
+                <label className="input-label">{t('description')} *</label>
+                <input required className="input-field" value={newReturn.description} onChange={e => setNewReturn({...newReturn, description: e.target.value})} placeholder={language === 'ar' ? 'وصف المنتج...' : 'Product description...'} />
+              </div>
+              <div className="input-group">
+                <label className="input-label">{t('returnReason')}</label>
+                <input className="input-field" value={newReturn.reason} onChange={e => setNewReturn({...newReturn, reason: e.target.value})} placeholder={language === 'ar' ? 'منتج تالف، خطأ في الطلب...' : 'Damaged, wrong item...'} />
+              </div>
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+                <button type="submit" className="btn btn-primary" style={{ flex: 1, background: 'linear-gradient(135deg, #a855f7, #7c3aed)' }}>{t('confirm')}</button>
+                <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowReturnModal(false)}>{t('cancel')}</button>
+              </div>
+            </form>
           </div>
         </div>
       )}

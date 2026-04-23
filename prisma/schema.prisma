@@ -88,3 +88,15 @@ model UserLog {
   details   String?
   createdAt DateTime @default(now())
 }
+
+model CustomerReturn {
+  id            String    @id @default(uuid())
+  orderId       String?   // Optional link to the original J order
+  customerPhone String
+  customerName  String    @default("Unknown")
+  description   String
+  reason        String?
+  status        String    @default("At Station") // "At Station" | "Returned to Jumia"
+  receivedAt    DateTime  @default(now())
+  returnedAt    DateTime? // When marked as returned to Jumia
+}

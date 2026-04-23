@@ -113,6 +113,16 @@ export const translations = {
     returnedOrders: "Returned to  J ",
     returnDate: "Return Date",
 
+    // Customer Returns Section (in Orders Tab)
+    customerReturns: "Customer Returns",
+    customerReturnsDesc: "Packages returned by customers to the station, pending return to  J .",
+    receiveCustomerReturn: "Receive Customer Return",
+    returnReason: "Reason",
+    atStation: "At Station",
+    returnedToJumia: "Returned to  J ",
+    markReturnedToJumia: "Mark Returned to  J ",
+    pendingReturns: "Pending Returns",
+
     // Analytics Tab
     performance: "Performance",
     daily: "Daily",
@@ -245,6 +255,16 @@ export const translations = {
     // Returned Tab
     returnedOrders: "المرتجع لـ J ",
     returnDate: "تاريخ الارجاع",
+
+    // Customer Returns Section (in Orders Tab)
+    customerReturns: "مرتجعات العملاء",
+    customerReturnsDesc: "الطرود التي أرجعها العملاء للمحطة بانتظار إرجاعها لـ J .",
+    receiveCustomerReturn: "استلام مرتجع عميل",
+    returnReason: "السبب",
+    atStation: "في المحطة",
+    returnedToJumia: "تم الارجاع لـ J ",
+    markReturnedToJumia: "تم الارجاع لـ J ",
+    pendingReturns: "مرتجعات معلقة",
 
     // Analytics Tab
     performance: "الأداء",

@@ -12,22 +12,25 @@ export const DashboardProvider = ({ children }) => {
   const [bostaOrders, setBostaOrders] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [basataTransactions, setBasataTransactions] = useState([]);
+  const [customerReturns, setCustomerReturns] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      const [oRes, bostaRes, cRes, bRes] = await Promise.all([
+      const [oRes, bostaRes, cRes, bRes, crRes] = await Promise.all([
         fetch('/api/orders'),
         fetch('/api/bosta'),
         fetch('/api/customers'),
-        fetch('/api/basata')
+        fetch('/api/basata'),
+        fetch('/api/customer-returns')
       ]);
 
       if (oRes.ok) setOrders(await oRes.json());
       if (bostaRes.ok) setBostaOrders(await bostaRes.json());
       if (cRes.ok) setCustomers(await cRes.json());
       if (bRes.ok) setBasataTransactions(await bRes.json());
+      if (crRes.ok) setCustomerReturns(await crRes.json());
 
     } catch (error) {
       console.warn("Could not fetch from database. Ensure you are running via 'vercel dev' or have configured PostgreSQL correctly.", error);
@@ -280,12 +283,51 @@ export const DashboardProvider = ({ children }) => {
     }
   };
 
+  // ── Customer Returns ─────────────────────────────────────────────
+  const receiveCustomerReturn = async (returnData) => {
+    try {
+      const res = await fetch('/api/customer-returns', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(returnData)
+      });
+      if (res.ok) {
+        await fetchData();
+        logUserAction('Receive Customer Return', { orderId: returnData.orderId, phone: returnData.customerPhone });
+        return { success: true };
+      } else {
+        const errData = await res.text();
+        return { success: false, error: errData };
+      }
+    } catch (err) {
+      console.error(err);
+      return { success: false, error: 'Network error' };
+    }
+  };
+
+  const markReturnedToJumia = async (id) => {
+    try {
+      const res = await fetch('/api/customer-returns', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      });
+      if (res.ok) {
+        await fetchData();
+        logUserAction('Mark Returned to Jumia', { id });
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
     <DashboardContext.Provider value={{ 
       orders, 
       bostaOrders,
       customers, 
       basataTransactions,
+      customerReturns,
       isLoading,
       receiveOrder, 
       bulkReceiveOrders,
@@ -298,7 +340,9 @@ export const DashboardProvider = ({ children }) => {
       addCustomer,
       calculatePenalty,
       calculateStorageFee,
-      logBasataService
+      logBasataService,
+      receiveCustomerReturn,
+      markReturnedToJumia
     }}>
       {children}
     </DashboardContext.Provider>

@@ -11,6 +11,8 @@ import {
   XAxis, YAxis, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import { useLanguage } from '../context/LanguageContext';
+import { exportToPPTX } from '../utils/exportUtils';
+import { Presentation } from 'lucide-react';
 
 const CHART_COLORS = {
   jumia: '#f97316',
@@ -149,6 +151,37 @@ export default function AnalyticsTab() {
   const ordersReceivedKey = language === 'ar' ? 'طلبات مستلمة' : 'Orders Received';
   const callsMadeKey      = language === 'ar' ? 'مكالمات'       : 'Calls Made';
 
+  const handleExportPPTX = () => {
+    const analytics = {
+      jumia: {
+        pickedUpCount: jumiaPickedUp.length,
+        cash: jumiaCash,
+        returnedCount: stdReturned.length,
+        returnedAmt: jumiaReturnedAmt,
+        penalties: activePenalties
+      },
+      bosta: {
+        pickedUpCount: bostaPickedUp.length,
+        cash: bostaCash,
+        returnedCount: bostaReturned.length,
+        returnedAmt: bostaReturnedAmt
+      },
+      basata: {
+        volume: basataVolume,
+        categoryData: basataCatData
+      },
+      calls: {
+        total: callsInPeriod.length,
+        taken: callsTaken.length,
+        resolved: callsResolved.length,
+        coverage: coveragePct
+      },
+      grandTotal: grandTotal - jumiaReturnedAmt - bostaReturnedAmt
+    };
+
+    exportToPPTX(analytics, `FCF_Master_Report_${timeframe}`, language);
+  };
+
   // Resolution breakdown pie
   const resolutionCounts = {};
   callsResolved.forEach(l => { resolutionCounts[l.resolution] = (resolutionCounts[l.resolution] || 0) + 1; });
@@ -240,7 +273,27 @@ export default function AnalyticsTab() {
               </button>
             ))}
           </div>
-          <div style={{ [language === 'ar' ? 'paddingRight' : 'paddingLeft']: '0.5rem', [language === 'ar' ? 'borderRight' : 'borderLeft']: '1px solid var(--border-color)' }}>
+          <div style={{ 
+            display: 'flex', 
+            gap: '0.75rem',
+            [language === 'ar' ? 'paddingRight' : 'paddingLeft']: '0.5rem', 
+            [language === 'ar' ? 'borderRight' : 'borderLeft']: '1px solid var(--border-color)' 
+          }}>
+            <button
+              className="btn btn-outline"
+              style={{ 
+                borderColor: 'var(--color-primary)', 
+                color: 'var(--color-primary)',
+                background: 'rgba(120, 100, 255, 0.05)',
+                gap: '0.5rem',
+                fontSize: '0.85rem',
+                padding: '0.4rem 0.8rem'
+              }}
+              onClick={handleExportPPTX}
+            >
+              <Presentation size={16} />
+              {language === 'ar' ? 'تقرير PPTX' : 'Master PPTX'}
+            </button>
             <ExportActions
               data={[
                 { group: 'Overview', metric: 'Grand Total Revenue', value: `${grandTotal} EGP` },

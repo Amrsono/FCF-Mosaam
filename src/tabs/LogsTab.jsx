@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
-import { ShieldAlert, Search, Filter } from 'lucide-react';
+import { ShieldAlert, Search, Filter, Download } from 'lucide-react';
+import { exportToExcel } from '../utils/exportUtils';
 
 export default function LogsTab() {
   const { t, language } = useLanguage();
@@ -90,6 +91,35 @@ export default function LogsTab() {
               style={{ width: '100%', padding: '0.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-primary)' }}
             />
           </div>
+
+          {/* Excel export — exports current filtered view */}
+          <button
+            className="btn btn-outline"
+            style={{ color: 'var(--color-success)', borderColor: 'rgba(50,255,100,0.3)', padding: '0.5rem 1rem', fontSize: '0.85rem', alignSelf: 'flex-end', gap: '0.4rem' }}
+            onClick={() => exportToExcel(
+              filteredLogs.map(log => {
+                let parsedAmount = null;
+                try {
+                  const det = typeof log.details === 'string' ? JSON.parse(log.details) : log.details;
+                  if (det && det.amount !== undefined) parsedAmount = Number(det.amount);
+                } catch {}
+                return { ...log, _amount: parsedAmount !== null ? parsedAmount : '-' };
+              }),
+              [
+                { label: language === 'ar' ? 'تاريخ' : 'Date',    accessor: l => new Date(l.createdAt).toLocaleDateString() },
+                { label: language === 'ar' ? 'الوقت' : 'Time',    accessor: l => new Date(l.createdAt).toLocaleTimeString() },
+                { label: language === 'ar' ? 'المستخدم' : 'User',   accessor: 'username' },
+                { label: language === 'ar' ? 'الإجراء' : 'Action', accessor: 'action' },
+                { label: language === 'ar' ? 'المبلغ' : 'Amount (EGP)', accessor: '_amount' },
+                { label: language === 'ar' ? 'التفاصيل' : 'Details', accessor: l => l.details || '-' },
+              ],
+              `System_Logs_Export_${new Date().toISOString().slice(0,10)}`
+            )}
+            title={language === 'ar' ? 'تصدير إلى إكسيل' : 'Export to Excel'}
+          >
+            <Download size={15} />
+            {language === 'ar' ? 'تصدير إكسيل' : 'Export Excel'}
+          </button>
         </div>
       </div>
 

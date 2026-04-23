@@ -180,10 +180,10 @@ export default function AnalyticsTab() {
             <ExportActions
               data={[
                 { group: 'Overview', metric: 'Grand Total Revenue', value: `${grandTotal} EGP` },
-                { group: 'Jumia', metric: 'Cash Collected', value: `${jumiaCash} EGP` },
-                { group: 'Jumia', metric: 'Picked Up', value: jumiaPickedUp.length },
-                { group: 'Jumia', metric: 'Returned', value: jumiaReturned.length },
-                { group: 'Jumia', metric: 'Penalties Pool', value: `${activePenalties} EGP` },
+                { group: ' J ', metric: 'Cash Collected', value: `${jumiaCash} EGP` },
+                { group: ' J ', metric: 'Picked Up', value: jumiaPickedUp.length },
+                { group: ' J ', metric: 'Returned', value: jumiaReturned.length },
+                { group: ' J ', metric: 'Penalties Pool', value: `${activePenalties} EGP` },
                 { group: 'Bosta', metric: 'Cash Collected', value: `${bostaCash} EGP` },
                 { group: 'Bosta', metric: 'Picked Up', value: bostaPickedUp.length },
                 { group: 'Bosta', metric: 'Returned', value: bostaReturned.length },
@@ -232,7 +232,7 @@ export default function AnalyticsTab() {
         <MetricCard title={`${t('bosta')} ${t('cash')}`} value={`${bostaCash.toLocaleString()} EGP`} icon={<DollarSign size={14} />} color={CHART_COLORS.bosta} sub={language === 'ar' ? `${bostaPickedUp.length} طلب مستلم` : `${bostaPickedUp.length} orders picked up`} />
         <MetricCard title={`${t('basata')} POS`} value={`${basataVolume.toLocaleString()} EGP`} icon={<Zap size={14} />} color={CHART_COLORS.basata} sub={language === 'ar' ? `${activeBasata.length} عملية` : `${activeBasata.length} transactions`} />
         <MetricCard title={t('parkedPenalties')} value={`${activePenalties} EGP`} icon={<AlertOctagon size={14} />} color={CHART_COLORS.warning} sub={language === 'ar' ? `${jumiaInventory.length} طلب مخزن` : `${jumiaInventory.length} parked orders`} />
-        <MetricCard title={language === 'ar' ? 'حالة SLA حرجة' : 'SLA Critical'} value={jumiaSlaCritical} icon={<ShieldAlert size={14} />} color={CHART_COLORS.danger} sub={language === 'ar' ? 'جوميا 4+ أيام تأخير' : 'Jumia 4+ days overdue'} />
+        <MetricCard title={language === 'ar' ? 'حالة SLA حرجة' : 'SLA Critical'} value={jumiaSlaCritical} icon={<ShieldAlert size={14} />} color={CHART_COLORS.danger} sub={language === 'ar' ? ' J  4+ أيام تأخير' : ' J  4+ days overdue'} />
         <MetricCard title={t('customers')} value={customers.length} icon={<Users size={14} />} color="var(--color-primary)" sub={language === 'ar' ? 'مسجلين في المحطة' : 'Registered at station'} />
       </div>
 
@@ -260,7 +260,7 @@ export default function AnalyticsTab() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title={language === 'ar' ? 'مقارنة طلبات جوميا وبوسطة' : 'Jumia vs Bosta Orders Comparison'} icon={<BarChart2 size={16} color={CHART_COLORS.bosta} />}>
+        <ChartCard title={language === 'ar' ? 'مقارنة طلبات  J  وبوسطة' : ' J  vs Bosta Orders Comparison'} icon={<BarChart2 size={16} color={CHART_COLORS.bosta} />}>
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={comparisonData} barGap={4}>
               <XAxis dataKey="name" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} axisLine={false} tickLine={false} />
@@ -291,7 +291,7 @@ export default function AnalyticsTab() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title={language === 'ar' ? 'صحة Jumia SLA' : 'Jumia SLA Health'} icon={<Clock size={16} color={CHART_COLORS.warning} />}>
+        <ChartCard title={language === 'ar' ? 'صحة SLA لـ J ' : ' J  SLA Health'} icon={<Clock size={16} color={CHART_COLORS.warning} />}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', justifyContent: 'center', height: '100%' }}>
             {[
               { label: `${t('onTrack')} (0-1 ${language === 'ar' ? 'أيام' : 'days'})`, value: Math.max(0, jumiaInventory.length - jumiaSlaCritical - jumiaSlaNear), color: CHART_COLORS.success },
@@ -316,7 +316,7 @@ export default function AnalyticsTab() {
               </div>
             ))}
             <div style={{ marginTop: '0.5rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-              {language === 'ar' ? `إجمالي ${jumiaInventory.length} في مخزون جوميا` : `${jumiaInventory.length} total in Jumia inventory`}
+              {language === 'ar' ? `إجمالي ${jumiaInventory.length} في مخزون  J ` : `${jumiaInventory.length} total in  J  inventory`}
             </div>
           </div>
         </ChartCard>

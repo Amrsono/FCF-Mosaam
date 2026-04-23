@@ -106,32 +106,45 @@ export default function LogsTab() {
                   <th>{t('date')}</th>
                   <th>{t('user')}</th>
                   <th>{t('action')}</th>
+                  <th>{language === 'ar' ? 'المبلغ' : 'Amount'}</th>
                   <th>{t('details')}</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredLogs.length === 0 ? (
                   <tr>
-                    <td colSpan={4} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>{t('noData')}</td>
+                    <td colSpan={5} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>{t('noData')}</td>
                   </tr>
                 ) : (
-                  filteredLogs.map(log => (
-                    <tr key={log.id}>
-                      <td style={{ whiteSpace: 'nowrap' }}>
-                        <div style={{ fontWeight: 500 }}>{new Date(log.createdAt).toLocaleDateString()}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(log.createdAt).toLocaleTimeString()}</div>
-                      </td>
-                      <td>
-                        <span className="badge" style={{ background: 'rgba(var(--color-primary-rgb), 0.1)', color: 'var(--color-primary)' }}>
-                          {log.username}
-                        </span>
-                      </td>
-                      <td style={{ fontWeight: 600 }}>{log.action}</td>
-                      <td style={{ maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--text-muted)' }} title={log.details}>
-                        {log.details || '-'}
-                      </td>
-                    </tr>
-                  ))
+                  filteredLogs.map(log => {
+                    let parsedAmount = null;
+                    try {
+                      const det = typeof log.details === 'string' ? JSON.parse(log.details) : log.details;
+                      if (det && det.amount !== undefined && det.amount !== null) {
+                        parsedAmount = Number(det.amount);
+                      }
+                    } catch {}
+                    return (
+                      <tr key={log.id}>
+                        <td style={{ whiteSpace: 'nowrap' }}>
+                          <div style={{ fontWeight: 500 }}>{new Date(log.createdAt).toLocaleDateString()}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(log.createdAt).toLocaleTimeString()}</div>
+                        </td>
+                        <td>
+                          <span className="badge" style={{ background: 'rgba(var(--color-primary-rgb), 0.1)', color: 'var(--color-primary)' }}>
+                            {log.username}
+                          </span>
+                        </td>
+                        <td style={{ fontWeight: 600 }}>{log.action}</td>
+                        <td style={{ fontWeight: 700, color: parsedAmount !== null && parsedAmount > 0 ? 'var(--color-success)' : 'var(--text-muted)' }}>
+                          {parsedAmount !== null ? `${parsedAmount.toLocaleString()} EGP` : '-'}
+                        </td>
+                        <td style={{ maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--text-muted)' }} title={log.details}>
+                          {log.details || '-'}
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>

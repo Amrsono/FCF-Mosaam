@@ -13,7 +13,7 @@ model Customer {
   email           String?
   address         String?
   tier            String       @default("New")
-  deliveries      Int          @default(0) // Jumia deliveries
+  deliveries      Int          @default(0) // J deliveries
   bostaDeliveries Int          @default(0) // Bosta deliveries
   createdAt       DateTime     @default(now())
 

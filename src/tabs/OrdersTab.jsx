@@ -231,7 +231,7 @@ export default function OrdersTab() {
                 <th style={{ color: 'var(--color-warning)' }}>{language === 'ar' ? 'متاح في المنفذ' : 'In Stock'}</th>
                 <th>{language === 'ar' ? 'اجمالي الفلوس' : 'Total Money'}</th>
                 <th>{language === 'ar' ? 'تم سداد' : 'Paid'}</th>
-                <th>jumiapay</th>
+                <th> J  Pay</th>
                 <th style={{ color: 'var(--color-primary)' }}>{language === 'ar' ? 'رسوم التخزين' : 'Storage Fees'}</th>
                 <th style={{ color: 'var(--color-success)' }}>{language === 'ar' ? 'دخل المخزن' : 'WH Income'}</th>
                 <th>S</th>
@@ -427,7 +427,7 @@ export default function OrdersTab() {
                   <label className="input-label">{language === 'ar' ? 'طريقة الدفع' : 'Payment Method'}</label>
                   <select className="input-field" value={newOrder.paymentMethod} onChange={e => setNewOrder({...newOrder, paymentMethod: e.target.value})}>
                      <option value="Cash">Cash</option>
-                     <option value="JumiaPay">JumiaPay</option>
+                     <option value="JumiaPay"> J  Pay</option>
                   </select>
                 </div>
               </div>
@@ -537,7 +537,7 @@ export default function OrdersTab() {
         onClose={() => setShowImportWizard(false)}
         targetFields={importTargetFields}
         onImport={bulkReceiveOrders}
-        title={language === 'ar' ? 'استيراد طلبات جوميا' : 'Import Jumia Orders'}
+        title={language === 'ar' ? 'استيراد طلبات  J ' : 'Import  J  Orders'}
       />
 
     </div>

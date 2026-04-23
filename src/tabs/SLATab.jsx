@@ -29,7 +29,7 @@ export default function SLATab() {
   const jumiaExportHeaders = [
     { label: t('orderId'), accessor: 'id' },
     { label: t('phone'), accessor: 'customerPhone' },
-    { label: t('receivedAt'), accessor: o => new Date(o.receivedAt).toLocaleDateString() },
+    { label: t('receivedAt'), accessor: o => new Date(o.receivedAt).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) },
     { label: t('daysInInv'), accessor: 'daysParked' },
     { label: t('status'), accessor: o => o.slaStatus.toUpperCase() }
   ];
@@ -37,7 +37,7 @@ export default function SLATab() {
   const bostaExportHeaders = [
     { label: language === 'ar' ? 'رقم طلب بوسطة' : 'Bosta Order ID', accessor: 'id' },
     { label: t('phone'), accessor: 'customerPhone' },
-    { label: t('receivedAt'), accessor: o => new Date(o.receivedAt).toLocaleDateString() },
+    { label: t('receivedAt'), accessor: o => new Date(o.receivedAt).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) },
     { label: t('daysInInv'), accessor: 'daysParked' },
     { label: t('status'), accessor: o => o.slaStatus.toUpperCase() }
   ];
@@ -93,7 +93,7 @@ export default function SLATab() {
           style={{ border: 'none', gap: '0.5rem', flex: '1 1 auto' }}
           onClick={() => setActiveSource('jumia')}
         >
-          <Package size={16} /> {language === 'ar' ? 'SLA لجوميا' : 'Jumia SLA'}
+          <Package size={16} /> {language === 'ar' ? 'SLA لـ J ' : ' J  SLA'}
           <span style={{ background: 'rgba(255,255,255,0.15)', borderRadius: '999px', padding: '0.1rem 0.5rem', fontSize: '0.8rem' }}>{jumiaInventory.length}</span>
         </button>
         <button
@@ -112,12 +112,12 @@ export default function SLATab() {
       <div className="glass-panel" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
           <h3 style={{ color: 'white', margin: 0, fontSize: '1.2rem' }}>
-            {language === 'ar' ? `الجدول الزمني لـ ${activeSource === 'jumia' ? 'جوميا' : 'بوسطة'}` : `${activeSource === 'jumia' ? 'Jumia' : 'Bosta'} Tracking Timeline`}
+            {language === 'ar' ? `الجدول الزمني لـ ${activeSource === 'jumia' ? ' J ' : 'بوسطة'}` : `${activeSource === 'jumia' ? ' J ' : 'Bosta'} Tracking Timeline`}
           </h3>
           <ExportActions
             data={inventoryOrders}
             headers={activeSource === 'jumia' ? jumiaExportHeaders : bostaExportHeaders}
-            filename={`${activeSource === 'jumia' ? 'Jumia' : 'Bosta'}_SLA_Export`}
+            filename={`${activeSource === 'jumia' ? ' J ' : 'Bosta'}_SLA_Export`}
             title={t('slaMonitoring')}
           />
         </div>
@@ -131,7 +131,7 @@ export default function SLATab() {
                   {order.daysParked} {language === 'ar' ? 'أيام في المخزن' : 'Days Parked'}
                 </span>
               </div>
-              <span style={{ color: 'var(--text-secondary)' }}>{t('receivedAt')}: {new Date(order.receivedAt).toLocaleDateString()}</span>
+              <span style={{ color: 'var(--text-secondary)' }}>{t('receivedAt')}: {new Date(order.receivedAt).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
               {order.slaStatus === 'orange' && <span style={{ color: 'var(--color-warning)', fontSize: '0.85rem' }}>{language === 'ar' ? '⚠ تواصل مع العميل بشكل عاجل.' : '⚠ Contact customer urgently.'}</span>}
               {order.slaStatus === 'red' && <span style={{ color: 'var(--color-danger)', fontSize: '0.85rem' }}>{language === 'ar' ? '🚨 انتهت فترة السماح! ينصح بالإرجاع.' : '🚨 Grace period expired! Return recommended.'}</span>}
             </div>
@@ -145,7 +145,7 @@ export default function SLATab() {
 
         {inventoryOrders.length === 0 && (
           <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-            {language === 'ar' ? `لا توجد طلبات لـ ${activeSource === 'jumia' ? 'جوميا' : 'بوسطة'} قيد التتبع حالياً.` : `No ${activeSource === 'jumia' ? 'Jumia' : 'Bosta'} inventory currently tracked for SLA.`}
+            {language === 'ar' ? `لا توجد طلبات لـ ${activeSource === 'jumia' ? ' J ' : 'بوسطة'} قيد التتبع حالياً.` : `No ${activeSource === 'jumia' ? ' J ' : 'Bosta'} inventory currently tracked for SLA.`}
           </div>
         )}
       </div>

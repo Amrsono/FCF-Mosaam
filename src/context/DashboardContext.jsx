@@ -66,7 +66,7 @@ export const DashboardProvider = ({ children }) => {
       });
       if (res.ok) {
         await fetchData();
-        logUserAction('Receive Order', { id: orderData.id, phone: orderData.customerPhone });
+        logUserAction('Receive Order', { id: orderData.id, phone: orderData.customerPhone, amount: Number(orderData.totalValue) || 0 });
       } else {
         const errData = await res.text();
         alert("Database Connection Error: Could not save to Vercel Postgres. Ensure you are running 'vercel dev' and have pushed your Prisma schema. Error details: " + errData);
@@ -106,7 +106,8 @@ export const DashboardProvider = ({ children }) => {
         onProgressRow(i + 1);
     }
     await fetchData();
-    logUserAction('Bulk Import Orders', { successCount, totalCount: mappedOrdersList.length });
+    const totalImportedValue = mappedOrdersList.reduce((s, r) => s + (Number(r.totalValue) || 0), 0);
+    logUserAction('Bulk Import Orders', { successCount, totalCount: mappedOrdersList.length, amount: totalImportedValue });
     return successCount;
   };
 
@@ -156,7 +157,8 @@ export const DashboardProvider = ({ children }) => {
       });
       if (res.ok) {
         await fetchData(); // Resync
-        logUserAction('Pick Up Order', { id: orderId });
+        const pickedOrder = orders.find(o => o.id === orderId);
+        logUserAction('Pick Up Order', { id: orderId, amount: pickedOrder?.totalValue || 0 });
       }
     } catch (err) {
       console.error(err);
@@ -172,7 +174,8 @@ export const DashboardProvider = ({ children }) => {
       });
       if (res.ok) {
         await fetchData(); // Resync
-        logUserAction('Return Order', { id: orderId });
+        const returnedOrder = orders.find(o => o.id === orderId);
+        logUserAction('Return Order', { id: orderId, amount: returnedOrder?.totalValue || 0 });
       }
     } catch (err) {
       console.error(err);
@@ -203,7 +206,7 @@ export const DashboardProvider = ({ children }) => {
       });
       if (res.ok) {
         await fetchData();
-        logUserAction('Receive Bosta Order', { id: orderData.id, phone: orderData.customerPhone });
+        logUserAction('Receive Bosta Order', { id: orderData.id, phone: orderData.customerPhone, amount: Number(orderData.totalValue) || 0 });
       } else {
         alert("Database Connection Error (Bosta API).");
       }
@@ -221,7 +224,8 @@ export const DashboardProvider = ({ children }) => {
       });
       if (res.ok) {
         await fetchData(); 
-        logUserAction('Pick Up Bosta Order', { id: orderId });
+        const pickedBosta = bostaOrders.find(o => o.id === orderId);
+        logUserAction('Pick Up Bosta Order', { id: orderId, amount: pickedBosta?.totalValue || 0 });
       }
     } catch (err) {
       console.error(err);
@@ -237,7 +241,8 @@ export const DashboardProvider = ({ children }) => {
       });
       if (res.ok) {
         await fetchData(); 
-        logUserAction('Return Bosta Order', { id: orderId });
+        const returnedBosta = bostaOrders.find(o => o.id === orderId);
+        logUserAction('Return Bosta Order', { id: orderId, amount: returnedBosta?.totalValue || 0 });
       }
     } catch (err) {
       console.error(err);

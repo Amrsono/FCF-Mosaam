@@ -12,7 +12,7 @@ export default function ParkedPenaltiesTab() {
     { label: t('orderId'), accessor: 'id' },
     { label: t('customer'), accessor: 'customerName' },
     { label: t('phone'), accessor: 'customerPhone' },
-    { label: t('receivedAt'), accessor: o => new Date(o.receivedAt).toLocaleDateString() },
+    { label: t('receivedAt'), accessor: o => new Date(o.receivedAt).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) },
     { label: t('daysInInv'), accessor: 'daysParked' },
     { label: t('penaltyAmount'), accessor: 'penalty' }
   ];
@@ -54,7 +54,7 @@ export default function ParkedPenaltiesTab() {
             <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{order.customerPhone}</span>
           </div>
         </td>
-        <td>{new Date(order.receivedAt).toLocaleDateString()}</td>
+        <td>{new Date(order.receivedAt).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</td>
         <td>
           <span className="badge badge-warning">{order.daysParked} {language === 'ar' ? 'أيام' : 'Days'}</span>
         </td>

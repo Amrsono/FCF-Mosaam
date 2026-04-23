@@ -555,6 +555,21 @@ export default function OrdersTab() {
               <option value="Returned to Jumia">{t('returnedToJumia')}</option>
               <option value="All">{language === 'ar' ? 'الكل' : 'All'}</option>
             </select>
+            <ExportActions
+              data={(customerReturns || []).filter(r => returnFilterStatus === 'All' || r.status === returnFilterStatus)}
+              headers={[
+                { label: t('orderId'), accessor: 'orderId' },
+                { label: t('customer'), accessor: 'customerName' },
+                { label: t('phone'), accessor: 'customerPhone' },
+                { label: t('description'), accessor: 'description' },
+                { label: t('returnReason'), accessor: 'reason' },
+                { label: t('receivedAt'), accessor: r => new Date(r.receivedAt).toLocaleString() },
+                { label: t('status'), accessor: r => r.status === 'At Station' ? t('atStation') : t('returnedToJumia') },
+                { label: language === 'ar' ? 'تاريخ الارجاع لـ J' : 'Returned to J Date', accessor: r => r.returnedAt ? new Date(r.returnedAt).toLocaleString() : '-' }
+              ]}
+              filename="Customer_Returns_Export"
+              title={t('customerReturns')}
+            />
             <button className="btn btn-outline" style={{ color: '#a855f7', borderColor: 'rgba(168,85,247,0.4)', padding: '0.4rem 0.8rem', fontSize: '0.85rem' }} onClick={() => setShowReturnModal(true)}>
               <PackageX size={16} /> {t('receiveCustomerReturn')}
             </button>

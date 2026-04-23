@@ -13,6 +13,7 @@ export default function ReturnedTab() {
     { label: t('customer'), accessor: 'customerName' },
     { label: t('phone'), accessor: 'customerPhone' },
     { label: t('value'), accessor: 'totalValue' },
+    { label: language === 'ar' ? 'المنفذ' : 'Outlet', accessor: 'outlet' },
     { label: t('receivedAt'), accessor: o => new Date(o.receivedAt).toLocaleDateString() },
     { label: t('returnedStatus'), accessor: o => o.returnedAt ? new Date(o.returnedAt).toLocaleDateString() : 'N/A' },
     { label: t('daysInInv'), accessor: 'daysParkedFinal' }
@@ -64,6 +65,7 @@ export default function ReturnedTab() {
               <th>{t('orderId')}</th>
               <th>{t('customer')}</th>
               <th>{t('value')}</th>
+              <th>{language === 'ar' ? 'المنفذ' : 'Outlet'}</th>
               <th>{t('receivedAt')}</th>
               <th>{language === 'ar' ? 'تاريخ الإرجاع' : 'Returned On'}</th>
               <th>{t('daysInInv')}</th>
@@ -80,6 +82,7 @@ export default function ReturnedTab() {
                   </div>
                 </td>
                 <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{order.totalValue} EGP</td>
+                <td style={{ fontWeight: 600, color: 'white' }}>{order.outlet || '-'}</td>
                 <td>{new Date(order.receivedAt).toLocaleDateString()}</td>
                 <td>
                   <span style={{ color: 'var(--color-danger)', fontWeight: 500 }}>
@@ -90,7 +93,7 @@ export default function ReturnedTab() {
               </tr>
             )) : (
                <tr>
-                <td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                <td colSpan="7" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
                    <PackageX size={40} style={{ margin: '0 auto 1rem auto', opacity: 0.5 }} />
                    {language === 'ar' ? 'لم يتم تسجيل طلبات مرتجعة بعد.' : 'No returned orders logged yet.'}
                 </td>

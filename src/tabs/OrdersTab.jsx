@@ -539,7 +539,15 @@ export default function OrdersTab() {
       )}
 
       {/* ═══════════════════ Customer Returns Section ═══════════════════ */}
-      <div className="glass-panel" style={{ background: 'rgba(255,255,255,0.02)', padding: '1.5rem', border: '1px solid rgba(168,85,247,0.2)' }}>
+      <div className="glass-panel" style={{
+        background: 'rgba(255,255,255,0.02)',
+        padding: '1.5rem',
+        border: '1px solid rgba(168,85,247,0.2)',
+        margin: '0 -1.5rem -1.5rem -1.5rem',
+        borderRadius: '0 0 var(--radius-lg) var(--radius-lg)',
+        borderTop: '2px solid rgba(168,85,247,0.3)',
+        boxShadow: 'none'
+      }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
           <div style={{ flex: '1 1 200px' }}>
             <h4 style={{ color: 'white', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.1rem' }}>

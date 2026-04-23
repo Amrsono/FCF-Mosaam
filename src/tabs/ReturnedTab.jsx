@@ -5,7 +5,7 @@ import ExportActions from '../components/ExportActions';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function ReturnedTab() {
-  const { orders, customers } = useDashboard();
+  const { orders, customers, customerReturns } = useDashboard();
   const { t, language } = useLanguage();
   
   const exportHeaders = [
@@ -20,18 +20,38 @@ export default function ReturnedTab() {
   ];
 
   // Filter for returned orders
-  const returnedOrders = orders
+  const standardReturns = orders
     .filter(o => o.status === 'Returned')
     .map(o => {
       const cust = customers.find(c => c.phone === o.customerPhone);
       return {
         ...o,
         customerName: cust?.name || (language === 'ar' ? 'غير معروف' : 'Unknown'),
+        type: 'Warehouse',
         daysParkedFinal: o.returnedAt 
           ? Math.floor(Math.abs(new Date(o.returnedAt) - new Date(o.receivedAt)) / (1000 * 60 * 60 * 24))
           : getDaysDifference(o.receivedAt)
       };
-    })
+    });
+
+  // Filter for customer returns that have been sent back to Jumia
+  const cReturnsSentBack = (customerReturns || [])
+    .filter(r => r.status === 'Returned to Jumia')
+    .map(r => ({
+      id: r.orderId || (language === 'ar' ? 'مرتجع عميل' : 'Cust Return'),
+      customerPhone: r.customerPhone,
+      customerName: r.customerName,
+      totalValue: 0, // Customer returns don't have a value tracked in the applet
+      outlet: r.outlet,
+      receivedAt: r.receivedAt,
+      returnedAt: r.returnedAt,
+      type: 'Customer',
+      daysParkedFinal: r.returnedAt 
+        ? Math.floor(Math.abs(new Date(r.returnedAt) - new Date(r.receivedAt)) / (1000 * 60 * 60 * 24))
+        : getDaysDifference(r.receivedAt)
+    }));
+
+  const returnedOrders = [...standardReturns, ...cReturnsSentBack]
     .sort((a, b) => new Date(b.returnedAt) - new Date(a.returnedAt));
 
   return (
@@ -81,7 +101,15 @@ export default function ReturnedTab() {
                     <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{order.customerPhone}</span>
                   </div>
                 </td>
-                <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{order.totalValue} EGP</td>
+                <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                  {order.type === 'Customer' ? (
+                    <span className="badge badge-info" style={{ fontSize: '0.7rem', padding: '0.2rem 0.4rem' }}>
+                      {language === 'ar' ? 'مرتجع عميل' : 'Customer Return'}
+                    </span>
+                  ) : (
+                    `${order.totalValue} EGP`
+                  )}
+                </td>
                 <td style={{ fontWeight: 600, color: 'white' }}>{order.outlet || '-'}</td>
                 <td>{new Date(order.receivedAt).toLocaleDateString()}</td>
                 <td>

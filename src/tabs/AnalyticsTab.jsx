@@ -63,10 +63,15 @@ export default function AnalyticsTab() {
 
   // --- JUMIA ---
   const jumiaPickedUp = orders.filter(o => o.status === 'Picked Up' && new Date(o.pickedUpAt) >= thresholdDate);
-  const jumiaReturned = orders.filter(o => o.status === 'Returned' && new Date(o.returnedAt) >= thresholdDate);
   const jumiaInventory = orders.filter(o => o.status === 'Inventory');
+  
+  // Include Customer Returns that were sent back to Jumia
+  const stdReturned = orders.filter(o => o.status === 'Returned' && new Date(o.returnedAt) >= thresholdDate);
+  const custReturned = (customerReturns || []).filter(r => r.status === 'Returned to Jumia' && new Date(r.returnedAt) >= thresholdDate);
+  const jumiaReturned = [...stdReturned, ...custReturned];
+  
   const jumiaCash = jumiaPickedUp.reduce((s, o) => s + o.totalValue, 0);
-  const jumiaReturnedAmt = jumiaReturned.reduce((s, o) => s + o.totalValue, 0);
+  const jumiaReturnedAmt = stdReturned.reduce((s, o) => s + o.totalValue, 0); // Customer returns don't have a value in our system
   const getJumiaDailyRate = (order) => {
     const size = (order.size || 'M').toUpperCase();
     if (size === 'S') return 18;

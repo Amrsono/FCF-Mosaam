@@ -170,17 +170,14 @@ export default function CallsLogTab() {
         </div>
 
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-          {/* Admin-only Excel export */}
-          {user?.role === 'admin' && (
-            <button
-              className="btn btn-outline"
-              style={{ color: 'var(--color-success)', borderColor: 'rgba(50,255,100,0.3)', fontSize: '0.85rem', padding: '0.4rem 0.9rem' }}
-              onClick={() => exportToExcel(allLogsForExport, exportHeaders, 'Calls_Log_Export')}
-              title={isRTL ? 'تصدير إلى إكسل (للمديرين فقط)' : 'Export to Excel (Admin only)'}
-            >
-              <Download size={15} /> {isRTL ? 'إكسل' : 'Excel'}
-            </button>
-          )}
+          <button
+            className="btn btn-outline"
+            style={{ color: 'var(--color-success)', borderColor: 'rgba(50,255,100,0.3)', fontSize: '0.85rem', padding: '0.4rem 0.9rem' }}
+            onClick={() => exportToExcel(allLogsForExport, exportHeaders, 'Calls_Log_Export')}
+            title={isRTL ? 'تصدير إلى إكسل' : 'Export to Excel'}
+          >
+            <Download size={15} /> {isRTL ? 'إكسل' : 'Excel'}
+          </button>
 
           {/* Show/hide closed */}
           <button

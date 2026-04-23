@@ -60,7 +60,7 @@ export default function ReturnedTab() {
       {/* Top Banner */}
       <div className="glass-panel" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(135deg, rgba(239,68,68,0.15), rgba(var(--hue-primary), 15%, 10%, 0.5))', flexWrap: 'wrap', gap: '1.5rem', padding: '1.5rem' }}>
         <div style={{ flex: '1 1 200px' }}>
-          <h2 style={{ color: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.25rem' }}>
+          <h2 style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.25rem' }}>
             <RefreshCcw size={24} color="var(--color-danger)" /> 
             {language === 'ar' ? 'مرتجعات المستودع' : 'Warehouse Returns'}
           </h2>
@@ -110,7 +110,7 @@ export default function ReturnedTab() {
                     `${order.totalValue} EGP`
                   )}
                 </td>
-                <td style={{ fontWeight: 600, color: 'white' }}>{order.outlet || '-'}</td>
+                <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{order.outlet || '-'}</td>
                 <td>{new Date(order.receivedAt).toLocaleDateString()}</td>
                 <td>
                   <span style={{ color: 'var(--color-danger)', fontWeight: 500 }}>

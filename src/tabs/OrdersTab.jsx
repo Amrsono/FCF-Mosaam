@@ -545,13 +545,13 @@ export default function OrdersTab() {
 
       {/* ═══════════════════ Customer Returns Section ═══════════════════ */}
       <div className="glass-panel" style={{
-        background: 'rgba(255,255,255,0.02)',
+        background: 'var(--bg-overlay)',
         border: '1px solid rgba(168,85,247,0.2)',
         borderTop: '3px solid #a855f7'
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
           <div style={{ flex: '1 1 200px' }}>
-            <h4 style={{ color: 'white', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.1rem' }}>
+            <h4 style={{ color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.1rem' }}>
               <RotateCcw size={20} color="#a855f7" /> {t('customerReturns')}
             </h4>
             <p style={{ color: 'var(--text-secondary)', margin: '0.3rem 0 0 0', fontSize: '0.8rem' }}>
@@ -620,7 +620,7 @@ export default function OrdersTab() {
                     </td>
                     <td>{ret.description}</td>
                     <td style={{ color: 'var(--text-secondary)' }}>{ret.reason || '-'}</td>
-                    <td style={{ fontWeight: 600, color: 'white' }}>{ret.outlet || 'وبور الثلج'}</td>
+                    <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{ret.outlet || 'وبور الثلج'}</td>
                     <td style={{ fontSize: '0.8rem' }}>{new Date(ret.receivedAt).toLocaleString()}</td>
                     <td>
                       <span className={`badge ${ret.status === 'At Station' ? 'badge-warning' : 'badge-success'}`}>
@@ -664,7 +664,7 @@ export default function OrdersTab() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '1rem' }}>
           <div className="glass-panel" style={{ width: '100%', maxWidth: '440px', background: 'var(--bg-main)', borderTop: '3px solid #a855f7' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h3 style={{ color: 'white', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <h3 style={{ color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <RotateCcw size={20} color="#a855f7" /> {t('receiveCustomerReturn')}
               </h3>
             </div>

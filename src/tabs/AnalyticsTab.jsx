@@ -368,7 +368,7 @@ export default function AnalyticsTab() {
             ].map(s => (
               <div key={s.label}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem' }}>
-                  <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.82rem' }}>{s.label}</span>
+                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.82rem' }}>{s.label}</span>
                   <span style={{ color: s.color, fontWeight: 700 }}>{s.value}</span>
                 </div>
                 <div style={{ height: '6px', background: 'rgba(255,255,255,0.08)', borderRadius: '999px' }}>
@@ -415,7 +415,7 @@ export default function AnalyticsTab() {
                 return (
                   <div key={p.name}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                      <span style={{ color: 'white', fontSize: '0.85rem' }}>#{i + 1} {p.name}</span>
+                      <span style={{ color: 'var(--text-primary)', fontSize: '0.85rem' }}>#{i + 1} {p.name}</span>
                       <span style={{ color: CHART_COLORS.basata, fontWeight: 700 }}>{p.count}x</span>
                     </div>
                     <div style={{ height: '5px', background: 'rgba(255,255,255,0.08)', borderRadius: '999px' }}>
@@ -454,39 +454,39 @@ export default function AnalyticsTab() {
             <tbody>
               <tr>
                 <td><span style={{ color: CHART_COLORS.jumia, fontWeight: 700 }}>{t('jumia')}</span></td>
-                <td style={{ color: CHART_COLORS.success, fontWeight: 600 }}>{jumiaCash.toLocaleString()} EGP</td>
-                <td>{jumiaPickedUp.length}</td>
-                <td><span style={{ color: CHART_COLORS.danger }}>{jumiaReturned.length}</span></td>
-                <td style={{ color: CHART_COLORS.danger }}>{jumiaReturnedAmt.toLocaleString()} EGP</td>
-                <td style={{ color: (jumiaCash - jumiaReturnedAmt) >= 0 ? CHART_COLORS.success : CHART_COLORS.danger, fontWeight: 700 }}>
+                <td style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{jumiaCash.toLocaleString()} EGP</td>
+                <td style={{ color: 'var(--text-primary)' }}>{jumiaPickedUp.length}</td>
+                <td style={{ color: 'var(--text-primary)' }}><span style={{ color: 'var(--color-danger)' }}>{jumiaReturned.length}</span></td>
+                <td style={{ color: 'var(--color-danger)' }}>{jumiaReturnedAmt.toLocaleString()} EGP</td>
+                <td style={{ color: 'var(--color-success)', fontWeight: 700 }}>
                   {(jumiaCash - jumiaReturnedAmt).toLocaleString()} EGP
                 </td>
               </tr>
               <tr>
                 <td><span style={{ color: CHART_COLORS.bosta, fontWeight: 700 }}>{t('bosta')}</span></td>
-                <td style={{ color: CHART_COLORS.success, fontWeight: 600 }}>{bostaCash.toLocaleString()} EGP</td>
-                <td>{bostaPickedUp.length}</td>
-                <td><span style={{ color: CHART_COLORS.danger }}>{bostaReturned.length}</span></td>
-                <td style={{ color: CHART_COLORS.danger }}>{bostaReturnedAmt.toLocaleString()} EGP</td>
-                <td style={{ color: (bostaCash - bostaReturnedAmt) >= 0 ? CHART_COLORS.success : CHART_COLORS.danger, fontWeight: 700 }}>
+                <td style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{bostaCash.toLocaleString()} EGP</td>
+                <td style={{ color: 'var(--text-primary)' }}>{bostaPickedUp.length}</td>
+                <td style={{ color: 'var(--text-primary)' }}><span style={{ color: 'var(--color-danger)' }}>{bostaReturned.length}</span></td>
+                <td style={{ color: 'var(--color-danger)' }}>{bostaReturnedAmt.toLocaleString()} EGP</td>
+                <td style={{ color: 'var(--color-success)', fontWeight: 700 }}>
                   {(bostaCash - bostaReturnedAmt).toLocaleString()} EGP
                 </td>
               </tr>
               <tr>
                 <td><span style={{ color: CHART_COLORS.basata, fontWeight: 700 }}>{t('basata')} POS</span></td>
-                <td style={{ color: CHART_COLORS.success, fontWeight: 600 }}>{basataVolume.toLocaleString()} EGP</td>
-                <td>{activeBasata.length} {language === 'ar' ? 'عملية' : 'trx'}</td>
-                <td>—</td>
-                <td>—</td>
-                <td style={{ color: CHART_COLORS.success, fontWeight: 700 }}>{basataVolume.toLocaleString()} EGP</td>
+                <td style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{basataVolume.toLocaleString()} EGP</td>
+                <td style={{ color: 'var(--text-primary)' }}>{activeBasata.length} {language === 'ar' ? 'عملية' : 'trx'}</td>
+                <td style={{ color: 'var(--text-muted)' }}>—</td>
+                <td style={{ color: 'var(--text-muted)' }}>—</td>
+                <td style={{ color: 'var(--color-success)', fontWeight: 700 }}>{basataVolume.toLocaleString()} EGP</td>
               </tr>
-              <tr style={{ borderTop: '2px solid var(--border-color)' }}>
-                <td style={{ color: 'white', fontWeight: 800 }}>{language === 'ar' ? 'الإجمالي' : 'TOTAL'}</td>
-                <td style={{ color: 'white', fontWeight: 800 }}>{grandTotal.toLocaleString()} EGP</td>
-                <td style={{ fontWeight: 700 }}>{jumiaPickedUp.length + bostaPickedUp.length + activeBasata.length}</td>
-                <td style={{ color: CHART_COLORS.danger, fontWeight: 700 }}>{jumiaReturned.length + bostaReturned.length}</td>
-                <td style={{ color: CHART_COLORS.danger, fontWeight: 700 }}>{(jumiaReturnedAmt + bostaReturnedAmt).toLocaleString()} EGP</td>
-                <td style={{ color: CHART_COLORS.success, fontWeight: 800 }}>
+              <tr style={{ borderTop: '2px solid var(--border-color)', background: 'var(--bg-overlay)' }}>
+                <td style={{ color: 'var(--text-primary)', fontWeight: 800 }}>{language === 'ar' ? 'الإجمالي' : 'TOTAL'}</td>
+                <td style={{ color: 'var(--text-primary)', fontWeight: 800 }}>{grandTotal.toLocaleString()} EGP</td>
+                <td style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{jumiaPickedUp.length + bostaPickedUp.length + activeBasata.length}</td>
+                <td style={{ color: 'var(--color-danger)', fontWeight: 700 }}>{jumiaReturned.length + bostaReturned.length}</td>
+                <td style={{ color: 'var(--color-danger)', fontWeight: 700 }}>{(jumiaReturnedAmt + bostaReturnedAmt).toLocaleString()} EGP</td>
+                <td style={{ color: 'var(--color-success)', fontWeight: 800 }}>
                   {(grandTotal - jumiaReturnedAmt - bostaReturnedAmt).toLocaleString()} EGP
                 </td>
               </tr>
@@ -509,7 +509,7 @@ export default function AnalyticsTab() {
             { label: language === 'ar' ? 'مغلقة'              : 'Closed',              value: callsClosed.length,     color: 'var(--text-muted)' },
             { label: language === 'ar' ? 'نسبة التغطية'       : 'Coverage Rate',       value: `${coveragePct}%`,      color: coveragePct >= 80 ? 'var(--color-success)' : coveragePct >= 50 ? 'var(--color-warning)' : 'var(--color-danger)' },
           ].map(m => (
-            <div key={m.label} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-md)', padding: '0.75rem 1rem', borderLeft: `3px solid ${m.color}` }}>
+            <div key={m.label} style={{ background: 'var(--bg-overlay)', borderRadius: 'var(--radius-md)', padding: '0.75rem 1rem', borderLeft: `3px solid ${m.color}` }}>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>{m.label}</div>
               <div style={{ fontSize: '1.5rem', fontWeight: 700, color: m.color }}>{m.value}</div>
             </div>
@@ -525,10 +525,10 @@ export default function AnalyticsTab() {
             </div>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={callsVsOrdersData} barGap={4}>
-                <XAxis dataKey="name" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} axisLine={false} tickLine={false} />
-                <YAxis orientation={language === 'ar' ? 'right' : 'left'} tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }} axisLine={false} tickLine={false} />
-                <Tooltip content={<CustomTooltip language={language} />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
-                <Legend formatter={val => <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.78rem' }}>{val}</span>} />
+                <XAxis dataKey="name" tick={{ fill: 'var(--text-muted)', fontSize: 12 }} axisLine={false} tickLine={false} />
+                <YAxis orientation={language === 'ar' ? 'right' : 'left'} tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <Tooltip content={<CustomTooltip language={language} />} cursor={{ fill: 'var(--bg-overlay)' }} />
+                <Legend formatter={val => <span style={{ color: 'var(--text-secondary)', fontSize: '0.78rem' }}>{val}</span>} />
                 <Bar dataKey={ordersReceivedKey} fill={CHART_COLORS.jumia}  radius={[6,6,0,0]} />
                 <Bar dataKey={callsMadeKey}      fill={CHART_COLORS.warning} radius={[6,6,0,0]} />
               </BarChart>
@@ -547,7 +547,7 @@ export default function AnalyticsTab() {
                     {resolutionPieData.map((e, i) => <Cell key={i} fill={e.color} stroke="transparent" />)}
                   </Pie>
                   <Tooltip content={<CustomTooltip language={language} />} />
-                  <Legend formatter={val => <span style={{ color: 'rgba(255,255,255,0.65)', fontSize: '0.75rem' }}>{val}</span>} />
+                  <Legend formatter={val => <span style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>{val}</span>} />
                 </PieChart>
               </ResponsiveContainer>
             ) : (

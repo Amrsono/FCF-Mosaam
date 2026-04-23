@@ -161,7 +161,10 @@ export default function OrdersTab() {
   };
 
   return (
-    <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: '100%', overflowY: 'auto', paddingRight: '0.5rem' }}>
+      
+      {/* ═══════════════════ Main Inventory Section ═══════════════════ */}
+      <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       
       {/* Header Actions */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
@@ -538,15 +541,14 @@ export default function OrdersTab() {
         </div>
       )}
 
+        </div>
+      </div>
+
       {/* ═══════════════════ Customer Returns Section ═══════════════════ */}
       <div className="glass-panel" style={{
         background: 'rgba(255,255,255,0.02)',
-        padding: '1.5rem',
         border: '1px solid rgba(168,85,247,0.2)',
-        margin: '0 -1.5rem -1.5rem -1.5rem',
-        borderRadius: '0 0 var(--radius-lg) var(--radius-lg)',
-        borderTop: '2px solid rgba(168,85,247,0.3)',
-        boxShadow: 'none'
+        borderTop: '3px solid #a855f7'
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
           <div style={{ flex: '1 1 200px' }}>

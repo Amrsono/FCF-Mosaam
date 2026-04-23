@@ -91,14 +91,14 @@ function AppContent() {
           ))}
         </nav>
 
-        {/* Theme + Language Switcher + User Info + Logout */}
+        {/* Sidebar Footer: Theme, Language, User, Logout */}
         <div style={{ 
           borderTop: '1px solid var(--border-color)', 
-          padding: '1.25rem 0.5rem 0.5rem', 
-          marginTop: '1rem', 
+          padding: '1.25rem 1rem 1.25rem', 
+          marginTop: 'auto', 
           display: 'flex', 
           flexDirection: 'column', 
-          gap: '0.85rem' 
+          gap: '1rem' 
         }}>
           
           {/* Theme Switcher */}
@@ -106,31 +106,29 @@ function AppContent() {
             display: 'flex', 
             background: 'var(--bg-main)', 
             borderRadius: 'var(--radius-md)', 
-            padding: '0.25rem', 
+            padding: '2px', 
             border: '1px solid var(--border-color)',
-            height: '40px'
+            height: '40px',
+            overflow: 'hidden'
           }}>
             <button 
-              className={`btn ${theme === 'dark' ? 'btn-primary' : 'btn-outline'}`} 
-              style={{ flex: 1, padding: 0, border: 'none', background: theme === 'dark' ? undefined : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
+              className={`btn ${theme === 'dark' ? 'btn-primary' : ''}`} 
+              style={{ flex: 1, padding: 0, border: 'none', background: theme === 'dark' ? undefined : 'transparent', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
               onClick={() => toggleTheme('dark')}
-              title="Dark Theme"
             >
               <Moon size={14} />
             </button>
             <button 
-              className={`btn ${theme === 'medium' ? 'btn-primary' : 'btn-outline'}`} 
-              style={{ flex: 1, padding: 0, border: 'none', background: theme === 'medium' ? undefined : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
+              className={`btn ${theme === 'medium' ? 'btn-primary' : ''}`} 
+              style={{ flex: 1, padding: 0, border: 'none', background: theme === 'medium' ? undefined : 'transparent', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
               onClick={() => toggleTheme('medium')}
-              title="Medium Theme"
             >
               <Monitor size={14} />
             </button>
             <button 
-              className={`btn ${theme === 'light' ? 'btn-primary' : 'btn-outline'}`} 
-              style={{ flex: 1, padding: 0, border: 'none', background: theme === 'light' ? undefined : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
+              className={`btn ${theme === 'light' ? 'btn-primary' : ''}`} 
+              style={{ flex: 1, padding: 0, border: 'none', background: theme === 'light' ? undefined : 'transparent', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
               onClick={() => toggleTheme('light')}
-              title="Light Theme"
             >
               <Sun size={14} />
             </button>
@@ -144,40 +142,41 @@ function AppContent() {
               width: '100%', 
               justifyContent: 'center', 
               gap: '0.6rem', 
-              fontSize: '0.9rem',
-              height: '42px',
+              fontSize: '0.85rem',
+              height: '40px',
               fontWeight: 500
             }}
           >
-            <Languages size={16} />
-            <span style={{ paddingTop: '2px' }}>{language === 'en' ? 'العربية' : 'English'}</span>
+            <Languages size={15} />
+            <span>{language === 'en' ? 'العربية' : 'English'}</span>
           </button>
 
           {/* User Profile Card */}
           <div style={{ 
             display: 'flex', 
             alignItems: 'center', 
-            gap: '0.85rem', 
-            padding: '0.75rem 1rem', 
-            background: 'rgba(255,255,255,0.02)', 
+            gap: '0.75rem', 
+            padding: '0.75rem', 
+            background: 'rgba(255,255,255,0.03)', 
             border: '1px solid var(--border-color)', 
-            borderRadius: 'var(--radius-md)' 
+            borderRadius: 'var(--radius-md)',
+            width: '100%'
           }}>
             <div style={{ 
-              width: '40px', 
-              height: '40px', 
-              borderRadius: '10px', 
+              width: '36px', 
+              height: '36px', 
+              borderRadius: '8px', 
               background: 'linear-gradient(135deg, var(--color-primary), var(--color-accent))', 
               display: 'flex', 
               alignItems: 'center', 
               justifyContent: 'center',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+              flexShrink: 0
             }}>
-              <Shield size={20} color="white" />
+              <Shield size={18} color="white" />
             </div>
-            <div style={{ overflow: 'hidden' }}>
-              <div style={{ color: 'var(--text-primary)', fontWeight: 700, fontSize: '0.95rem', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{user.username}</div>
-              <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'capitalize' }}>{user.role === 'admin' ? t('admin') : t('staff')}</div>
+            <div style={{ overflow: 'hidden', flex: 1 }}>
+              <div style={{ color: 'var(--text-primary)', fontWeight: 700, fontSize: '0.88rem', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{user.username}</div>
+              <div style={{ color: 'var(--text-muted)', fontSize: '0.72rem', textTransform: 'capitalize' }}>{user.role === 'admin' ? t('admin') : t('staff')}</div>
             </div>
           </div>
 
@@ -188,13 +187,13 @@ function AppContent() {
               width: '100%', 
               justifyContent: 'center', 
               color: 'var(--color-danger)', 
-              borderColor: 'rgba(239,68,68,0.3)',
-              height: '42px',
-              marginTop: '0.25rem'
+              borderColor: 'rgba(239,68,68,0.2)',
+              height: '40px',
+              fontSize: '0.85rem'
             }}
             onClick={logout}
           >
-            <LogOut size={16} /> 
+            <LogOut size={15} /> 
             <span style={{ fontWeight: 600 }}>{t('signOut')}</span>
           </button>
         </div>

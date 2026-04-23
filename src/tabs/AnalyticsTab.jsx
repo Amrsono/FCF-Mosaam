@@ -3,7 +3,7 @@ import { useDashboard } from '../context/DashboardContext';
 import {
   TrendingUp, PackageCheck, AlertOctagon, Users, DollarSign,
   Zap, BarChart2, Activity,
-  ArrowUpRight, ArrowDownRight, ShieldAlert, Clock
+  ArrowUpRight, ArrowDownRight, ShieldAlert, Clock, Phone
 } from 'lucide-react';
 import ExportActions from '../components/ExportActions';
 import {
@@ -45,7 +45,7 @@ const CustomTooltip = ({ active, payload, label, language }) => {
 };
 
 export default function AnalyticsTab() {
-  const { orders, customers, basataTransactions, bostaOrders } = useDashboard();
+  const { orders, customers, basataTransactions, bostaOrders, callLogs } = useDashboard();
   const { t, language } = useLanguage();
   const [timeframe, setTimeframe] = useState('daily');
 
@@ -108,6 +108,58 @@ export default function AnalyticsTab() {
 
   // --- GRAND TOTAL ---
   const grandTotal = jumiaCash + bostaCash + basataVolume;
+
+  // --- CALLS LOG ANALYTICS ---
+  const callsInPeriod = (callLogs || []).filter(l => l.createdAt && new Date(l.createdAt) >= thresholdDate);
+  const callsTaken   = callsInPeriod.filter(l => l.agentName);
+  const callsResolved= callsInPeriod.filter(l => l.resolution);
+  const callsClosed  = callsInPeriod.filter(l => l.isClosed);
+
+  // Urgent orders in period (2–3 days) — total received within period from both sources
+  const allOrdersInPeriod = [
+    ...orders.filter(o => new Date(o.receivedAt) >= thresholdDate),
+    ...bostaOrders.filter(o => new Date(o.receivedAt) >= thresholdDate)
+  ];
+  const urgentInPeriod = allOrdersInPeriod.filter(o => {
+    const d = Math.floor(Math.abs(new Date() - new Date(o.receivedAt)) / 86400000);
+    return o.status === 'Inventory' && d >= 2 && d < 4;
+  });
+  const coveragePct = urgentInPeriod.length > 0
+    ? Math.round((callsTaken.length / urgentInPeriod.length) * 100)
+    : 100;
+
+  // Calls vs Orders received bar data
+  const callsVsOrdersData = [
+    {
+      name: language === 'ar' ? 'J' : 'J',
+      [language === 'ar' ? 'طلبات مستلمة' : 'Orders Received']: orders.filter(o => new Date(o.receivedAt) >= thresholdDate).length,
+      [language === 'ar' ? 'مكالمات' : 'Calls Made']: callsInPeriod.filter(l => l.orderSource !== 'bosta').length,
+    },
+    {
+      name: language === 'ar' ? 'بوسطة' : 'Bosta',
+      [language === 'ar' ? 'طلبات مستلمة' : 'Orders Received']: bostaOrders.filter(o => new Date(o.receivedAt) >= thresholdDate).length,
+      [language === 'ar' ? 'مكالمات' : 'Calls Made']: callsInPeriod.filter(l => l.orderSource === 'bosta').length,
+    },
+  ];
+  const ordersReceivedKey = language === 'ar' ? 'طلبات مستلمة' : 'Orders Received';
+  const callsMadeKey      = language === 'ar' ? 'مكالمات'       : 'Calls Made';
+
+  // Resolution breakdown pie
+  const resolutionCounts = {};
+  callsResolved.forEach(l => { resolutionCounts[l.resolution] = (resolutionCounts[l.resolution] || 0) + 1; });
+  const RESOLUTION_DISPLAY = {
+    coming_pickup:   language === 'ar' ? '✅ سيأتي للاستلام' : '✅ Coming to pick up',
+    will_cancel:     language === 'ar' ? '❌ سيلغي' : '❌ Will cancel',
+    no_answer:       language === 'ar' ? '📵 لا رد' : '📵 No answer',
+    declined:        language === 'ar' ? '❓ رفض' : '❓ Declined',
+    no_longer_wants: language === 'ar' ? '🚫 لا يريد' : '🚫 No longer wants',
+  };
+  const RES_COLORS = ['#22c55e','#ef4444','#f59e0b','#a855f7','#f97316'];
+  const resolutionPieData = Object.keys(resolutionCounts).map((key, i) => ({
+    name: RESOLUTION_DISPLAY[key] || key,
+    value: resolutionCounts[key],
+    color: RES_COLORS[i % RES_COLORS.length]
+  }));
 
   // --- CHART DATA ---
   const revenueStreamData = [
@@ -431,6 +483,70 @@ export default function AnalyticsTab() {
               </tr>
             </tbody>
           </table>
+        </div>
+      </ChartCard>
+
+      {/* Row 6: Calls Log Analytics */}
+      <ChartCard
+        title={language === 'ar' ? '📞 تحليلات سجل المكالمات' : '📞 Calls Log Analytics'}
+        icon={<Phone size={16} color="var(--color-warning)" />}
+      >
+        {/* Metric strip */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+          {[
+            { label: language === 'ar' ? 'مكالمات في الفترة' : 'Calls This Period',  value: callsInPeriod.length,   color: 'var(--color-warning)' },
+            { label: language === 'ar' ? 'تم استلامها'        : 'Calls Taken',         value: callsTaken.length,      color: 'var(--color-primary)' },
+            { label: language === 'ar' ? 'تم الحل'            : 'Resolved',            value: callsResolved.length,   color: 'var(--color-success)' },
+            { label: language === 'ar' ? 'مغلقة'              : 'Closed',              value: callsClosed.length,     color: 'var(--text-muted)' },
+            { label: language === 'ar' ? 'نسبة التغطية'       : 'Coverage Rate',       value: `${coveragePct}%`,      color: coveragePct >= 80 ? 'var(--color-success)' : coveragePct >= 50 ? 'var(--color-warning)' : 'var(--color-danger)' },
+          ].map(m => (
+            <div key={m.label} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-md)', padding: '0.75rem 1rem', borderLeft: `3px solid ${m.color}` }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>{m.label}</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: m.color }}>{m.value}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Charts row */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%,300px), 1fr))', gap: '1rem' }}>
+          {/* Calls vs Orders received grouped bar */}
+          <div>
+            <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: 600 }}>
+              {language === 'ar' ? 'مكالمات مقابل طلبات مستلمة' : 'Calls Made vs Orders Received'}
+            </div>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={callsVsOrdersData} barGap={4}>
+                <XAxis dataKey="name" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} axisLine={false} tickLine={false} />
+                <YAxis orientation={language === 'ar' ? 'right' : 'left'} tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <Tooltip content={<CustomTooltip language={language} />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+                <Legend formatter={val => <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.78rem' }}>{val}</span>} />
+                <Bar dataKey={ordersReceivedKey} fill={CHART_COLORS.jumia}  radius={[6,6,0,0]} />
+                <Bar dataKey={callsMadeKey}      fill={CHART_COLORS.warning} radius={[6,6,0,0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Resolution breakdown pie */}
+          <div>
+            <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: 600 }}>
+              {language === 'ar' ? 'توزيع نتائج المكالمات' : 'Call Resolution Breakdown'}
+            </div>
+            {resolutionPieData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={200}>
+                <PieChart>
+                  <Pie data={resolutionPieData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={4} dataKey="value">
+                    {resolutionPieData.map((e, i) => <Cell key={i} fill={e.color} stroke="transparent" />)}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip language={language} />} />
+                  <Legend formatter={val => <span style={{ color: 'rgba(255,255,255,0.65)', fontSize: '0.75rem' }}>{val}</span>} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '200px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                {language === 'ar' ? 'لا توجد مكالمات محلولة بعد' : 'No resolved calls yet in this period'}
+              </div>
+            )}
+          </div>
         </div>
       </ChartCard>
 

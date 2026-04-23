@@ -120,7 +120,7 @@ export default function BostaTab() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
         <div className="glass-panel" style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.15), transparent)', [language === 'ar' ? 'borderRight' : 'borderLeft']: '3px solid #6366f1', padding: '1rem' }}>
           <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{t('inventoryStatus')}</div>
-          <div style={{ fontSize: '2rem', fontWeight: 700, color: 'white' }}>{inventoryCount}</div>
+          <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--text-primary)' }}>{inventoryCount}</div>
         </div>
         <div className="glass-panel" style={{ background: 'linear-gradient(135deg, rgba(34,197,94,0.15), transparent)', [language === 'ar' ? 'borderRight' : 'borderLeft']: '3px solid var(--color-success)', padding: '1rem' }}>
           <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{t('pickedUpStatus')}</div>
@@ -214,11 +214,11 @@ export default function BostaTab() {
                     <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{order.category}</span>
                   </div>
                 </td>
-                <td style={{ fontWeight: 700, color: 'white' }}>{order.outlet || 'وبور الثلج'}</td>
+                <td style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{order.outlet || 'وبور الثلج'}</td>
                 <td>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
                     {/* Date line */}
-                    <span style={{ fontWeight: 600, color: 'white', fontSize: '0.82rem', letterSpacing: '0.01em' }}>
+                    <span style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.82rem', letterSpacing: '0.01em' }}>
                       {new Date(order.receivedAt).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-GB', { year: 'numeric', month: 'short', day: '2-digit' })}
                     </span>
                     {/* Time line */}
@@ -321,7 +321,7 @@ export default function BostaTab() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '1rem' }}>
           <div className="glass-panel" style={{ width: '100%', maxWidth: '440px', background: 'var(--bg-main)', borderTop: '3px solid #6366f1' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h3 style={{ color: 'white', margin: 0 }}>{t('receiveBostaOrder')}</h3>
+              <h3 style={{ color: 'var(--text-primary)', margin: 0 }}>{t('receiveBostaOrder')}</h3>
               <Package color="#6366f1" size={24} />
             </div>
             <form onSubmit={handleSubmit}>
@@ -376,10 +376,10 @@ export default function BostaTab() {
       {showCrossSellModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: '1rem' }}>
           <div className="glass-panel" style={{ width: '100%', maxWidth: '450px', background: 'var(--bg-main)', textAlign: 'center', border: '1px solid #6366f1' }}>
-            <div style={{ width: '64px', height: '64px', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+            <div style={{ width: '64px', height: '64px', background: 'var(--bg-overlay)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
                <CreditCard size={32} color="#6366f1" />
             </div>
-            <h3 style={{ marginBottom: '1rem', color: 'white' }}>{language === 'ar' ? 'عرض كارت ميزة (بوسطة)' : 'Meeza Card Offer (Bosta)'}</h3>
+            <h3 style={{ marginBottom: '1rem', color: 'var(--text-primary)' }}>{language === 'ar' ? 'عرض كارت ميزة (بوسطة)' : 'Meeza Card Offer (Bosta)'}</h3>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', lineHeight: '1.6' }}>
               {language === 'ar' 
                 ? 'هل قمت بعرض "كارت ميزة اللحظي" والخدمات المصرفية للبنك الأهلي على العميل قبل استلام طرد بوسطة؟' 
@@ -387,7 +387,7 @@ export default function BostaTab() {
             </p>
 
             {/* Missing Data Fields */}
-            <div className="glass-panel" style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', marginBottom: '1.5rem', textAlign: 'right' }}>
+            <div className="glass-panel" style={{ background: 'var(--bg-overlay)', padding: '1rem', marginBottom: '1.5rem', textAlign: 'right' }}>
                <h4 style={{ fontSize: '0.9rem', marginBottom: '1rem', color: '#6366f1' }}>
                  {language === 'ar' ? 'تحديث بيانات العميل' : 'Update Customer Data'}
                </h4>

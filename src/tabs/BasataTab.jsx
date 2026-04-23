@@ -110,7 +110,7 @@ export default function BasataTab() {
       
       {/* 1. Quick Actions Bar */}
       <div>
-        <h3 style={{ color: 'white', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <h3 style={{ color: 'var(--text-primary)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <Zap size={20} color="var(--color-warning)" /> {t('popularQuickActions')}
         </h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
@@ -124,7 +124,7 @@ export default function BasataTab() {
               onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
             >
               <div style={{ color: action.color }}>{action.icon}</div>
-              <span style={{ fontWeight: 600, color: 'white' }}>{action.provider}</span>
+              <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{action.provider}</span>
             </button>
           ))}
         </div>
@@ -132,13 +132,13 @@ export default function BasataTab() {
 
       {/* 2. Full Service Categories */}
       <div>
-         <h3 style={{ color: 'white', marginBottom: '1rem' }}>{t('allServiceCategories')}</h3>
+         <h3 style={{ color: 'var(--text-primary)', marginBottom: '1rem' }}>{t('allServiceCategories')}</h3>
          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
            {SERVICE_CATEGORIES.map(cat => (
              <div key={cat.title} className="glass-panel" style={{ padding: '1.25rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>
                   {cat.icon}
-                  <h4 style={{ color: 'white', margin: 0 }}>{cat.title}</h4>
+                  <h4 style={{ color: 'var(--text-primary)', margin: 0 }}>{cat.title}</h4>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   {cat.services.map(svc => (
@@ -161,7 +161,7 @@ export default function BasataTab() {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '2px solid var(--border-color)', paddingBottom: '0.5rem', flexWrap: 'wrap', gap: '1rem' }}>
            <div style={{ flex: '1 1 200px' }}>
-             <h3 style={{ color: 'white', margin: 0 }}>{t('transactionReport')}</h3>
+             <h3 style={{ color: 'var(--text-primary)', margin: 0 }}>{t('transactionReport')}</h3>
              <p style={{ color: 'var(--text-secondary)', margin: '0.2rem 0 0 0', fontSize: '0.85rem' }}>
                 {language === 'ar' ? 'سجل كامل لخدمات POS التي تم معالجتها.' : 'Full history of processed POS services.'}
              </p>
@@ -192,7 +192,7 @@ export default function BasataTab() {
                    <td style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{new Date(t.performedAt).toLocaleString()}</td>
                    <td style={{ fontFamily: 'monospace' }}>{t.transactionId || '-'}</td>
                    <td>
-                      <div style={{ fontWeight: 600, color: 'white' }}>{t.serviceProvider}</div>
+                      <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{t.serviceProvider}</div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t.category}</div>
                    </td>
                    <td><span className="badge badge-neutral">{getPaymentMethodLabel(t.paymentMethod)}</span></td>
@@ -214,13 +214,13 @@ export default function BasataTab() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '1rem' }}>
           <div className="glass-panel" style={{ width: '100%', maxWidth: '450px', background: 'var(--bg-main)', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-               <h3 style={{ color: 'white', margin: 0 }}>{t('logPosTransaction')}</h3>
+               <h3 style={{ color: 'var(--text-primary)', margin: 0 }}>{t('logPosTransaction')}</h3>
                <CreditCard color="var(--color-primary)" />
             </div>
             
             <div style={{ background: 'var(--bg-panel)', padding: '1rem', borderRadius: 'var(--radius-md)', marginBottom: '1.5rem', [language === 'ar' ? 'borderRight' : 'borderLeft']: '4px solid var(--color-primary)' }}>
               <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{t('serviceProvider')}</div>
-              <div style={{ color: 'white', fontWeight: 600, fontSize: '1.1rem' }}>{activeService.provider}</div>
+              <div style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: '1.1rem' }}>{activeService.provider}</div>
               <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>{activeService.category}</div>
             </div>
 

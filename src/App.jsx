@@ -157,7 +157,7 @@ function AppContent() {
             alignItems: 'center', 
             gap: '0.75rem', 
             padding: '0.75rem', 
-            background: 'rgba(255,255,255,0.03)', 
+            background: 'var(--bg-overlay)', 
             border: '1px solid var(--border-color)', 
             borderRadius: 'var(--radius-md)',
             width: '100%'

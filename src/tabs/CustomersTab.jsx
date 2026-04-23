@@ -52,7 +52,7 @@ export default function CustomersTab() {
   return (
     <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: '100%' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-        <h3 style={{ color: 'white', margin: 0, flex: '1 1 100%' }}>{t('customerDirectory')}</h3>
+        <h3 style={{ color: 'var(--text-primary)', margin: 0, flex: '1 1 100%' }}>{t('customerDirectory')}</h3>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', width: '100%', justifyContent: 'space-between' }}>
           <div className="badge badge-primary">{t('total')}: {customers.length}</div>
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>

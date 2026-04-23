@@ -111,7 +111,7 @@ export default function SLATab() {
       {/* Timeline */}
       <div className="glass-panel" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-          <h3 style={{ color: 'white', margin: 0, fontSize: '1.2rem' }}>
+          <h3 style={{ color: 'var(--text-primary)', margin: 0, fontSize: '1.2rem' }}>
             {language === 'ar' ? `الجدول الزمني لـ ${activeSource === 'jumia' ? ' J ' : 'بوسطة'}` : `${activeSource === 'jumia' ? ' J ' : 'Bosta'} Tracking Timeline`}
           </h3>
           <ExportActions
@@ -126,7 +126,7 @@ export default function SLATab() {
           <div key={order.id} style={{ ...getSlaCardStyle(order.slaStatus), padding: '1.25rem', borderRadius: 'var(--radius-md)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: '1 1 200px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: '1.1rem', fontWeight: 600, color: 'white' }}>{order.id}</span>
+                <span style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-primary)' }}>{order.id}</span>
                 <span className={`badge badge-${order.slaStatus === 'red' ? 'danger' : order.slaStatus === 'orange' ? 'warning' : 'success'}`}>
                   {order.daysParked} {language === 'ar' ? 'أيام في المخزن' : 'Days Parked'}
                 </span>

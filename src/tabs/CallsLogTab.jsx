@@ -101,20 +101,54 @@ export default function CallsLogTab() {
     setFormState(prev => { const n = { ...prev }; delete n[logId]; return n; });
   };
 
-  // Export headers for admin Excel export
-  const exportHeaders = [
-    { label: isRTL ? 'رقم الطلب' : 'Order ID',      accessor: 'orderId' },
-    { label: isRTL ? 'المصدر' : 'Source',             accessor: l => l.orderSource === 'bosta' ? 'Bosta' : 'J' },
-    { label: isRTL ? 'هاتف العميل' : 'Customer Phone', accessor: 'customerPhone' },
-    { label: isRTL ? 'الوكيل' : 'Agent',              accessor: l => l.agentName || '-' },
-    { label: isRTL ? 'وقت الاستلام' : 'Taken At',    accessor: l => l.takenAt ? new Date(l.takenAt).toLocaleString() : '-' },
-    { label: isRTL ? 'النتيجة' : 'Resolution',        accessor: l => l.resolution || '-' },
-    { label: isRTL ? 'ملاحظات' : 'Notes',             accessor: l => l.notes || '-' },
-    { label: isRTL ? 'وقت النتيجة' : 'Resolved At',  accessor: l => l.resolvedAt ? new Date(l.resolvedAt).toLocaleString() : '-' },
-    { label: isRTL ? 'مغلق؟' : 'Closed?',            accessor: l => l.isClosed ? 'Yes' : 'No' },
-  ];
+  // Resolution label map for human-readable export values
+  const RESOLUTION_LABELS = {
+    coming_pickup:   t('resComingPickup'),
+    will_cancel:     t('resWillCancel'),
+    no_answer:       t('resNoAnswer'),
+    declined:        t('resDeclined'),
+    no_longer_wants: t('resNoLongerWants'),
+  };
 
-  const allLogsForExport = callLogs; // admin sees everything
+  // Build a fully enriched export dataset — every log joined with its order + customer data
+  const allLogsForExport = useMemo(() => {
+    return callLogs.map(log => {
+      const srcOrders = log.orderSource === 'bosta' ? bostaOrders : orders;
+      const order = srcOrders.find(o => o.id === log.orderId);
+      const cust  = customers.find(c => c.phone === log.customerPhone);
+      const daysParked = order ? getDaysDifference(order.receivedAt) : '-';
+      return {
+        ...log,
+        _customerName: cust?.name || '-',
+        _outlet:       order?.outlet || '-',
+        _description:  order?.description || '-',
+        _totalValue:   order?.totalValue ?? '-',
+        _daysParked:   daysParked,
+        _receivedAt:   order?.receivedAt ? new Date(order.receivedAt).toLocaleString() : '-',
+        _resolutionLabel: log.resolution ? (RESOLUTION_LABELS[log.resolution] || log.resolution) : '-',
+      };
+    });
+  }, [callLogs, orders, bostaOrders, customers]);
+
+  // Full export headers — 14 columns
+  const exportHeaders = [
+    { label: isRTL ? 'رقم الطلب'         : 'Order ID',          accessor: 'orderId' },
+    { label: isRTL ? 'المصدر'             : 'Source',            accessor: l => l.orderSource === 'bosta' ? 'Bosta' : 'J' },
+    { label: isRTL ? 'اسم العميل'        : 'Customer Name',     accessor: '_customerName' },
+    { label: isRTL ? 'هاتف العميل'       : 'Customer Phone',    accessor: 'customerPhone' },
+    { label: isRTL ? 'المنفذ'            : 'Outlet',            accessor: '_outlet' },
+    { label: isRTL ? 'وصف الطلب'        : 'Description',       accessor: '_description' },
+    { label: isRTL ? 'قيمة الطلب'       : 'Order Value (EGP)', accessor: '_totalValue' },
+    { label: isRTL ? 'أيام في المخزن'   : 'Days Parked',       accessor: '_daysParked' },
+    { label: isRTL ? 'تاريخ الاستلام'   : 'Received At',       accessor: '_receivedAt' },
+    { label: isRTL ? 'الوكيل'           : 'Agent',             accessor: l => l.agentName || '-' },
+    { label: isRTL ? 'وقت استلام المكالمة' : 'Call Taken At',  accessor: l => l.takenAt ? new Date(l.takenAt).toLocaleString() : '-' },
+    { label: isRTL ? 'نتيجة المكالمة'  : 'Resolution',        accessor: '_resolutionLabel' },
+    { label: isRTL ? 'ملاحظات'          : 'Notes',             accessor: l => l.notes || '-' },
+    { label: isRTL ? 'وقت تسجيل النتيجة' : 'Resolved At',     accessor: l => l.resolvedAt ? new Date(l.resolvedAt).toLocaleString() : '-' },
+    { label: isRTL ? 'تاريخ الإنشاء'   : 'Created At',        accessor: l => l.createdAt ? new Date(l.createdAt).toLocaleString() : '-' },
+    { label: isRTL ? 'الحالة'           : 'Status',            accessor: l => l.isClosed ? (isRTL ? 'مغلق' : 'Closed') : (isRTL ? 'مفتوح' : 'Open') },
+  ];
 
   return (
     <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: '100%' }}>

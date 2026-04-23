@@ -47,7 +47,7 @@ const CustomTooltip = ({ active, payload, label, language }) => {
 };
 
 export default function AnalyticsTab() {
-  const { orders, customers, basataTransactions, bostaOrders, callLogs } = useDashboard();
+  const { orders, customers, basataTransactions, bostaOrders, callLogs, customerReturns } = useDashboard();
   const { t, language } = useLanguage();
   const [timeframe, setTimeframe] = useState('daily');
 

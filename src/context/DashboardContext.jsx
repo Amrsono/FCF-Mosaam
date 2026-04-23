@@ -13,17 +13,19 @@ export const DashboardProvider = ({ children }) => {
   const [customers, setCustomers] = useState([]);
   const [basataTransactions, setBasataTransactions] = useState([]);
   const [customerReturns, setCustomerReturns] = useState([]);
+  const [callLogs, setCallLogs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      const [oRes, bostaRes, cRes, bRes, crRes] = await Promise.all([
+      const [oRes, bostaRes, cRes, bRes, crRes, clRes] = await Promise.all([
         fetch('/api/orders'),
         fetch('/api/bosta'),
         fetch('/api/customers'),
         fetch('/api/basata'),
-        fetch('/api/customer-returns')
+        fetch('/api/customer-returns'),
+        fetch('/api/call-logs')
       ]);
 
       if (oRes.ok) setOrders(await oRes.json());
@@ -31,6 +33,7 @@ export const DashboardProvider = ({ children }) => {
       if (cRes.ok) setCustomers(await cRes.json());
       if (bRes.ok) setBasataTransactions(await bRes.json());
       if (crRes.ok) setCustomerReturns(await crRes.json());
+      if (clRes.ok) setCallLogs(await clRes.json());
 
     } catch (error) {
       console.warn("Could not fetch from database. Ensure you are running via 'vercel dev' or have configured PostgreSQL correctly.", error);
@@ -324,6 +327,68 @@ export const DashboardProvider = ({ children }) => {
     }
   };
 
+  // ── Calls Log ────────────────────────────────────────────────────────
+  const createOrGetCallLog = async (orderId, orderSource, customerPhone) => {
+    try {
+      const res = await fetch('/api/call-logs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId, orderSource, customerPhone })
+      });
+      if (res.ok) await fetchData();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const takeCallOwnership = async (logId, agentName) => {
+    try {
+      const res = await fetch('/api/call-logs', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: logId, action: 'TAKE', agentName })
+      });
+      if (res.ok) {
+        await fetchData();
+        logUserAction('Take Call Ownership', { logId, agentName });
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const resolveCall = async (logId, resolution, notes) => {
+    try {
+      const res = await fetch('/api/call-logs', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: logId, action: 'RESOLVE', resolution, notes })
+      });
+      if (res.ok) {
+        await fetchData();
+        logUserAction('Resolve Call', { logId, resolution });
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const closeCallLog = async (logId) => {
+    try {
+      const res = await fetch('/api/call-logs', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: logId, action: 'CLOSE' })
+      });
+      if (res.ok) {
+        await fetchData();
+        logUserAction('Close Call Log', { logId });
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
     <DashboardContext.Provider value={{ 
       orders, 
@@ -331,6 +396,7 @@ export const DashboardProvider = ({ children }) => {
       customers, 
       basataTransactions,
       customerReturns,
+      callLogs,
       isLoading,
       receiveOrder, 
       bulkReceiveOrders,
@@ -345,7 +411,11 @@ export const DashboardProvider = ({ children }) => {
       calculateStorageFee,
       logBasataService,
       receiveCustomerReturn,
-      markReturnedToJumia
+      markReturnedToJumia,
+      createOrGetCallLog,
+      takeCallOwnership,
+      resolveCall,
+      closeCallLog
     }}>
       {children}
     </DashboardContext.Provider>

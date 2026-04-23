@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { DashboardProvider } from './context/DashboardContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { Package, Users, Clock, AlertTriangle, BarChart3, LayoutDashboard, Zap, LogOut, Shield, Menu, X } from 'lucide-react';
+import { Package, Users, Clock, AlertTriangle, BarChart3, LayoutDashboard, Zap, LogOut, Shield, Menu, X, Phone } from 'lucide-react';
 import OrdersTab from './tabs/OrdersTab';
 import CustomersTab from './tabs/CustomersTab';
 import SLATab from './tabs/SLATab';
@@ -11,6 +11,7 @@ import ReturnedTab from './tabs/ReturnedTab';
 import BasataTab from './tabs/BasataTab';
 import BostaTab from './tabs/BostaTab';
 import LogsTab from './tabs/LogsTab';
+import CallsLogTab from './tabs/CallsLogTab';
 import LoginPage from './pages/LoginPage';
 
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
@@ -37,13 +38,14 @@ function AppContent() {
   if (!user) return <LoginPage />;
 
   const tabs = [
-    { id: 'orders', label: t('inventory'), icon: <Package size={20} /> },
+    { id: 'orders',    label: t('inventory'), icon: <Package size={20} /> },
     { id: 'customers', label: t('customers'), icon: <Users size={20} /> },
-    { id: 'sla', label: t('sla'), icon: <Clock size={20} /> },
+    { id: 'sla',       label: t('sla'),       icon: <Clock size={20} /> },
     { id: 'penalties', label: t('penalties'), icon: <AlertTriangle size={20} /> },
-    { id: 'basata', label: t('basata'), icon: <Zap size={20} /> },
-    { id: 'bosta', label: t('bosta'), icon: <Package size={20} /> },
-    { id: 'returned', label: t('returned'), icon: <Package size={20} /> },
+    { id: 'basata',    label: t('basata'),    icon: <Zap size={20} /> },
+    { id: 'bosta',     label: t('bosta'),     icon: <Package size={20} /> },
+    { id: 'returned',  label: t('returned'),  icon: <Package size={20} /> },
+    { id: 'calls',     label: t('callsLog'),  icon: <Phone size={20} /> },
     ...(user?.role === 'admin' ? [
       { id: 'analytics', label: t('analytics'), icon: <BarChart3 size={20} /> },
       { id: 'logs', label: t('logs'), icon: <Shield size={20} /> }
@@ -157,15 +159,16 @@ function AppContent() {
         </header>
 
         <section className="content-area">
-          {activeTab === 'orders' && <OrdersTab />}
+          {activeTab === 'orders'    && <OrdersTab />}
           {activeTab === 'customers' && <CustomersTab />}
-          {activeTab === 'sla' && <SLATab />}
+          {activeTab === 'sla'       && <SLATab />}
           {activeTab === 'penalties' && <ParkedPenaltiesTab />}
-          {activeTab === 'basata' && <BasataTab />}
-          {activeTab === 'bosta' && <BostaTab />}
-          {activeTab === 'returned' && <ReturnedTab />}
+          {activeTab === 'basata'    && <BasataTab />}
+          {activeTab === 'bosta'     && <BostaTab />}
+          {activeTab === 'returned'  && <ReturnedTab />}
+          {activeTab === 'calls'     && <CallsLogTab />}
           {activeTab === 'analytics' && user?.role === 'admin' && <AnalyticsTab />}
-          {activeTab === 'logs' && user?.role === 'admin' && <LogsTab />}
+          {activeTab === 'logs'      && user?.role === 'admin' && <LogsTab />}
         </section>
       </main>
     </div>

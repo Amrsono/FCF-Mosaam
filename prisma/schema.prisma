@@ -101,3 +101,18 @@ model CustomerReturn {
   receivedAt    DateTime  @default(now())
   returnedAt    DateTime? // When marked as returned to Jumia
 }
+
+model CallLog {
+  id            String    @id @default(uuid())
+  orderId       String                          // The J or Bosta order ID
+  orderSource   String    @default("jumia")     // "jumia" | "bosta"
+  customerPhone String
+  agentName     String?                         // Username who took ownership
+  takenAt       DateTime?                       // When agent clicked "Take Call"
+  resolution    String?                         // "coming_pickup" | "will_cancel" | "no_answer" | "declined" | "no_longer_wants"
+  notes         String?
+  resolvedAt    DateTime?
+  isClosed      Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+}
+

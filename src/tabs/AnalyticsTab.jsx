@@ -67,9 +67,16 @@ export default function AnalyticsTab() {
   const jumiaInventory = orders.filter(o => o.status === 'Inventory');
   const jumiaCash = jumiaPickedUp.reduce((s, o) => s + o.totalValue, 0);
   const jumiaReturnedAmt = jumiaReturned.reduce((s, o) => s + o.totalValue, 0);
+  const getJumiaDailyRate = (order) => {
+    const size = (order.size || 'M').toUpperCase();
+    if (size === 'S') return 18;
+    if (size === 'L') return 45;
+    return 30;
+  };
   const activePenalties = jumiaInventory.reduce((s, o) => {
     const days = Math.floor(Math.abs(new Date() - new Date(o.receivedAt)) / 86400000);
-    return s + days * 5;
+    if (days < 1) return s;
+    return s + getJumiaDailyRate(o) * days;
   }, 0);
   const jumiaSlaCritical = jumiaInventory.filter(o => {
     const d = Math.floor(Math.abs(new Date() - new Date(o.receivedAt)) / 86400000);
@@ -296,7 +303,7 @@ export default function AnalyticsTab() {
             {[
               { label: `${t('onTrack')} (0-1 ${language === 'ar' ? 'أيام' : 'days'})`, value: Math.max(0, jumiaInventory.length - jumiaSlaCritical - jumiaSlaNear), color: CHART_COLORS.success },
               { label: `${language === 'ar' ? 'تنبيه' : 'Warning'} (2-3 ${language === 'ar' ? 'أيام' : 'days'})`, value: jumiaSlaNear, color: CHART_COLORS.warning },
-              { label: `${t('critical4Days')} (4+ ${language === 'ar' ? 'أيام' : 'days'})`, value: jumiaSlaCritical, color: CHART_COLORS.danger },
+              { label: t('critical4Days'), value: jumiaSlaCritical, color: CHART_COLORS.danger },
             ].map(s => (
               <div key={s.label}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem' }}>

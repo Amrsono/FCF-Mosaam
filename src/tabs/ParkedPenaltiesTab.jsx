@@ -14,17 +14,21 @@ export default function ParkedPenaltiesTab() {
     { label: t('phone'), accessor: 'customerPhone' },
     { label: t('receivedAt'), accessor: o => new Date(o.receivedAt).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) },
     { label: t('daysInInv'), accessor: 'daysParked' },
-    { label: t('penaltyAmount'), accessor: 'penalty' }
+    { label: language === 'ar' ? 'سعر اليوم' : 'Daily Rate', accessor: o => `${o.dailyRate} EGP` },
+    { label: t('penaltyAmount'), accessor: o => `${o.penalty} EGP` }
   ];
 
   const penalizedOrders = orders
     .filter(o => o.status === 'Inventory')
     .map(o => {
        const cust = customers.find(c => c.phone === o.customerPhone);
+       const size = (o.size || 'M').toUpperCase();
+       const dailyRate = size === 'S' ? 18 : size === 'L' ? 45 : 30;
        return {
          ...o,
          customerName: cust?.name || (language === 'ar' ? 'غير معروف' : 'Unknown'),
          penalty: calculatePenalty(o),
+         dailyRate,
          daysParked: getDaysDifference(o.receivedAt)
        };
     })
@@ -59,7 +63,7 @@ export default function ParkedPenaltiesTab() {
           <span className="badge badge-warning">{order.daysParked} {language === 'ar' ? 'أيام' : 'Days'}</span>
         </td>
         <td style={{ fontWeight: 600, color: 'var(--color-warning)', fontSize: '1.1rem' }}>
-          {order.penalty} EGP
+          {order.penalty} <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 400 }}>EGP ({order.dailyRate}/day)</span>
         </td>
       </tr>
     ));
@@ -76,7 +80,9 @@ export default function ParkedPenaltiesTab() {
             {t('parkedPenalties')}
           </h2>
           <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem', fontSize: '0.9rem' }}>
-            {language === 'ar' ? 'مستحقة من الطلبات المخزنة (5 جنيه / اليوم)' : 'Accrued from orders parked (5 EGP / Day)'}
+            {language === 'ar'
+              ? 'مستحقة من الطلبات المخزنة — S: 18 | M: 30 | L: 45 جنيه / اليوم'
+              : 'Accrued from parked orders — S: 18 | M: 30 | L: 45 EGP / Day'}
           </p>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem', flex: '1 1 auto' }}>

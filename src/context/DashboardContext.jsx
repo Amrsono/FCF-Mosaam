@@ -185,20 +185,23 @@ export const DashboardProvider = ({ children }) => {
     }
   };
 
-  const calculatePenalty = (order) => {
-    // Disabled for now: Math.max(0, (days - 3) * 5)
-    return 0; 
+  // Returns daily storage rate based on package size (Jumia only)
+  const getJumiaDailyRate = (order) => {
+    const size = (order.size || 'M').toUpperCase();
+    if (size === 'S') return 18;
+    if (size === 'L') return 45;
+    return 30; // Medium (default)
   };
 
-  const calculateStorageFee = (order) => {
-    const days = Math.max(1, getDaysDifference(order.receivedAt)); // At least 1 day if received today
-    const size = (order.size || 'M').toUpperCase();
-    let dailyRate = 30;
-    if (size === 'S') dailyRate = 18;
-    if (size === 'L') dailyRate = 45;
-    
-    return dailyRate * days;
+  // Accrued storage fee: charges from day 1, every day parked (18/30/45 EGP per day)
+  const calculatePenalty = (order) => {
+    const days = getDaysDifference(order.receivedAt);
+    if (days < 1) return 0;
+    return getJumiaDailyRate(order) * days;
   };
+
+  // Alias kept for backwards compatibility (same logic)
+  const calculateStorageFee = calculatePenalty;
 
   const receiveBostaOrder = async (orderData) => {
     try {

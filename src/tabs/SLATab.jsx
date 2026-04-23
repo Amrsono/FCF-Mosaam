@@ -77,7 +77,7 @@ export default function SLATab() {
         </div>
         <div>
           <div style={{ fontSize: '2rem', fontWeight: 700 }}>{list.filter(o => o.slaStatus === 'red').length}</div>
-          <div style={{ color: 'var(--text-secondary)' }}>{t('critical4Days')} (4+ {language === 'ar' ? 'أيام' : 'Days'})</div>
+          <div style={{ color: 'var(--text-secondary)' }}>{t('critical4Days')}</div>
         </div>
       </div>
     </div>

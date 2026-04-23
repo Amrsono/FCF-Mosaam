@@ -25,7 +25,7 @@ export const DashboardProvider = ({ children }) => {
         fetch('/api/customers'),
         fetch('/api/basata'),
         fetch('/api/customer-returns'),
-        fetch('/api/call-logs')
+        fetch('/api/call-logs?all=true')
       ]);
 
       if (oRes.ok) setOrders(await oRes.json());

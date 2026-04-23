@@ -12,7 +12,7 @@ export default async function handler(req, res) {
 
     // POST: Log a new customer return (customer brought package back to station)
     if (req.method === 'POST') {
-      const { orderId, customerPhone, customerName, description, reason } = req.body;
+      const { orderId, customerPhone, customerName, description, reason, outlet } = req.body;
 
       const newReturn = await prisma.customerReturn.create({
         data: {
@@ -20,7 +20,8 @@ export default async function handler(req, res) {
           customerPhone: customerPhone || '',
           customerName: customerName || 'Unknown',
           description: description || '',
-          reason: reason || null
+          reason: reason || null,
+          outlet: outlet || 'وبور الثلج'
         }
       });
 

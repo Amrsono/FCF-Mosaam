@@ -24,7 +24,7 @@ export default function OrdersTab() {
   const [showReturnModal, setShowReturnModal] = useState(false);
   const [returnFilterStatus, setReturnFilterStatus] = useState('At Station');
   const [newReturn, setNewReturn] = useState({
-    orderId: '', customerPhone: '', customerName: '', description: '', reason: ''
+    orderId: '', customerPhone: '', customerName: '', description: '', reason: '', outlet: 'وبور الثلج'
   });
 
   // Form for new order simulation
@@ -58,11 +58,37 @@ export default function OrdersTab() {
     { key: 'paymentMethod', label: language === 'ar' ? 'طريقة الدفع' : 'Payment Method', required: false }
   ];
 
-  // Aggregated Summary Data
+  // Derived Data (computed first so summaryByOutlet can consume it)
+  const orderList = useMemo(() => {
+    return orders.map(order => {
+      const cust = customers.find(c => c.phone === order.customerPhone);
+      return {
+        ...order,
+        customerName: cust?.name || (language === 'ar' ? 'غير معروف' : 'Unknown'),
+        tier: cust?.tier || (language === 'ar' ? 'جديد' : 'New'),
+        penalty: calculatePenalty(order),
+        daysParked: order.status === 'Inventory' ? getDaysDifference(order.receivedAt) : 0
+      };
+    }).filter(order => {
+      // Search
+      const matchesSearch = order.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                            order.customerPhone.includes(searchTerm);
+      // Category Filter
+      const matchesCategory = filterCategory === 'All' || order.category === filterCategory;
+      // Tier Filter
+      const matchesTier = filterTier === 'All' || order.tier === filterTier;
+      // Status Filter
+      const matchesStatus = filterStatus === 'All' || order.status === filterStatus;
+
+      return matchesSearch && matchesCategory && matchesTier && matchesStatus;
+    }).sort((a, b) => new Date(b.receivedAt) - new Date(a.receivedAt));
+  }, [orders, customers, searchTerm, filterCategory, filterTier, filterStatus, calculatePenalty, language]);
+
+  // Aggregated Summary Data — derived from the already-filtered orderList
   const summaryByOutlet = useMemo(() => {
     const outlets = ['وبور الثلج', 'تجاره', 'المستشفى'];
     return outlets.map(outletName => {
-      const outletOrders = orders.filter(o => (o.outlet || "وبور الثلج") === outletName);
+      const outletOrders = orderList.filter(o => (o.outlet || "وبور الثلج") === outletName);
       const received = outletOrders.length;
       const delivered = outletOrders.filter(o => o.status === 'Picked Up').length;
       const returned = outletOrders.filter(o => o.status === 'Returned').length;
@@ -101,33 +127,7 @@ export default function OrdersTab() {
         lCount
       };
     });
-  }, [orders]);
-
-  // Derived Data
-  const orderList = useMemo(() => {
-    return orders.map(order => {
-      const cust = customers.find(c => c.phone === order.customerPhone);
-      return {
-        ...order,
-        customerName: cust?.name || (language === 'ar' ? 'غير معروف' : 'Unknown'),
-        tier: cust?.tier || (language === 'ar' ? 'جديد' : 'New'),
-        penalty: calculatePenalty(order),
-        daysParked: order.status === 'Inventory' ? getDaysDifference(order.receivedAt) : 0
-      };
-    }).filter(order => {
-      // Search
-      const matchesSearch = order.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                            order.customerPhone.includes(searchTerm);
-      // Category Filter
-      const matchesCategory = filterCategory === 'All' || order.category === filterCategory;
-      // Tier Filter
-      const matchesTier = filterTier === 'All' || order.tier === filterTier;
-      // Status Filter
-      const matchesStatus = filterStatus === 'All' || order.status === filterStatus;
-
-      return matchesSearch && matchesCategory && matchesTier && matchesStatus;
-    }).sort((a, b) => new Date(b.receivedAt) - new Date(a.receivedAt));
-  }, [orders, customers, searchTerm, filterCategory, filterTier, filterStatus, calculatePenalty, language]);
+  }, [orderList, calculateStorageFee]);
 
   const handleSimulateReceive = (e) => {
     e.preventDefault();
@@ -592,6 +592,7 @@ export default function OrdersTab() {
                 <th>{t('customer')}</th>
                 <th>{t('description')}</th>
                 <th>{t('returnReason')}</th>
+                <th>{language === 'ar' ? 'المنفذ' : 'Outlet'}</th>
                 <th>{t('receivedAt')}</th>
                 <th>{t('status')}</th>
                 <th>{t('actions')}</th>
@@ -610,6 +611,7 @@ export default function OrdersTab() {
                     </td>
                     <td>{ret.description}</td>
                     <td style={{ color: 'var(--text-secondary)' }}>{ret.reason || '-'}</td>
+                    <td style={{ fontWeight: 600, color: 'white' }}>{ret.outlet || 'وبور الثلج'}</td>
                     <td style={{ fontSize: '0.8rem' }}>{new Date(ret.receivedAt).toLocaleString()}</td>
                     <td>
                       <span className={`badge ${ret.status === 'At Station' ? 'badge-warning' : 'badge-success'}`}>
@@ -637,7 +639,7 @@ export default function OrdersTab() {
                 ))
               : (
                 <tr>
-                  <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                  <td colSpan="8" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
                     <PackageX size={30} style={{ margin: '0 auto 0.5rem', opacity: 0.4, display: 'block' }} />
                     {language === 'ar' ? 'لا توجد مرتجعات عملاء.' : 'No customer returns found.'}
                   </td>
@@ -663,7 +665,7 @@ export default function OrdersTab() {
               const res = await receiveCustomerReturn(newReturn);
               if (res.success) {
                 setShowReturnModal(false);
-                setNewReturn({ orderId: '', customerPhone: '', customerName: '', description: '', reason: '' });
+                setNewReturn({ orderId: '', customerPhone: '', customerName: '', description: '', reason: '', outlet: 'وبور الثلج' });
               } else {
                 alert(res.error || 'Failed to save');
               }
@@ -689,6 +691,14 @@ export default function OrdersTab() {
               <div className="input-group">
                 <label className="input-label">{t('returnReason')}</label>
                 <input className="input-field" value={newReturn.reason} onChange={e => setNewReturn({...newReturn, reason: e.target.value})} placeholder={language === 'ar' ? 'منتج تالف، خطأ في الطلب...' : 'Damaged, wrong item...'} />
+              </div>
+              <div className="input-group">
+                <label className="input-label">{language === 'ar' ? 'المنفذ (فرع الاستلام)' : 'Outlet (Receiving Branch)'}</label>
+                <select className="input-field" value={newReturn.outlet} onChange={e => setNewReturn({...newReturn, outlet: e.target.value})}>
+                  <option value="وبور الثلج">وبور الثلج</option>
+                  <option value="تجاره">تجاره</option>
+                  <option value="المستشفى">المستشفى</option>
+                </select>
               </div>
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
                 <button type="submit" className="btn btn-primary" style={{ flex: 1, background: 'linear-gradient(135deg, #a855f7, #7c3aed)' }}>{t('confirm')}</button>

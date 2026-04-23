@@ -96,6 +96,7 @@ model CustomerReturn {
   customerName  String    @default("Unknown")
   description   String
   reason        String?
+  outlet        String    @default("وبور الثلج") // Which branch received the return
   status        String    @default("At Station") // "At Station" | "Returned to Jumia"
   receivedAt    DateTime  @default(now())
   returnedAt    DateTime? // When marked as returned to Jumia

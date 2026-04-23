@@ -12,6 +12,7 @@ export default function ParkedPenaltiesTab() {
     { label: t('orderId'), accessor: 'id' },
     { label: t('customer'), accessor: 'customerName' },
     { label: t('phone'), accessor: 'customerPhone' },
+    { label: language === 'ar' ? 'المنفذ' : 'Outlet', accessor: 'outlet' },
     { label: t('receivedAt'), accessor: o => new Date(o.receivedAt).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) },
     { label: t('daysInInv'), accessor: 'daysParked' },
     { label: language === 'ar' ? 'سعر اليوم' : 'Daily Rate', accessor: o => `${o.dailyRate} EGP` },
@@ -41,7 +42,7 @@ export default function ParkedPenaltiesTab() {
     if (penalizedOrders.length === 0) {
       return (
         <tr>
-          <td colSpan="5" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+          <td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
              <AlertCircle size={40} style={{ margin: '0 auto 1rem auto', opacity: 0.5 }} />
              {language === 'ar' ? 'لا توجد غرامات نشطة في المخزون حالياً.' : 'No active penalties found across inventory.'}
           </td>
@@ -58,6 +59,7 @@ export default function ParkedPenaltiesTab() {
             <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{order.customerPhone}</span>
           </div>
         </td>
+        <td style={{ fontWeight: 700, color: 'white' }}>{order.outlet || 'وبور الثلج'}</td>
         <td>{new Date(order.receivedAt).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</td>
         <td>
           <span className="badge badge-warning">{order.daysParked} {language === 'ar' ? 'أيام' : 'Days'}</span>
@@ -101,6 +103,7 @@ export default function ParkedPenaltiesTab() {
             <tr>
               <th>{t('orderId')}</th>
               <th>{language === 'ar' ? 'معلومات العميل' : 'Customer Info'}</th>
+              <th>{language === 'ar' ? 'المنفذ' : 'Outlet'}</th>
               <th>{t('receivedAt')}</th>
               <th>{t('daysInInv')}</th>
               <th>{t('penaltyAmount')}</th>

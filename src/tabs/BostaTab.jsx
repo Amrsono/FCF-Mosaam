@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useDashboard, getDaysDifference } from '../context/DashboardContext';
-import { Search, Plus, UserCheck, RefreshCw, Package, CreditCard, Gift, AlertCircle } from 'lucide-react';
+import { Search, Plus, UserCheck, RefreshCw, Package, CreditCard, Gift, AlertCircle, CalendarClock, Clock } from 'lucide-react';
 import ExportActions from '../components/ExportActions';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -17,7 +17,7 @@ export default function BostaTab() {
   const [customerUpdateData, setCustomerUpdateData] = useState({ name: '', email: '', address: '', phone: '' });
 
   const [newOrder, setNewOrder] = useState({
-    id: '', customerPhone: '', customerName: '', description: '', totalValue: '', category: 'Electronics'
+    id: '', customerPhone: '', customerName: '', description: '', totalValue: '', category: 'Electronics', outlet: 'وبور الثلج'
   });
 
   const exportHeaders = [
@@ -26,6 +26,8 @@ export default function BostaTab() {
     { label: t('phone'), accessor: 'customerPhone' },
     { label: t('description'), accessor: 'description' },
     { label: t('category'), accessor: 'category' },
+    { label: language === 'ar' ? 'المنفذ' : 'Outlet', accessor: 'outlet' },
+    { label: t('receivedAt'), accessor: o => new Date(o.receivedAt).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) },
     { label: t('value'), accessor: 'totalValue' },
     { label: t('status'), accessor: 'status' },
     { label: t('daysInInv'), accessor: 'daysParked' },
@@ -60,10 +62,11 @@ export default function BostaTab() {
       customerName: newOrder.customerName,
       description: newOrder.description,
       totalValue: Number(newOrder.totalValue),
-      category: newOrder.category
+      category: newOrder.category,
+      outlet: newOrder.outlet
     });
     setShowModal(false);
-    setNewOrder({ id: '', customerPhone: '', customerName: '', description: '', totalValue: '', category: 'Electronics' });
+    setNewOrder({ id: '', customerPhone: '', customerName: '', description: '', totalValue: '', category: 'Electronics', outlet: 'وبور الثلج' });
   };
 
   const getSlaColor = (days) => {
@@ -76,6 +79,25 @@ export default function BostaTab() {
     if (days >= 4) return t('critical4Days');
     if (days >= 2) return t('warning2Days');
     return t('onTrack');
+  };
+
+  // Calculates precise elapsed time label (hours if < 24h, else days)
+  const getElapsedLabel = (receivedAt) => {
+    const diffMs = Math.abs(new Date() - new Date(receivedAt));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    if (diffDays < 1) {
+      return language === 'ar' ? `${diffHours} ساعة` : `${diffHours}h ago`;
+    }
+    return language === 'ar' ? `${diffDays} يوم` : `${diffDays}d ago`;
+  };
+
+  const getElapsedColor = (receivedAt) => {
+    const diffMs = Math.abs(new Date() - new Date(receivedAt));
+    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+    if (diffDays >= 3) return 'var(--color-danger)';
+    if (diffDays >= 1) return 'var(--color-warning)';
+    return 'var(--color-success)';
   };
 
   const getStatusLabel = (status) => {
@@ -157,6 +179,13 @@ export default function BostaTab() {
               <th>{language === 'ar' ? 'رقم طلب بوسطة' : 'Bosta Order ID'}</th>
               <th>{t('customer')}</th>
               <th>{t('description')}</th>
+              <th>{language === 'ar' ? 'المنفذ' : 'Outlet'}</th>
+              <th>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <CalendarClock size={14} color="#6366f1" />
+                  {language === 'ar' ? 'تاريخ ووقت الاستلام' : 'Date Received'}
+                </div>
+              </th>
               <th>{t('status')}</th>
               <th>{language === 'ar' ? 'معلومات SLA' : 'SLA / Days Parked'}</th>
               <th>{t('actions')}</th>
@@ -183,6 +212,38 @@ export default function BostaTab() {
                     <span>{order.description}</span>
                     <span style={{ fontSize: '0.85rem', color: '#6366f1', fontWeight: 600 }}>{order.totalValue} EGP</span>
                     <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{order.category}</span>
+                  </div>
+                </td>
+                <td style={{ fontWeight: 700, color: 'white' }}>{order.outlet || 'وبور الثلج'}</td>
+                <td>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                    {/* Date line */}
+                    <span style={{ fontWeight: 600, color: 'white', fontSize: '0.82rem', letterSpacing: '0.01em' }}>
+                      {new Date(order.receivedAt).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-GB', { year: 'numeric', month: 'short', day: '2-digit' })}
+                    </span>
+                    {/* Time line */}
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                      <Clock size={11} />
+                      {new Date(order.receivedAt).toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                    {/* Elapsed badge — only for inventory orders */}
+                    {order.status === 'Inventory' && (
+                      <span style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.2rem',
+                        fontSize: '0.7rem',
+                        fontWeight: 700,
+                        background: `${getElapsedColor(order.receivedAt)}22`,
+                        color: getElapsedColor(order.receivedAt),
+                        padding: '0.15rem 0.5rem',
+                        borderRadius: '999px',
+                        alignSelf: 'flex-start',
+                        border: `1px solid ${getElapsedColor(order.receivedAt)}44`
+                      }}>
+                        ⏱ {getElapsedLabel(order.receivedAt)}
+                      </span>
+                    )}
                   </div>
                 </td>
                 <td>
@@ -246,7 +307,7 @@ export default function BostaTab() {
               </tr>
             )) : (
               <tr>
-                <td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                <td colSpan="7" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
                   {language === 'ar' ? 'لم يتم العثور على طلبات بوسطة. استلم طرداً للبدء.' : 'No Bosta orders found. Receive a package to get started.'}
                 </td>
               </tr>
@@ -294,6 +355,14 @@ export default function BostaTab() {
                      <option value="Groceries">{language === 'ar' ? 'بقاليات' : 'Groceries'}</option>
                   </select>
                 </div>
+              </div>
+              <div className="input-group">
+                <label className="input-label">{language === 'ar' ? 'المنفذ (فرع الاستلام)' : 'Outlet (Receiving Branch)'}</label>
+                <select className="input-field" value={newOrder.outlet} onChange={e => setNewOrder({ ...newOrder, outlet: e.target.value })}>
+                  <option value="وبور الثلج">وبور الثلج</option>
+                  <option value="تجاره">تجاره</option>
+                  <option value="المستشفى">المستشفى</option>
+                </select>
               </div>
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
                 <button type="submit" className="btn btn-primary" style={{ flex: 1, background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>{t('confirm')}</button>

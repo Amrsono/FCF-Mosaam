@@ -12,12 +12,12 @@ export default async function handler(req, res) {
 
     // POST: Receive new order into inventory
     if (req.method === 'POST') {
-      const { 
-        id, customerPhone, customerName, description, totalValue, category, 
+      const {
+        id, customerPhone, customerName, description, totalValue, category,
         email, address, tier,
-        outlet, size, paymentMethod, orderCost 
+        outlet, size, paymentMethod, orderCost
       } = req.body;
-      
+
       // Upsert Customer logic: match by phone
       await prisma.customer.upsert({
         where: { phone: customerPhone },
@@ -55,26 +55,26 @@ export default async function handler(req, res) {
 
       if (action === 'PICK_UP') {
         const updated = await prisma.$transaction(async (tx) => {
-           const order = await tx.order.update({
-             where: { id },
-             data: { status: 'Picked Up', pickedUpAt: new Date() }
-           });
-           
-           // Increment customer delivery count
-           await tx.customer.update({
-             where: { phone: order.customerPhone },
-             data: { deliveries: { increment: 1 } }
-           });
+          const order = await tx.order.update({
+            where: { id },
+            data: { status: 'Picked Up', pickedUpAt: new Date() }
+          });
 
-           return order;
+          // Increment customer delivery count
+          await tx.customer.update({
+            where: { phone: order.customerPhone },
+            data: { deliveries: { increment: 1 } }
+          });
+
+          return order;
         });
         return res.status(200).json(updated);
       }
 
       if (action === 'RETURN') {
         const order = await prisma.order.update({
-           where: { id },
-           data: { status: 'Returned', returnedAt: new Date() }
+          where: { id },
+          data: { status: 'Returned', returnedAt: new Date() }
         });
         return res.status(200).json(order);
       }

@@ -542,7 +542,6 @@ export default function OrdersTab() {
       )}
 
         </div>
-      </div>
 
       {/* ═══════════════════ Customer Returns Section ═══════════════════ */}
       <div className="glass-panel" style={{

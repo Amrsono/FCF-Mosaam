@@ -187,7 +187,7 @@ export default function LoginPage() {
         {/* Footer Note */}
         <div style={{ marginTop: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.78rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.25rem' }}>
           <Lock size={12} style={{ [language === 'ar' ? 'marginLeft' : 'marginRight']: '0.3rem', verticalAlign: 'middle' }} />
-          {language === 'ar' ? 'مؤمن بواسطة JWT Authentication — FCF Mosaam © 2024' : 'Secured by JWT Authentication — FCF Mosaam © 2024'}
+          {language === 'ar' ? 'مؤمن بواسطة JWT Authentication — FCF Mosaam © 2026' : 'Secured by JWT Authentication — FCF Mosaam © 2026'}
         </div>
       </div>
 

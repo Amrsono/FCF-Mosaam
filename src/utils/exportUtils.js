@@ -199,7 +199,7 @@ export const exportToPPTX = async (analytics, filename, language = 'en') => {
     const cStats = [
       [language === 'ar' ? 'المؤشر' : 'Metric', language === 'ar' ? 'القيمة' : 'Value'],
       [language === 'ar' ? 'إجمالي المكالمات' : 'Total Calls', String(analytics.calls.total)],
-      [language === 'ar' ? 'المكالمات المستلمة' : 'Calls Taken', String(analytics.calls.taken)],
+      [language === 'ar' ? 'المكالمات الصادرة' : 'Calls Made', String(analytics.calls.taken)],
       [language === 'ar' ? 'المكالمات المحلولة' : 'Resolved', String(analytics.calls.resolved)],
       [language === 'ar' ? 'نسبة التغطية' : 'Coverage Rate', `${analytics.calls.coverage}%`]
     ];

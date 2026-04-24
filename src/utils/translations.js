@@ -139,8 +139,8 @@ export const translations = {
     financialSummary: "Full Financial Summary",
 
     // Calls Log Tab
-    takeCall: "📞 Take Call",
-    callTakenBy: "Call taken by",
+    takeCall: "📞 Make Call",
+    callMadeBy: "Call made by",
     submitResolution: "Submit Resolution",
     closeCall: "Close",
     noActiveUrgentCalls: "No urgent calls at the moment. All orders are on track.",
@@ -302,8 +302,8 @@ export const translations = {
     financialSummary: "الملخص المالي الكامل",
 
     // Calls Log Tab
-    takeCall: "📞 استلام المكالمة",
-    callTakenBy: "المكالمة بواسطة",
+    takeCall: "📞 إجراء المكالمة",
+    callMadeBy: "تم الاتصال بواسطة",
     submitResolution: "تأكيد النتيجة",
     closeCall: "إغلاق",
     noActiveUrgentCalls: "لا توجد مكالمات عاجلة حالياً. جميع الطلبات في المسار.",

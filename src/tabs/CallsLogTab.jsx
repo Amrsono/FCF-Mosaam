@@ -142,7 +142,7 @@ export default function CallsLogTab() {
     { label: isRTL ? 'أيام في المخزن'   : 'Days Parked',       accessor: '_daysParked' },
     { label: isRTL ? 'تاريخ الاستلام'   : 'Received At',       accessor: '_receivedAt' },
     { label: isRTL ? 'الوكيل'           : 'Agent',             accessor: l => l.agentName || '-' },
-    { label: isRTL ? 'وقت استلام المكالمة' : 'Call Taken At',  accessor: l => l.takenAt ? new Date(l.takenAt).toLocaleString() : '-' },
+    { label: isRTL ? 'وقت إجراء المكالمة' : 'Call Made At',  accessor: l => l.takenAt ? new Date(l.takenAt).toLocaleString() : '-' },
     { label: isRTL ? 'نتيجة المكالمة'  : 'Resolution',        accessor: '_resolutionLabel' },
     { label: isRTL ? 'ملاحظات'          : 'Notes',             accessor: l => l.notes || '-' },
     { label: isRTL ? 'وقت تسجيل النتيجة' : 'Resolved At',     accessor: l => l.resolvedAt ? new Date(l.resolvedAt).toLocaleString() : '-' },
@@ -291,7 +291,7 @@ export default function CallsLogTab() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.82rem', color: 'var(--text-secondary)', flexWrap: 'wrap' }}>
                   <PhoneCall size={14} color="var(--color-warning)" />
                   <span style={{ color: 'var(--color-warning)', fontWeight: 600 }}>{log.agentName}</span>
-                  <span>{isRTL ? '— استلم المكالمة' : '— took ownership'}</span>
+                  <span>{isRTL ? '— أجرى المكالمة' : '— made the call'}</span>
                   {log.takenAt && (
                     <span style={{ color: 'var(--text-muted)' }}>
                       @ {new Date(log.takenAt).toLocaleTimeString(isRTL ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' })}

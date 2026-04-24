@@ -118,7 +118,7 @@ export default function AnalyticsTab() {
 
   // --- CALLS LOG ANALYTICS ---
   const callsInPeriod = (callLogs || []).filter(l => l.createdAt && new Date(l.createdAt) >= thresholdDate);
-  const callsTaken   = callsInPeriod.filter(l => l.agentName);
+  const callsMade   = callsInPeriod.filter(l => l.agentName);
   const callsResolved= callsInPeriod.filter(l => l.resolution);
   const callsClosed  = callsInPeriod.filter(l => l.isClosed);
 
@@ -132,7 +132,7 @@ export default function AnalyticsTab() {
     return o.status === 'Inventory' && d >= 2 && d < 4;
   });
   const coveragePct = urgentInPeriod.length > 0
-    ? Math.round((callsTaken.length / urgentInPeriod.length) * 100)
+    ? Math.round((callsMade.length / urgentInPeriod.length) * 100)
     : 100;
 
   // Calls vs Orders received bar data
@@ -172,7 +172,7 @@ export default function AnalyticsTab() {
       },
       calls: {
         total: callsInPeriod.length,
-        taken: callsTaken.length,
+        taken: callsMade.length,
         resolved: callsResolved.length,
         coverage: coveragePct
       },
@@ -557,7 +557,7 @@ export default function AnalyticsTab() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
           {[
             { label: language === 'ar' ? 'مكالمات في الفترة' : 'Calls This Period',  value: callsInPeriod.length,   color: 'var(--color-warning)' },
-            { label: language === 'ar' ? 'تم استلامها'        : 'Calls Taken',         value: callsTaken.length,      color: 'var(--color-primary)' },
+            { label: language === 'ar' ? 'تم إجراؤها'        : 'Calls Made',         value: callsMade.length,      color: 'var(--color-primary)' },
             { label: language === 'ar' ? 'تم الحل'            : 'Resolved',            value: callsResolved.length,   color: 'var(--color-success)' },
             { label: language === 'ar' ? 'مغلقة'              : 'Closed',              value: callsClosed.length,     color: 'var(--text-muted)' },
             { label: language === 'ar' ? 'نسبة التغطية'       : 'Coverage Rate',       value: `${coveragePct}%`,      color: coveragePct >= 80 ? 'var(--color-success)' : coveragePct >= 50 ? 'var(--color-warning)' : 'var(--color-danger)' },

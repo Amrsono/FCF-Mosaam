@@ -389,6 +389,22 @@ export const DashboardProvider = ({ children }) => {
     }
   };
 
+  const reopenCallLog = async (logId) => {
+    try {
+      const res = await fetch('/api/call-logs', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: logId, action: 'REOPEN' })
+      });
+      if (res.ok) {
+        await fetchData();
+        logUserAction('Re-open Call Log', { logId });
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
     <DashboardContext.Provider value={{ 
       orders, 
@@ -415,7 +431,8 @@ export const DashboardProvider = ({ children }) => {
       createOrGetCallLog,
       takeCallOwnership,
       resolveCall,
-      closeCallLog
+      closeCallLog,
+      reopenCallLog
     }}>
       {children}
     </DashboardContext.Provider>

@@ -62,6 +62,18 @@ export default async function handler(req, res) {
         return res.status(200).json(updated);
       }
 
+      if (action === 'REOPEN') {
+        const updated = await prisma.callLog.update({
+          where: { id },
+          data: { 
+            resolution: null, 
+            notes: null, 
+            resolvedAt: null 
+          }
+        });
+        return res.status(200).json(updated);
+      }
+
       return res.status(400).json({ error: 'Invalid action' });
     }
 

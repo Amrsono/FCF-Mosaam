@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useDashboard, getDaysDifference } from '../context/DashboardContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { Phone, PhoneCall, CheckCircle2, XCircle, ChevronDown, Clock, Package, AlertCircle, EyeOff, Eye, Download } from 'lucide-react';
+import { Phone, PhoneCall, CheckCircle2, XCircle, ChevronDown, Clock, Package, AlertCircle, EyeOff, Eye, Download, RefreshCw } from 'lucide-react';
 import { exportToExcel } from '../utils/exportUtils';
 
 // Resolution config: key → { label key, color, icon }
@@ -16,7 +16,7 @@ const RESOLUTIONS = [
 
 export default function CallsLogTab() {
   const { orders, bostaOrders, customers, callLogs,
-          createOrGetCallLog, takeCallOwnership, resolveCall, closeCallLog } = useDashboard();
+          createOrGetCallLog, takeCallOwnership, resolveCall, closeCallLog, reopenCallLog } = useDashboard();
   const { t, language } = useLanguage();
   const { user } = useAuth();
 
@@ -311,15 +311,15 @@ export default function CallsLogTab() {
               {/* Action bar */}
               <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'flex-end', borderTop: '1px solid var(--border-color)', paddingTop: '0.75rem' }}>
 
-                {/* Step 1: Take Call button */}
-                {!log?.agentName && (
+                {/* Step 1: Take Call / Follow Up button */}
+                {(!log?.agentName || (log?.agentName !== user?.username && !log?.resolution)) && (
                   <button
                     className="btn btn-outline"
                     style={{ color: 'var(--color-warning)', borderColor: 'rgba(245,158,11,0.4)', fontWeight: 600, gap: '0.5rem' }}
                     onClick={() => handleTakeCall(order)}
                   >
                     <Phone size={15} />
-                    {t('takeCall')}
+                    {log?.agentName ? (isRTL ? 'متابعة' : 'Follow Up') : t('takeCall')}
                   </button>
                 )}
 
@@ -366,11 +366,24 @@ export default function CallsLogTab() {
                   </div>
                 )}
 
+                {/* Re-open button (only if resolved) */}
+                {log?.resolution && (
+                  <button
+                    className="btn btn-outline"
+                    style={{ color: 'var(--color-primary)', borderColor: 'var(--color-primary)', fontSize: '0.82rem', padding: '0.4rem 0.8rem', gap: '0.4rem' }}
+                    title={isRTL ? 'إعادة فتح المكالمة' : 'Re-open this call'}
+                    onClick={() => reopenCallLog(log.id)}
+                  >
+                    <RefreshCw size={14} />
+                    {isRTL ? 'إعادة فتح' : 'Re-open'}
+                  </button>
+                )}
+
                 {/* Close button — always available if there's a log */}
                 {log && (
                   <button
                     className="btn btn-outline"
-                    style={{ color: 'var(--text-muted)', borderColor: 'var(--border-color)', fontSize: '0.82rem', padding: '0.4rem 0.8rem', marginInlineStart: 'auto' }}
+                    style={{ color: 'var(--text-muted)', borderColor: 'var(--border-color)', fontSize: '0.82rem', padding: '0.4rem 0.8rem', marginInlineStart: 'auto', gap: '0.4rem' }}
                     title={isRTL ? 'إغلاق هذه البطاقة' : 'Close this card'}
                     onClick={() => closeCallLog(log.id)}
                   >

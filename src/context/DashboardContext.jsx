@@ -191,12 +191,12 @@ export const DashboardProvider = ({ children }) => {
   // Returns daily storage rate based on package size (Jumia only)
   const getJumiaDailyRate = (order) => {
     const size = (order.size || 'M').toUpperCase();
-    if (size === 'S') return 18;
-    if (size === 'L') return 45;
-    return 30; // Medium (default)
+    if (size === 'S') return 20;
+    if (size === 'L') return 40;
+    return 40; // Medium (default)
   };
 
-  // Accrued storage fee: charges from day 1, every day parked (18/30/45 EGP per day)
+  // Accrued storage fee: charges from day 1, every day parked (20/40/40 EGP per day)
   const calculatePenalty = (order) => {
     const days = getDaysDifference(order.receivedAt);
     if (days < 1) return 0;

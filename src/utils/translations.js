@@ -105,8 +105,8 @@ export const translations = {
     // SLA Tab
     slaMonitoring: "SLA Monitoring & Overdue Tracking",
     slaAlerts: "SLA Alerts",
-    critical4Days: "Critical (4+ Days)",
-    warning2Days: "Warning (2-3 Days)",
+    critical5Days: "Critical (5+ Days)",
+    warning3Days: "Warning (3-4 Days)",
     onTrack: "On Track",
 
     // Parked Penalties Tab
@@ -271,8 +271,8 @@ export const translations = {
     // SLA Tab
     slaMonitoring: "مراقبة SLA وتتبع التأخير",
     slaAlerts: "تنبيهات SLA",
-    critical4Days: "حرج (4+ أيام)",
-    warning2Days: "تحذير (2-3 أيام)",
+    critical5Days: "حرج (5+ أيام)",
+    warning3Days: "تحذير (3-4 أيام)",
     onTrack: "في المسار",
 
     // Parked Penalties Tab

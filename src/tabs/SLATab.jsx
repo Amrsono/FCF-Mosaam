@@ -15,8 +15,8 @@ export default function SLATab() {
       .map(o => {
         const days = getDaysDifference(o.receivedAt);
         let slaStatus = 'green';
-        if (days >= 4) slaStatus = 'red';
-        else if (days >= 2) slaStatus = 'orange';
+        if (days >= 5) slaStatus = 'red';
+        else if (days >= 3) slaStatus = 'orange';
         return { ...o, daysParked: days, slaStatus };
       })
       .sort((a, b) => b.daysParked - a.daysParked);
@@ -59,7 +59,7 @@ export default function SLATab() {
         </div>
         <div>
           <div style={{ fontSize: '2rem', fontWeight: 700 }}>{list.filter(o => o.slaStatus === 'green').length}</div>
-          <div style={{ color: 'var(--text-secondary)' }}>{t('onTrack')} (0-1 {language === 'ar' ? 'أيام' : 'Days'})</div>
+          <div style={{ color: 'var(--text-secondary)' }}>{t('onTrack')} (0-2 {language === 'ar' ? 'أيام' : 'Days'})</div>
         </div>
       </div>
       <div className="glass-panel" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -68,7 +68,7 @@ export default function SLATab() {
         </div>
         <div>
           <div style={{ fontSize: '2rem', fontWeight: 700 }}>{list.filter(o => o.slaStatus === 'orange').length}</div>
-          <div style={{ color: 'var(--text-secondary)' }}>{language === 'ar' ? 'تأخير' : 'Delayed'} (2-3 {language === 'ar' ? 'أيام' : 'Days'})</div>
+          <div style={{ color: 'var(--text-secondary)' }}>{t('warning3Days')}</div>
         </div>
       </div>
       <div className="glass-panel" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -77,7 +77,7 @@ export default function SLATab() {
         </div>
         <div>
           <div style={{ fontSize: '2rem', fontWeight: 700 }}>{list.filter(o => o.slaStatus === 'red').length}</div>
-          <div style={{ color: 'var(--text-secondary)' }}>{t('critical4Days')}</div>
+          <div style={{ color: 'var(--text-secondary)' }}>{t('critical5Days')}</div>
         </div>
       </div>
     </div>

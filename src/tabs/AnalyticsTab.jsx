@@ -76,9 +76,9 @@ export default function AnalyticsTab() {
   const jumiaReturnedAmt = stdReturned.reduce((s, o) => s + o.totalValue, 0); // Customer returns don't have a value in our system
   const getJumiaDailyRate = (order) => {
     const size = (order.size || 'M').toUpperCase();
-    if (size === 'S') return 18;
-    if (size === 'L') return 45;
-    return 30;
+    if (size === 'S') return 20;
+    if (size === 'L') return 40;
+    return 40;
   };
   const activePenalties = jumiaInventory.reduce((s, o) => {
     const days = Math.floor(Math.abs(new Date() - new Date(o.receivedAt)) / 86400000);
@@ -87,11 +87,11 @@ export default function AnalyticsTab() {
   }, 0);
   const jumiaSlaCritical = jumiaInventory.filter(o => {
     const d = Math.floor(Math.abs(new Date() - new Date(o.receivedAt)) / 86400000);
-    return d >= 4;
+    return d >= 5;
   }).length;
   const jumiaSlaNear = jumiaInventory.filter(o => {
     const d = Math.floor(Math.abs(new Date() - new Date(o.receivedAt)) / 86400000);
-    return d >= 2 && d < 4;
+    return d >= 3 && d < 5;
   }).length;
 
   // --- BOSTA ---
@@ -355,7 +355,7 @@ export default function AnalyticsTab() {
         <MetricCard title={`${t('bosta')} ${t('cash')}`} value={`${bostaCash.toLocaleString()} EGP`} icon={<DollarSign size={14} />} color={CHART_COLORS.bosta} sub={language === 'ar' ? `${bostaPickedUp.length} طلب مستلم` : `${bostaPickedUp.length} orders picked up`} />
         <MetricCard title={`${t('basata')} POS`} value={`${basataVolume.toLocaleString()} EGP`} icon={<Zap size={14} />} color={CHART_COLORS.basata} sub={language === 'ar' ? `${activeBasata.length} عملية` : `${activeBasata.length} transactions`} />
         <MetricCard title={t('parkedPenalties')} value={`${activePenalties} EGP`} icon={<AlertOctagon size={14} />} color={CHART_COLORS.warning} sub={language === 'ar' ? `${jumiaInventory.length} طلب مخزن` : `${jumiaInventory.length} parked orders`} />
-        <MetricCard title={language === 'ar' ? 'حالة SLA حرجة' : 'SLA Critical'} value={jumiaSlaCritical} icon={<ShieldAlert size={14} />} color={CHART_COLORS.danger} sub={language === 'ar' ? ' J  4+ أيام تأخير' : ' J  4+ days overdue'} />
+        <MetricCard title={language === 'ar' ? 'حالة SLA حرجة' : 'SLA Critical'} value={jumiaSlaCritical} icon={<ShieldAlert size={14} />} color={CHART_COLORS.danger} sub={language === 'ar' ? ' J  5+ أيام تأخير' : ' J  5+ days overdue'} />
         <MetricCard title={t('customers')} value={customers.length} icon={<Users size={14} />} color="var(--color-primary)" sub={language === 'ar' ? 'مسجلين في المحطة' : 'Registered at station'} />
       </div>
 
@@ -417,9 +417,9 @@ export default function AnalyticsTab() {
         <ChartCard title={language === 'ar' ? 'صحة SLA لـ J ' : ' J  SLA Health'} icon={<Clock size={16} color={CHART_COLORS.warning} />}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', justifyContent: 'center', height: '100%' }}>
             {[
-              { label: `${t('onTrack')} (0-1 ${language === 'ar' ? 'أيام' : 'days'})`, value: Math.max(0, jumiaInventory.length - jumiaSlaCritical - jumiaSlaNear), color: CHART_COLORS.success },
-              { label: `${language === 'ar' ? 'تنبيه' : 'Warning'} (2-3 ${language === 'ar' ? 'أيام' : 'days'})`, value: jumiaSlaNear, color: CHART_COLORS.warning },
-              { label: t('critical4Days'), value: jumiaSlaCritical, color: CHART_COLORS.danger },
+              { label: `${t('onTrack')} (0-2 ${language === 'ar' ? 'أيام' : 'days'})`, value: Math.max(0, jumiaInventory.length - jumiaSlaCritical - jumiaSlaNear), color: CHART_COLORS.success },
+              { label: `${t('warning3Days')}`, value: jumiaSlaNear, color: CHART_COLORS.warning },
+              { label: t('critical5Days'), value: jumiaSlaCritical, color: CHART_COLORS.danger },
             ].map(s => (
               <div key={s.label}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.3rem' }}>

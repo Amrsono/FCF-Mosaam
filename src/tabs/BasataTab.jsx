@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useDashboard } from '../context/DashboardContext';
-import { Smartphone, Wifi, Zap, Building2, CreditCard, BookOpen } from 'lucide-react';
+import { Smartphone, Wifi, Zap, Building2, CreditCard, BookOpen, Banknote } from 'lucide-react';
 import ExportActions from '../components/ExportActions';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -56,6 +56,11 @@ export default function BasataTab() {
       title: language === 'ar' ? 'خدمات حكومية' : 'Government Services',
       icon: <Building2 size={20} color="var(--color-danger)" />,
       services: language === 'ar' ? ['مخالفات مرور', 'تأمينات اجتماعية', 'ضرائب عقارية'] : ['Traffic Fines (Niyaba)', 'Social Insurance', 'Real Estate Tax']
+    },
+    {
+      title: t('bankingAndCash'),
+      icon: <Banknote size={20} color="var(--color-primary)" />,
+      services: [t('cashDeposit'), t('cashWithdrawal')]
     }
   ];
 

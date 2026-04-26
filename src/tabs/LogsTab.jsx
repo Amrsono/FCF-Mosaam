@@ -113,7 +113,7 @@ export default function LogsTab() {
                 { label: language === 'ar' ? 'رقم الطلب' : 'Order ID', accessor: l => {
                   try {
                     const det = typeof l.details === 'string' ? JSON.parse(l.details) : l.details;
-                    return det?.id || det?.orderId || '-';
+                    return det?.id || det?.orderId || det?.transactionId || '-';
                   } catch { return '-'; }
                 }},
                 { label: language === 'ar' ? 'المبلغ' : 'Amount (EGP)', accessor: '_amount' },
@@ -161,7 +161,7 @@ export default function LogsTab() {
                       if (det && det.amount !== undefined && det.amount !== null) {
                         parsedAmount = Number(det.amount);
                       }
-                      orderId = det?.id || det?.orderId || '-';
+                      orderId = det?.id || det?.orderId || det?.transactionId || '-';
                     } catch {}
                     return (
                       <tr key={log.id}>

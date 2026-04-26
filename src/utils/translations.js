@@ -94,6 +94,9 @@ export const translations = {
     card: "Card",
     wallet: "Digital Wallet",
     other: "Other",
+    bankingAndCash: "Banking & Cash",
+    cashDeposit: "Cash Deposit",
+    cashWithdrawal: "Cash Withdrawal",
 
     // Bosta Tab
     bostaInventory: "Bosta Orders Inventory",
@@ -257,6 +260,9 @@ export const translations = {
     card: "بطاقة",
     wallet: "محفظة رقمية",
     other: "أخرى",
+    bankingAndCash: "خدمات بنكية وكاش",
+    cashDeposit: "إيداع نقدي",
+    cashWithdrawal: "سحب نقدي",
 
     // Bosta Tab
     bostaInventory: "مخزون طلبات بوسطة",

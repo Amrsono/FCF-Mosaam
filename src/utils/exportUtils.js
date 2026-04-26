@@ -65,8 +65,7 @@ const loadArabicFont = async () => {
 
 /**
  * Safely convert any value to a printable string for PDF cells.
- * Also handles Arabic text by reshaping (joining) it.
- * Direction (reversal) is now handled by jsPDF's native RTL support.
+ * Also handles Arabic text by reshaping (joining) and then reversing it for jsPDF's LTR engine.
  */
 const safeString = (val) => {
   if (val == null) return '';
@@ -80,8 +79,10 @@ const safeString = (val) => {
 
   // Detect Arabic characters
   if (/[\u0600-\u06FF]/.test(str)) {
-    // Reshape the Arabic text to join characters correctly
-    return reshapeArabic(str);
+    // 1. Reshape the Arabic text to join characters correctly
+    const reshaped = reshapeArabic(str);
+    // 2. Reverse the string for LTR PDF engines. 
+    return reshaped.split('').reverse().join('');
   }
   return str;
 };
@@ -102,15 +103,12 @@ export const exportToPDF = async (data, headers, filename, title) => {
 
     // ── Detect RTL Needs ───────────────────────────────────────────
     const isRtl = /[\u0600-\u06FF]/.test(title || '') || headers.some(h => /[\u0600-\u06FF]/.test(h.label));
-    if (isRtl) {
-      doc.setRTL(true);
-    }
 
     // ── Title ──────────────────────────────────────────────────────
     if (title) {
       doc.setFontSize(18);
       if (isRtl) {
-        // In native RTL mode, text is placed relative to the right margin
+        // For RTL titles, align to the right side of the page
         doc.text(safeString(title), 196, 22, { align: 'right' });
       } else {
         doc.text(safeString(title), 14, 22);
@@ -132,12 +130,17 @@ export const exportToPDF = async (data, headers, filename, title) => {
       })
     );
 
+    // If RTL, reverse the columns order manually for the table
+    if (isRtl) {
+      tableColumn = tableColumn.reverse();
+      tableRows = tableRows.map(row => row.reverse());
+    }
+
     autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
       startY: title ? 30 : 14,
       theme: 'grid',
-      rtl: isRtl, // Native RTL support for autoTable
       headStyles: { 
         fillColor: [80, 60, 255], 
         halign: isRtl ? 'right' : 'left',

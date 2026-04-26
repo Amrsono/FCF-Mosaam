@@ -65,7 +65,8 @@ const loadArabicFont = async () => {
 
 /**
  * Safely convert any value to a printable string for PDF cells.
- * Also handles Arabic text by reshaping (joining) and then reversing it for jsPDF's LTR engine.
+ * Also handles Arabic text by reshaping (joining) it.
+ * Direction (reversal) is now handled by jsPDF's native RTL support.
  */
 const safeString = (val) => {
   if (val == null) return '';
@@ -79,10 +80,8 @@ const safeString = (val) => {
 
   // Detect Arabic characters
   if (/[\u0600-\u06FF]/.test(str)) {
-    // 1. Reshape the Arabic text to join characters correctly
-    const reshaped = reshapeArabic(str);
-    // 2. Reverse the string for LTR PDF engines. 
-    return reshaped.split('').reverse().join('');
+    // Reshape the Arabic text to join characters correctly
+    return reshapeArabic(str);
   }
   return str;
 };
@@ -101,12 +100,17 @@ export const exportToPDF = async (data, headers, filename, title) => {
       fontName = 'Amiri';
     }
 
+    // ── Detect RTL Needs ───────────────────────────────────────────
+    const isRtl = /[\u0600-\u06FF]/.test(title || '') || headers.some(h => /[\u0600-\u06FF]/.test(h.label));
+    if (isRtl) {
+      doc.setRTL(true);
+    }
+
     // ── Title ──────────────────────────────────────────────────────
     if (title) {
-      const isRtlTitle = /[\u0600-\u06FF]/.test(title);
       doc.setFontSize(18);
-      if (isRtlTitle) {
-        // For RTL titles, align to the right side of the page (A4 width is approx 210mm)
+      if (isRtl) {
+        // In native RTL mode, text is placed relative to the right margin
         doc.text(safeString(title), 196, 22, { align: 'right' });
       } else {
         doc.text(safeString(title), 14, 22);
@@ -114,9 +118,6 @@ export const exportToPDF = async (data, headers, filename, title) => {
     }
 
     // ── Table data ─────────────────────────────────────────────────
-    // If the title contains Arabic, we assume the whole report should be RTL
-    const isRtl = /[\u0600-\u06FF]/.test(title || '') || headers.some(h => /[\u0600-\u06FF]/.test(h.label));
-    
     let tableColumn = headers.map(h => safeString(h.label));
     let tableRows = data.map(item =>
       headers.map(h => {
@@ -131,19 +132,12 @@ export const exportToPDF = async (data, headers, filename, title) => {
       })
     );
 
-    // If RTL, reverse the columns order for the table
-    if (isRtl) {
-      tableColumn = tableColumn.reverse();
-      tableRows = tableRows.map(row => row.reverse());
-    }
-
-    const fontStyles = fontName ? { font: fontName } : {};
-
     autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
       startY: title ? 30 : 14,
       theme: 'grid',
+      rtl: isRtl, // Native RTL support for autoTable
       headStyles: { 
         fillColor: [80, 60, 255], 
         halign: isRtl ? 'right' : 'left',

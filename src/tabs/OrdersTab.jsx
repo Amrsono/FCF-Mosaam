@@ -40,6 +40,7 @@ export default function OrdersTab() {
     { label: t('description'), accessor: 'description' },
     { label: t('category'), accessor: 'category' },
     { label: t('value'), accessor: 'totalValue' },
+    { label: language === 'ar' ? 'رسوم التخزين' : 'Storage Fees', accessor: 'penalty' },
     { label: language === 'ar' ? 'المنفذ' : 'Outlet', accessor: 'outlet' },
     { label: language === 'ar' ? 'المقاس' : 'Size', accessor: 'size' },
     { label: t('status'), accessor: 'status' },

@@ -259,7 +259,7 @@ export default function AnalyticsTab() {
         <h4 style={{ color: 'white', margin: 0, fontSize: '0.95rem' }}>{title}</h4>
       </div>
       {children}
-    </ChartCard>
+    </div>
   );
 
   // Admin Transaction Counters Logic

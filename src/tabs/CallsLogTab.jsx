@@ -34,9 +34,10 @@ export default function CallsLogTab() {
         .map(o => {
           const days = getDaysDifference(o.receivedAt);
           const cust = customers.find(c => c.phone === o.customerPhone);
-          return { ...o, daysParked: days, orderSource: source, customerName: cust?.name || (isRTL ? 'غير معروف' : 'Unknown') };
+          const slaStatus = days >= 4 ? 'red' : 'orange'; 
+          return { ...o, daysParked: days, slaStatus, orderSource: source, customerName: cust?.name || (isRTL ? 'غير معروف' : 'Unknown') };
         })
-        .filter(o => o.daysParked >= 2 && o.daysParked < 4); // orange zone only
+        .filter(o => o.daysParked >= 2); // Show all delayed and critical orders
 
     return [
       ...buildUrgent(orders, 'jumia'),
@@ -164,7 +165,7 @@ export default function CallsLogTab() {
               {t('callsLog')}
             </h3>
             <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.8rem' }}>
-              {isRTL ? 'طلبات تحتاج تواصل عاجل مع العميل (2-3 أيام في المخزن)' : 'Orders requiring urgent customer contact (2-3 days in inventory)'}
+              {isRTL ? 'طلبات تحتاج تواصل عاجل مع العميل (2+ أيام في المخزن)' : 'Orders requiring urgent customer contact (2+ days in inventory)'}
             </p>
           </div>
         </div>
@@ -196,7 +197,7 @@ export default function CallsLogTab() {
 
       {/* ── Summary bar ── */}
       <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-        <div className="badge badge-warning" style={{ fontSize: '0.85rem', padding: '0.4rem 1rem' }}>
+        <div className={`badge badge-${enrichedList.some(o => o.slaStatus === 'red') ? 'danger' : 'warning'}`} style={{ fontSize: '0.85rem', padding: '0.4rem 1rem' }}>
           <AlertCircle size={13} style={{ marginInlineEnd: '0.4rem' }} />
           {t('urgentCallsCount')}: {enrichedList.length}
         </div>
@@ -228,11 +229,11 @@ export default function CallsLogTab() {
               key={order.id}
               className="glass-panel"
               style={{
-                borderLeft: isRTL ? 'none' : '4px solid var(--color-warning)',
-                borderRight: isRTL ? '4px solid var(--color-warning)' : 'none',
+                borderLeft: isRTL ? 'none' : `4px solid ${order.slaStatus === 'red' ? 'var(--color-danger)' : 'var(--color-warning)'}`,
+                borderRight: isRTL ? `4px solid ${order.slaStatus === 'red' ? 'var(--color-danger)' : 'var(--color-warning)'}` : 'none',
                 background: log?.resolution
                   ? `linear-gradient(${isRTL ? '270deg' : '90deg'}, ${resMeta?.color}10, transparent)`
-                  : `linear-gradient(${isRTL ? '270deg' : '90deg'}, rgba(245,158,11,0.08), transparent)`,
+                  : `linear-gradient(${isRTL ? '270deg' : '90deg'}, ${order.slaStatus === 'red' ? 'rgba(239,68,68,0.08)' : 'rgba(245,158,11,0.08)'}, transparent)`,
                 padding: '1.25rem',
                 display: 'flex',
                 flexDirection: 'column',
@@ -256,7 +257,7 @@ export default function CallsLogTab() {
                       {order.orderSource === 'bosta' ? t('sourceBosta') : t('sourceJ')}
                     </span>
                     {/* Days parked badge */}
-                    <span className="badge badge-warning" style={{ fontSize: '0.7rem' }}>
+                    <span className={`badge badge-${order.slaStatus === 'red' ? 'danger' : 'warning'}`} style={{ fontSize: '0.7rem' }}>
                       <Clock size={10} style={{ marginInlineEnd: '0.2rem' }} />
                       {order.daysParked} {isRTL ? 'أيام' : 'days'}
                     </span>

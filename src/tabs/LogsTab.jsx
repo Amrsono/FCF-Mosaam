@@ -110,6 +110,12 @@ export default function LogsTab() {
                 { label: language === 'ar' ? 'الوقت' : 'Time',    accessor: l => new Date(l.createdAt).toLocaleTimeString() },
                 { label: language === 'ar' ? 'المستخدم' : 'User',   accessor: 'username' },
                 { label: language === 'ar' ? 'الإجراء' : 'Action', accessor: 'action' },
+                { label: language === 'ar' ? 'رقم الطلب' : 'Order ID', accessor: l => {
+                  try {
+                    const det = typeof l.details === 'string' ? JSON.parse(l.details) : l.details;
+                    return det?.id || det?.orderId || '-';
+                  } catch { return '-'; }
+                }},
                 { label: language === 'ar' ? 'المبلغ' : 'Amount (EGP)', accessor: '_amount' },
                 { label: language === 'ar' ? 'التفاصيل' : 'Details', accessor: l => l.details || '-' },
               ],
@@ -136,6 +142,7 @@ export default function LogsTab() {
                   <th>{t('date')}</th>
                   <th>{t('user')}</th>
                   <th>{t('action')}</th>
+                  <th>{language === 'ar' ? 'رقم الطلب' : 'Order Number'}</th>
                   <th>{language === 'ar' ? 'المبلغ' : 'Amount'}</th>
                   <th>{t('details')}</th>
                 </tr>
@@ -143,16 +150,18 @@ export default function LogsTab() {
               <tbody>
                 {filteredLogs.length === 0 ? (
                   <tr>
-                    <td colSpan={5} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>{t('noData')}</td>
+                    <td colSpan={6} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>{t('noData')}</td>
                   </tr>
                 ) : (
                   filteredLogs.map(log => {
                     let parsedAmount = null;
+                    let orderId = '-';
                     try {
                       const det = typeof log.details === 'string' ? JSON.parse(log.details) : log.details;
                       if (det && det.amount !== undefined && det.amount !== null) {
                         parsedAmount = Number(det.amount);
                       }
+                      orderId = det?.id || det?.orderId || '-';
                     } catch {}
                     return (
                       <tr key={log.id}>
@@ -166,6 +175,9 @@ export default function LogsTab() {
                           </span>
                         </td>
                         <td style={{ fontWeight: 600 }}>{log.action}</td>
+                        <td style={{ fontFamily: 'monospace', fontWeight: 600, color: orderId !== '-' ? 'var(--color-primary)' : 'var(--text-muted)' }}>
+                          {orderId}
+                        </td>
                         <td style={{ fontWeight: 700, color: parsedAmount !== null && parsedAmount > 0 ? 'var(--color-success)' : 'var(--text-muted)' }}>
                           {parsedAmount !== null ? `${parsedAmount.toLocaleString()} EGP` : '-'}
                         </td>

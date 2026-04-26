@@ -5,11 +5,12 @@ import ExportActions from '../components/ExportActions';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function ParkedPenaltiesTab() {
-  const { orders, customers, calculatePenalty } = useDashboard();
+  const { orders, bostaOrders, customers, calculatePenalty } = useDashboard();
   const { t, language } = useLanguage();
 
   const exportHeaders = [
     { label: t('orderId'), accessor: 'id' },
+    { label: language === 'ar' ? 'المصدر' : 'Source', accessor: o => o.orderSource === 'bosta' ? 'Bosta' : 'J' },
     { label: t('customer'), accessor: 'customerName' },
     { label: t('phone'), accessor: 'customerPhone' },
     { label: language === 'ar' ? 'المنفذ' : 'Outlet', accessor: 'outlet' },
@@ -19,20 +20,27 @@ export default function ParkedPenaltiesTab() {
     { label: t('penaltyAmount'), accessor: o => `${o.penalty} EGP` }
   ];
 
-  const penalizedOrders = orders
-    .filter(o => o.status === 'Inventory')
-    .map(o => {
-       const cust = customers.find(c => c.phone === o.customerPhone);
-       const size = (o.size || 'M').toUpperCase();
-       const dailyRate = size === 'S' ? 18 : size === 'L' ? 45 : 30;
-       return {
-         ...o,
-         customerName: cust?.name || (language === 'ar' ? 'غير معروف' : 'Unknown'),
-         penalty: calculatePenalty(o),
-         dailyRate,
-         daysParked: getDaysDifference(o.receivedAt)
-       };
-    })
+  const buildPenalized = (orderSet, source) => 
+    orderSet
+      .filter(o => o.status === 'Inventory')
+      .map(o => {
+         const cust = customers.find(c => c.phone === o.customerPhone);
+         const size = (o.size || 'M').toUpperCase();
+         const dailyRate = size === 'S' ? 18 : size === 'L' ? 45 : 30;
+         return {
+           ...o,
+           orderSource: source,
+           customerName: cust?.name || (language === 'ar' ? 'غير معروف' : 'Unknown'),
+           penalty: calculatePenalty(o),
+           dailyRate,
+           daysParked: getDaysDifference(o.receivedAt)
+         };
+      });
+
+  const penalizedOrders = [
+    ...buildPenalized(orders, 'jumia'),
+    ...buildPenalized(bostaOrders, 'bosta')
+  ]
     .filter(o => o.penalty > 0)
     .sort((a, b) => b.penalty - a.penalty);
 
@@ -42,7 +50,7 @@ export default function ParkedPenaltiesTab() {
     if (penalizedOrders.length === 0) {
       return (
         <tr>
-          <td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+          <td colSpan="7" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
              <AlertCircle size={40} style={{ margin: '0 auto 1rem auto', opacity: 0.5 }} />
              {language === 'ar' ? 'لا توجد غرامات نشطة في المخزون حالياً.' : 'No active penalties found across inventory.'}
           </td>
@@ -53,6 +61,17 @@ export default function ParkedPenaltiesTab() {
     return penalizedOrders.map(order => (
       <tr key={order.id}>
         <td style={{ fontWeight: 600 }}>{order.id}</td>
+        <td>
+          <span style={{
+            fontSize: '0.7rem', fontWeight: 700, padding: '0.15rem 0.55rem',
+            borderRadius: '999px', background: order.orderSource === 'bosta' ? 'rgba(99,102,241,0.2)' : 'rgba(245,158,11,0.15)',
+            color: order.orderSource === 'bosta' ? '#818cf8' : 'var(--color-warning)',
+            border: `1px solid ${order.orderSource === 'bosta' ? 'rgba(99,102,241,0.3)' : 'rgba(245,158,11,0.3)'}`,
+            display: 'inline-flex', alignItems: 'center'
+          }}>
+            {order.orderSource === 'bosta' ? t('sourceBosta') : t('sourceJ')}
+          </span>
+        </td>
         <td>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <span>{order.customerName}</span>
@@ -102,6 +121,7 @@ export default function ParkedPenaltiesTab() {
           <thead>
             <tr>
               <th>{t('orderId')}</th>
+              <th>{language === 'ar' ? 'المصدر' : 'Source'}</th>
               <th>{language === 'ar' ? 'معلومات العميل' : 'Customer Info'}</th>
               <th>{language === 'ar' ? 'المنفذ' : 'Outlet'}</th>
               <th>{t('receivedAt')}</th>

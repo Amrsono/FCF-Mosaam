@@ -129,7 +129,7 @@ export default function AnalyticsTab() {
   ];
   const urgentInPeriod = allOrdersInPeriod.filter(o => {
     const d = Math.floor(Math.abs(new Date() - new Date(o.receivedAt)) / 86400000);
-    return o.status === 'Inventory' && d >= 2 && d < 4;
+    return o.status === 'Inventory' && d >= 3 && d < 5;
   });
   const coveragePct = urgentInPeriod.length > 0
     ? Math.round((callsMade.length / urgentInPeriod.length) * 100)

@@ -114,6 +114,7 @@ export default function ParkedPenaltiesTab() {
           <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
             <ExportActions data={penalizedOrders} headers={exportHeaders} filename="Pending_Penalties_Export" title={t('parkedPenalties')} />
           </div>
+        </div>
       </div>
       
       {/* Source Filter Toggle */}

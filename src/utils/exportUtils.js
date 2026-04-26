@@ -45,13 +45,11 @@ const loadArabicFont = async () => {
       );
       if (!res.ok) throw new Error(`Font fetch failed: ${res.status}`);
       const buffer = await res.arrayBuffer();
+      // Convert ArrayBuffer to Base64 reliably
       const bytes = new Uint8Array(buffer);
-
-      // Convert ArrayBuffer → base64 in chunks to avoid call-stack limits
       let binary = '';
-      const CHUNK = 8192;
-      for (let i = 0; i < bytes.length; i += CHUNK) {
-        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
+      for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
       }
       _fontCache = btoa(binary);
       return _fontCache;
@@ -62,7 +60,6 @@ const loadArabicFont = async () => {
       _fontPromise = null;
     }
   })();
-
   return _fontPromise;
 };
 
@@ -96,10 +93,10 @@ export const exportToPDF = async (data, headers, filename, title) => {
 
     // ── Register Arabic font ───────────────────────────────────────
     const fontBase64 = await loadArabicFont();
-    let fontName;
+    let fontName = 'helvetica'; // Fallback
     if (fontBase64) {
-      doc.addFileToVFS('Amiri-Regular.ttf', fontBase64);
-      doc.addFont('Amiri-Regular.ttf', 'Amiri', 'normal');
+      doc.addFileToVFS('Amiri.ttf', fontBase64);
+      doc.addFont('Amiri.ttf', 'Amiri', 'normal', 'Identity-H');
       doc.setFont('Amiri');
       fontName = 'Amiri';
     }

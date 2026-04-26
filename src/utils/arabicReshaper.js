@@ -1,10 +1,10 @@
 /**
- * A minimal Arabic reshaper utility to handle Arabic character joining (shaping).
- * Based on the Unicode Arabic joining algorithm.
+ * A more robust Arabic reshaper utility to handle Arabic character joining (shaping)
+ * and ligatures like Lam-Alef.
  */
 
 const ArabicChars = {
-  '\u0621': ['\u0621', null, null, null], // Hamza
+  '\u0621': ['\u0621', '\uFE80', null, null], // Hamza
   '\u0622': ['\u0622', '\uFE82', null, null], // Alef with Madda
   '\u0623': ['\u0623', '\uFE84', null, null], // Alef with Hamza Above
   '\u0624': ['\u0624', '\uFE86', null, null], // Waw with Hamza Above
@@ -40,44 +40,66 @@ const ArabicChars = {
   '\u0648': ['\u0648', '\uFEEE', null, null], // Waw
   '\u0649': ['\u0649', '\uFEF0', null, null], // Alef Maksura
   '\u064A': ['\u064A', '\uFEF2', '\uFEF3', '\uFEF4'], // Yeh
-  '\u0644\u0627': ['\uFEFB', '\uFEFC', null, null], // Lam-Alef
+};
+
+// Ligatures (Lam + Alef variants)
+const Ligatures = {
+  '\u0644\u0627': ['\uFEFB', '\uFEFC'], // Lam + Alef
+  '\u0644\u0622': ['\uFEF5', '\uFEF6'], // Lam + Alef Madda
+  '\u0644\u0623': ['\uFEF7', '\uFEF8'], // Lam + Alef Hamza Above
+  '\u0644\u0625': ['\uFEF9', '\uFEFA'], // Lam + Alef Hamza Below
 };
 
 const getCharType = (char) => {
-  if (!char) return 0; // None
+  if (!char) return 0;
   const forms = ArabicChars[char];
   if (!forms) return 0;
-  if (forms[2] === null) return 1; // Right-joining only
+  if (forms[2] === null) return 1; // Right-joining
   return 2; // Dual-joining
 };
 
 export const reshapeArabic = (text) => {
   if (!text) return text;
-  
-  // Handle Lam-Alef ligature first
-  let processed = text.replace(/\u0644\u0627/g, '\u0644\u0627'); // This is a placeholder for actual ligature handling if needed
 
-  let result = '';
+  // 1. First pass: Handle Ligatures (Lam-Alef)
+  let chars = [];
   for (let i = 0; i < text.length; i++) {
     const char = text[i];
-    const forms = ArabicChars[char];
+    const next = text[i + 1];
+    const lig = Ligatures[char + next];
+    if (lig) {
+      chars.push({ char: char + next, isLigature: true });
+      i++; // Skip next
+    } else {
+      chars.push({ char: char, isLigature: false });
+    }
+  }
+
+  // 2. Second pass: Shaping
+  let result = '';
+  for (let i = 0; i < chars.length; i++) {
+    const item = chars[i];
+    const char = item.char;
     
+    if (item.isLigature) {
+      const prev = chars[i - 1];
+      const prevType = prev ? getCharType(prev.char[prev.char.length - 1]) : 0;
+      // Ligatures only have Isolated (0) and Final (1) forms
+      result += (prevType === 2) ? Ligatures[char][1] : Ligatures[char][0];
+      continue;
+    }
+
+    const forms = ArabicChars[char];
     if (!forms) {
       result += char;
       continue;
     }
 
-    const prev = text[i - 1];
-    const next = text[i + 1];
+    const prev = chars[i - 1];
+    const next = chars[i + 1];
 
-    const prevType = getCharType(prev);
-    const nextType = getCharType(next);
-
-    // Ligature check (Lam + Alef)
-    if (char === '\u0644' && (next === '\u0627' || next === '\u0622' || next === '\u0623' || next === '\u0625')) {
-       // Lam-Alef handling is complex, but let's try a simple version
-       // We skip this for now to keep it simple, but in a real reshaper it's vital.
-    }
+    const prevType = prev ? (prev.isLigature ? 1 : getCharType(prev.char)) : 0;
+    const nextType = next ? (next.isLigature ? 2 : getCharType(next.char)) : 0;
 
     let formIndex = 0; // Isolated
     if (prevType === 2 && nextType !== 0) {
@@ -88,11 +110,10 @@ export const reshapeArabic = (text) => {
       formIndex = 2; // Beginning
     }
 
-    // Check if the form is supported for this char
+    // Adjust if form is not supported
     if (forms[formIndex] === null) {
-      // Fallback to simpler forms
-      if (formIndex === 3) formIndex = 1; // Medial -> Final
-      else if (formIndex === 2) formIndex = 0; // Beginning -> Isolated
+      if (formIndex === 3) formIndex = 1;
+      else if (formIndex === 2) formIndex = 0;
     }
     
     result += forms[formIndex] || char;

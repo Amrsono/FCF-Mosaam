@@ -114,7 +114,7 @@ export default function AnalyticsTab() {
   }, {});
 
   // --- GRAND TOTAL ---
-  const grandTotal = jumiaCash + bostaCash + basataVolume;
+  const grandTotal = jumiaCash + bostaCash + basataVolume + activePenalties;
 
   // --- CALLS LOG ANALYTICS ---
   const callsInPeriod = (callLogs || []).filter(l => l.createdAt && new Date(l.createdAt) >= thresholdDate);
@@ -204,6 +204,7 @@ export default function AnalyticsTab() {
     { name: t('jumia'), value: jumiaCash, color: CHART_COLORS.jumia },
     { name: t('bosta'), value: bostaCash, color: CHART_COLORS.bosta },
     { name: t('basata'), value: basataVolume, color: CHART_COLORS.basata },
+    { name: t('penalties'), value: activePenalties, color: CHART_COLORS.warning },
   ];
 
   const ordersStatusData = [
@@ -336,6 +337,7 @@ export default function AnalyticsTab() {
               { label: t('jumia'), value: jumiaCash, color: CHART_COLORS.jumia },
               { label: t('bosta'), value: bostaCash, color: CHART_COLORS.bosta },
               { label: t('basata'), value: basataVolume, color: CHART_COLORS.basata },
+              { label: t('penalties'), value: activePenalties, color: CHART_COLORS.warning },
             ].map(s => (
               <div key={s.label} style={{ flex: '1 1 auto', minWidth: '80px', textAlign: 'center' }}>
                 <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: s.color, margin: '0 auto 0.4rem' }} />
@@ -532,6 +534,14 @@ export default function AnalyticsTab() {
                 <td style={{ color: 'var(--text-muted)' }}>—</td>
                 <td style={{ color: 'var(--text-muted)' }}>—</td>
                 <td style={{ color: 'var(--color-success)', fontWeight: 700 }}>{basataVolume.toLocaleString()} EGP</td>
+              </tr>
+              <tr>
+                <td><span style={{ color: CHART_COLORS.warning, fontWeight: 700 }}>{t('penalties')}</span></td>
+                <td style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{activePenalties.toLocaleString()} EGP</td>
+                <td style={{ color: 'var(--text-primary)' }}>{jumiaInventory.length} {language === 'ar' ? 'طلب مخزن' : 'parked'}</td>
+                <td style={{ color: 'var(--text-muted)' }}>—</td>
+                <td style={{ color: 'var(--text-muted)' }}>—</td>
+                <td style={{ color: 'var(--color-success)', fontWeight: 700 }}>{activePenalties.toLocaleString()} EGP</td>
               </tr>
               <tr style={{ borderTop: '2px solid var(--border-color)', background: 'var(--bg-overlay)' }}>
                 <td style={{ color: 'var(--text-primary)', fontWeight: 800 }}>{language === 'ar' ? 'الإجمالي' : 'TOTAL'}</td>

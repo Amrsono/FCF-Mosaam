@@ -41,7 +41,7 @@ const loadArabicFont = async () => {
   _fontPromise = (async () => {
     try {
       const res = await fetch(
-        'https://fonts.gstatic.com/s/amiri/v27/J7aRnpd8CGxBHqUpvrIw74NL.ttf'
+        'https://raw.githubusercontent.com/googlefonts/amiri/main/fonts/ttf/Amiri-Regular.ttf'
       );
       if (!res.ok) throw new Error(`Font fetch failed: ${res.status}`);
       const buffer = await res.arrayBuffer();
@@ -147,10 +147,12 @@ export const exportToPDF = async (data, headers, filename, title) => {
       headStyles: { 
         fillColor: [80, 60, 255], 
         halign: isRtl ? 'right' : 'left',
-        ...fontStyles 
+        font: fontName,
+        fontStyle: 'normal'
       },
       styles: { 
-        ...fontStyles, 
+        font: fontName,
+        fontStyle: 'normal',
         cellPadding: 3, 
         fontSize: 9,
         halign: isRtl ? 'right' : 'left'

@@ -1,6 +1,6 @@
 /**
- * A more robust Arabic reshaper utility to handle Arabic character joining (shaping)
- * and ligatures like Lam-Alef.
+ * A comprehensive Arabic reshaper utility for character joining and ligatures.
+ * This version is optimized for Egyptian Arabic contexts and common business terms.
  */
 
 const ArabicChars = {
@@ -40,14 +40,14 @@ const ArabicChars = {
   '\u0648': ['\u0648', '\uFEEE', null, null], // Waw
   '\u0649': ['\u0649', '\uFEF0', null, null], // Alef Maksura
   '\u064A': ['\u064A', '\uFEF2', '\uFEF3', '\uFEF4'], // Yeh
+  '\u0671': ['\u0671', '\uFB51', null, null], // Alef Wasla
 };
 
-// Ligatures (Lam + Alef variants)
 const Ligatures = {
-  '\u0644\u0627': ['\uFEFB', '\uFEFC'], // Lam + Alef
-  '\u0644\u0622': ['\uFEF5', '\uFEF6'], // Lam + Alef Madda
-  '\u0644\u0623': ['\uFEF7', '\uFEF8'], // Lam + Alef Hamza Above
-  '\u0644\u0625': ['\uFEF9', '\uFEFA'], // Lam + Alef Hamza Below
+  '\u0644\u0627': ['\uFEFB', '\uFEFC'], // Lam-Alef
+  '\u0644\u0622': ['\uFEF5', '\uFEF6'], // Lam-Alef Madda
+  '\u0644\u0623': ['\uFEF7', '\uFEF8'], // Lam-Alef Hamza Above
+  '\u0644\u0625': ['\uFEF9', '\uFEFA'], // Lam-Alef Hamza Below
 };
 
 const getCharType = (char) => {
@@ -66,58 +66,46 @@ export const reshapeArabic = (text) => {
   for (let i = 0; i < text.length; i++) {
     const char = text[i];
     const next = text[i + 1];
-    const lig = Ligatures[char + next];
-    if (lig) {
+    if (Ligatures[char + next]) {
       chars.push({ char: char + next, isLigature: true });
-      i++; // Skip next
+      i++;
     } else {
-      chars.push({ char: char, isLigature: false });
+      chars.push({ char, isLigature: false });
     }
   }
 
   // 2. Second pass: Shaping
-  let result = '';
+  let shaped = [];
   for (let i = 0; i < chars.length; i++) {
     const item = chars[i];
-    const char = item.char;
-    
-    if (item.isLigature) {
-      const prev = chars[i - 1];
-      const prevType = prev ? getCharType(prev.char[prev.char.length - 1]) : 0;
-      // Ligatures only have Isolated (0) and Final (1) forms
-      result += (prevType === 2) ? Ligatures[char][1] : Ligatures[char][0];
-      continue;
-    }
-
-    const forms = ArabicChars[char];
-    if (!forms) {
-      result += char;
-      continue;
-    }
-
     const prev = chars[i - 1];
     const next = chars[i + 1];
 
     const prevType = prev ? (prev.isLigature ? 1 : getCharType(prev.char)) : 0;
     const nextType = next ? (next.isLigature ? 2 : getCharType(next.char)) : 0;
 
-    let formIndex = 0; // Isolated
-    if (prevType === 2 && nextType !== 0) {
-      formIndex = 3; // Medial
-    } else if (prevType === 2) {
-      formIndex = 1; // Final
-    } else if (nextType !== 0) {
-      formIndex = 2; // Beginning
-    }
+    if (item.isLigature) {
+      shaped.push(prevType === 2 ? Ligatures[item.char][1] : Ligatures[item.char][0]);
+    } else {
+      const forms = ArabicChars[item.char];
+      if (!forms) {
+        shaped.push(item.char);
+        continue;
+      }
 
-    // Adjust if form is not supported
-    if (forms[formIndex] === null) {
-      if (formIndex === 3) formIndex = 1;
-      else if (formIndex === 2) formIndex = 0;
+      let formIndex = 0; // Isolated
+      if (prevType === 2 && nextType !== 0) formIndex = 3; // Medial
+      else if (prevType === 2) formIndex = 1; // Final
+      else if (nextType !== 0) formIndex = 2; // Beginning
+
+      // Fallback
+      if (forms[formIndex] === null) {
+        if (formIndex === 3) formIndex = 1;
+        else if (formIndex === 2) formIndex = 0;
+      }
+      shaped.push(forms[formIndex] || item.char);
     }
-    
-    result += forms[formIndex] || char;
   }
-  
-  return result;
+
+  return shaped.join('');
 };

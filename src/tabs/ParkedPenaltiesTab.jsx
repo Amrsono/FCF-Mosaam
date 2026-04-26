@@ -26,7 +26,7 @@ export default function ParkedPenaltiesTab() {
       .map(o => {
          const cust = customers.find(c => c.phone === o.customerPhone);
          const size = (o.size || 'M').toUpperCase();
-         const dailyRate = size === 'S' ? 18 : size === 'L' ? 45 : 30;
+         const dailyRate = size === 'S' ? 20 : size === 'L' ? 40 : 40;
          return {
            ...o,
            orderSource: source,
@@ -102,8 +102,8 @@ export default function ParkedPenaltiesTab() {
           </h2>
           <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem', fontSize: '0.9rem' }}>
             {language === 'ar'
-              ? 'مستحقة من الطلبات المخزنة — S: 18 | M: 30 | L: 45 جنيه / اليوم'
-              : 'Accrued from parked orders — S: 18 | M: 30 | L: 45 EGP / Day'}
+              ? 'مستحقة من الطلبات المخزنة — S: 20 | M: 40 | L: 40 جنيه / اليوم'
+              : 'Accrued from parked orders — S: 20 | M: 40 | L: 40 EGP / Day'}
           </p>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem', flex: '1 1 auto' }}>

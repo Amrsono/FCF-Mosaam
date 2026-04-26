@@ -2,6 +2,7 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import pptxgen from "pptxgenjs";
+import { reshapeArabic } from './arabicReshaper';
 
 /**
  * Normalizes dataset to have matching columns for exporting
@@ -67,7 +68,7 @@ const loadArabicFont = async () => {
 
 /**
  * Safely convert any value to a printable string for PDF cells.
- * Also handles Arabic text by reversing it for jsPDF's LTR engine.
+ * Also handles Arabic text by reshaping (joining) and then reversing it for jsPDF's LTR engine.
  */
 const safeString = (val) => {
   if (val == null) return '';
@@ -81,9 +82,10 @@ const safeString = (val) => {
 
   // Detect Arabic characters
   if (/[\u0600-\u06FF]/.test(str)) {
-    // Reverse the string for LTR PDF engines. 
-    // This is a common workaround when full shaping is not available.
-    return str.split('').reverse().join('');
+    // 1. Reshape the Arabic text to join characters correctly
+    const reshaped = reshapeArabic(str);
+    // 2. Reverse the string for LTR PDF engines. 
+    return reshaped.split('').reverse().join('');
   }
   return str;
 };

@@ -74,6 +74,10 @@ const loadArabicFont = async () => {
  * Safely convert any value to a printable string for PDF cells.
  * Also handles Arabic text by reshaping (joining) and then reversing it for jsPDF's LTR engine.
  */
+/**
+ * Safely convert any value to a printable string for PDF cells.
+ * Also handles Arabic text by reshaping (joining) and then reversing it for jsPDF's LTR engine.
+ */
 const safeString = (val) => {
   if (val == null) return '';
   let str = '';
@@ -88,10 +92,8 @@ const safeString = (val) => {
   if (/[\u0600-\u06FF]/.test(str)) {
     // 1. Reshape the Arabic text to join characters correctly
     const reshaped = reshapeArabic(str);
-    // 2. Convert to Eastern Arabic Numerals (common in Egyptian official reports)
-    const withNumerals = toArabicNumerals(reshaped);
-    // 3. Reverse the string for LTR PDF engines. 
-    return withNumerals.split('').reverse().join('');
+    // 2. Reverse the string for LTR PDF engines. 
+    return reshaped.split('').reverse().join('');
   }
   return str;
 };

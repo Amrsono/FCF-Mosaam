@@ -295,7 +295,7 @@ export default function CallsLogTab() {
                   <span>{isRTL ? '— أجرى المكالمة' : '— made the call'}</span>
                   {log.takenAt && (
                     <span style={{ color: 'var(--text-muted)' }}>
-                      @ {new Date(log.takenAt).toLocaleTimeString(isRTL ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
+                      @ {new Date(log.takenAt).toLocaleString(isRTL ? 'ar-EG' : 'en-US', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
                     </span>
                   )}
                 </div>

@@ -7,6 +7,7 @@ import { useLanguage } from '../context/LanguageContext';
 export default function ParkedPenaltiesTab() {
   const { orders, bostaOrders, customers, calculatePenalty } = useDashboard();
   const { t, language } = useLanguage();
+  const [filterSource, setFilterSource] = React.useState('all'); // 'all' | 'jumia' | 'bosta'
 
   const exportHeaders = [
     { label: t('orderId'), accessor: 'id' },
@@ -38,8 +39,8 @@ export default function ParkedPenaltiesTab() {
       });
 
   const penalizedOrders = [
-    ...buildPenalized(orders, 'jumia'),
-    ...buildPenalized(bostaOrders, 'bosta')
+    ...(filterSource === 'all' || filterSource === 'jumia' ? buildPenalized(orders, 'jumia') : []),
+    ...(filterSource === 'all' || filterSource === 'bosta' ? buildPenalized(bostaOrders, 'bosta') : [])
   ]
     .filter(o => o.penalty > 0)
     .sort((a, b) => b.penalty - a.penalty);
@@ -113,7 +114,45 @@ export default function ParkedPenaltiesTab() {
           <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
             <ExportActions data={penalizedOrders} headers={exportHeaders} filename="Pending_Penalties_Export" title={t('parkedPenalties')} />
           </div>
-        </div>
+      </div>
+      
+      {/* Source Filter Toggle */}
+      <div style={{ 
+        display: 'flex', 
+        gap: '0.5rem', 
+        background: 'var(--bg-panel)', 
+        borderRadius: 'var(--radius-md)', 
+        padding: '0.4rem', 
+        alignSelf: 'stretch', 
+        border: '1px solid var(--border-color)', 
+        flexWrap: 'wrap' 
+      }}>
+        <button
+          className={`btn ${filterSource === 'all' ? 'btn-primary' : 'btn-outline'}`}
+          style={{ border: 'none', flex: '1 1 auto', fontSize: '0.85rem' }}
+          onClick={() => setFilterSource('all')}
+        >
+          {language === 'ar' ? 'الكل' : 'All'}
+        </button>
+        <button
+          className={`btn ${filterSource === 'jumia' ? 'btn-primary' : 'btn-outline'}`}
+          style={{ border: 'none', flex: '1 1 auto', fontSize: '0.85rem' }}
+          onClick={() => setFilterSource('jumia')}
+        >
+          {language === 'ar' ? 'J ' : ' J '}
+        </button>
+        <button
+          className={`btn ${filterSource === 'bosta' ? 'btn-primary' : 'btn-outline'}`}
+          style={{ 
+            border: 'none', 
+            flex: '1 1 auto', 
+            fontSize: '0.85rem',
+            ...(filterSource === 'bosta' ? { background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' } : {})
+          }}
+          onClick={() => setFilterSource('bosta')}
+        >
+          {language === 'ar' ? 'بوسطة' : 'Bosta'}
+        </button>
       </div>
 
       <div className="table-container" style={{ flex: 1 }}>

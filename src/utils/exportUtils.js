@@ -40,15 +40,18 @@ const loadArabicFont = async () => {
 
   _fontPromise = (async () => {
     try {
+      // Use a highly reliable Google Font CDN for Amiri
       const res = await fetch(
-        'https://raw.githubusercontent.com/googlefonts/amiri/main/fonts/ttf/Amiri-Regular.ttf'
+        'https://fonts.gstatic.com/s/amiri/v27/J7aRnpd8CGxBHqUpvrIw74NL.ttf'
       );
       if (!res.ok) throw new Error(`Font fetch failed: ${res.status}`);
       const buffer = await res.arrayBuffer();
-      // Convert ArrayBuffer to Base64 reliably
+      
+      // Efficiently convert ArrayBuffer to Base64
       const bytes = new Uint8Array(buffer);
       let binary = '';
-      for (let i = 0; i < bytes.byteLength; i++) {
+      const len = bytes.byteLength;
+      for (let i = 0; i < len; i++) {
         binary += String.fromCharCode(bytes[i]);
       }
       _fontCache = btoa(binary);
@@ -60,6 +63,7 @@ const loadArabicFont = async () => {
       _fontPromise = null;
     }
   })();
+
   return _fontPromise;
 };
 
@@ -108,7 +112,7 @@ export const exportToPDF = async (data, headers, filename, title) => {
     if (title) {
       doc.setFontSize(18);
       if (isRtl) {
-        // For RTL titles, align to the right side of the page
+        doc.setFont('Amiri');
         doc.text(safeString(title), 196, 22, { align: 'right' });
       } else {
         doc.text(safeString(title), 14, 22);
@@ -145,15 +149,20 @@ export const exportToPDF = async (data, headers, filename, title) => {
         fillColor: [80, 60, 255], 
         halign: isRtl ? 'right' : 'left',
         font: fontName,
-        fontStyle: 'normal'
+        fontStyle: 'normal',
+        textColor: [255, 255, 255]
       },
       styles: { 
         font: fontName,
         fontStyle: 'normal',
         cellPadding: 3, 
         fontSize: 9,
-        halign: isRtl ? 'right' : 'left'
+        halign: isRtl ? 'right' : 'left',
+        textColor: [0, 0, 0]
       },
+      alternateRowStyles: {
+        fillColor: [245, 245, 255]
+      }
     });
 
     doc.save(`${filename}.pdf`);

@@ -5,7 +5,7 @@ import ExportActions from '../components/ExportActions';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function CustomersTab() {
-  const { customers, updateCustomer, addCustomer } = useDashboard();
+  const { customers, orders, bostaOrders, updateCustomer, addCustomer } = useDashboard();
   const { t, language } = useLanguage();
   
   const [editingPhone, setEditingPhone] = useState(null);
@@ -22,9 +22,12 @@ export default function CustomersTab() {
     { label: t('email'), accessor: 'email' },
     { label: t('address'), accessor: 'address' },
     { label: t('tier'), accessor: 'tier' },
-    { label: t('deliveries'), accessor: 'deliveries' },
-    { label: t('bostaDeliveries'), accessor: 'bostaDeliveries' },
-    { label: t('total'), accessor: c => (c.deliveries || 0) + (c.bostaDeliveries || 0) }
+    { label: t('deliveries'), accessor: c => orders.filter(o => o.customerPhone === c.phone).length },
+    { label: t('bostaDeliveries'), accessor: c => bostaOrders.filter(o => o.customerPhone === c.phone).length },
+    { label: t('total'), accessor: c => 
+      orders.filter(o => o.customerPhone === c.phone).length + 
+      bostaOrders.filter(o => o.customerPhone === c.phone).length 
+    }
   ];
 
   const startEdit = (customer) => {
@@ -113,13 +116,17 @@ export default function CustomersTab() {
                   </td>
                   <td>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                      <span style={{ fontWeight: 700, color: 'var(--color-primary)' }}>{customer.deliveries || 0}</span>
+                      <span style={{ fontWeight: 700, color: 'var(--color-primary)' }}>
+                        {orders.filter(o => o.customerPhone === customer.phone).length}
+                      </span>
                       <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{language === 'ar' ? ' J ' : ' J '}</span>
                     </div>
                   </td>
                   <td>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                      <span style={{ fontWeight: 700, color: '#6366f1' }}>{customer.bostaDeliveries || 0}</span>
+                      <span style={{ fontWeight: 700, color: '#6366f1' }}>
+                        {bostaOrders.filter(o => o.customerPhone === customer.phone).length}
+                      </span>
                       <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{language === 'ar' ? 'بوسطة' : 'Bosta'}</span>
                     </div>
                   </td>

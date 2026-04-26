@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useDashboard } from '../context/DashboardContext';
+import { useAuth } from '../context/AuthContext';
 import {
   TrendingUp, PackageCheck, AlertOctagon, Users, DollarSign,
   Zap, BarChart2, Activity,
@@ -48,8 +49,11 @@ const CustomTooltip = ({ active, payload, label, language }) => {
 
 export default function AnalyticsTab() {
   const { orders, customers, basataTransactions, bostaOrders, callLogs, customerReturns } = useDashboard();
+  const { user } = useAuth();
   const { t, language } = useLanguage();
   const [timeframe, setTimeframe] = useState('daily');
+
+  const isAdminAccount = user?.username === 'admin';
 
   const exportHeaders = [
     { label: t('stream'), accessor: 'group' },
@@ -255,8 +259,35 @@ export default function AnalyticsTab() {
         <h4 style={{ color: 'white', margin: 0, fontSize: '0.95rem' }}>{title}</h4>
       </div>
       {children}
-    </div>
+    </ChartCard>
   );
+
+  // Admin Transaction Counters Logic
+  const getTransactionCount = (periodMs) => {
+    const limit = new Date(Date.now() - periodMs);
+    
+    const jTrx = orders.filter(o => 
+      (o.status === 'Picked Up' && o.pickedUpAt && new Date(o.pickedUpAt) >= limit) ||
+      (o.status === 'Returned' && o.returnedAt && new Date(o.returnedAt) >= limit)
+    ).length;
+    
+    const bTrx = bostaOrders.filter(o => 
+      (o.status === 'Picked Up' && o.pickedUpAt && new Date(o.pickedUpAt) >= limit) ||
+      (o.status === 'Returned' && o.returnedAt && new Date(o.returnedAt) >= limit)
+    ).length;
+    
+    const basataTrx = basataTransactions.filter(t => t.performedAt && new Date(t.performedAt) >= limit).length;
+    
+    const custRetTrx = (customerReturns || []).filter(r => 
+      r.status === 'Returned to Jumia' && r.returnedAt && new Date(r.returnedAt) >= limit
+    ).length;
+
+    return jTrx + bTrx + basataTrx + custRetTrx;
+  };
+
+  const dailyCount = isAdminAccount ? getTransactionCount(86400000) : 0;
+  const weeklyCount = isAdminAccount ? getTransactionCount(86400000 * 7) : 0;
+  const monthlyCount = isAdminAccount ? getTransactionCount(86400000 * 30) : 0;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: '100%', overflowY: 'auto', [language === 'ar' ? 'paddingLeft' : 'paddingRight']: '0.5rem' }}>
@@ -621,6 +652,79 @@ export default function AnalyticsTab() {
           </div>
         </div>
       </ChartCard>
+
+      {/* Admin Transaction Counters */}
+      {isAdminAccount && (
+        <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem', paddingBottom: '2rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: 'white', marginBottom: '0.5rem' }}>
+            <div style={{ background: 'var(--color-primary)', padding: '0.4rem', borderRadius: '8px', display: 'flex' }}>
+              <Activity size={18} color="white" />
+            </div>
+            <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700 }}>{t('transactionCounters')}</h3>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+            <div className="glass-panel" style={{ 
+              background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.03))',
+              border: '1px solid rgba(34, 197, 94, 0.2)',
+              padding: '1.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              position: 'relative',
+              overflow: 'hidden'
+            }}>
+              <div style={{ position: 'absolute', top: '-10px', right: '-10px', width: '80px', height: '80px', background: 'rgba(34, 197, 94, 0.05)', borderRadius: '50%', filter: 'blur(20px)' }} />
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.6rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t('dailyTransactions')}</div>
+                <div style={{ fontSize: '2.8rem', fontWeight: 900, color: 'white', lineHeight: 1 }}>{dailyCount.toLocaleString()}</div>
+              </div>
+              <div style={{ background: 'rgba(34, 197, 94, 0.15)', padding: '1rem', borderRadius: '1.25rem', display: 'flex', position: 'relative', zIndex: 1 }}>
+                <Zap size={32} color="#22c55e" strokeWidth={2.5} />
+              </div>
+            </div>
+            
+            <div className="glass-panel" style={{ 
+              background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(99, 102, 241, 0.03))',
+              border: '1px solid rgba(99, 102, 241, 0.2)',
+              padding: '1.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              position: 'relative',
+              overflow: 'hidden'
+            }}>
+              <div style={{ position: 'absolute', top: '-10px', right: '-10px', width: '80px', height: '80px', background: 'rgba(99, 102, 241, 0.05)', borderRadius: '50%', filter: 'blur(20px)' }} />
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.6rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t('weeklyTransactions')}</div>
+                <div style={{ fontSize: '2.8rem', fontWeight: 900, color: 'white', lineHeight: 1 }}>{weeklyCount.toLocaleString()}</div>
+              </div>
+              <div style={{ background: 'rgba(99, 102, 241, 0.15)', padding: '1rem', borderRadius: '1.25rem', display: 'flex', position: 'relative', zIndex: 1 }}>
+                <BarChart2 size={32} color="#6366f1" strokeWidth={2.5} />
+              </div>
+            </div>
+
+            <div className="glass-panel" style={{ 
+              background: 'linear-gradient(135deg, rgba(249, 115, 22, 0.15), rgba(249, 115, 22, 0.03))',
+              border: '1px solid rgba(249, 115, 22, 0.2)',
+              padding: '1.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              position: 'relative',
+              overflow: 'hidden'
+            }}>
+              <div style={{ position: 'absolute', top: '-10px', right: '-10px', width: '80px', height: '80px', background: 'rgba(249, 115, 22, 0.05)', borderRadius: '50%', filter: 'blur(20px)' }} />
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.6rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t('monthlyTransactions')}</div>
+                <div style={{ fontSize: '2.8rem', fontWeight: 900, color: 'white', lineHeight: 1 }}>{monthlyCount.toLocaleString()}</div>
+              </div>
+              <div style={{ background: 'rgba(249, 115, 22, 0.15)', padding: '1rem', borderRadius: '1.25rem', display: 'flex', position: 'relative', zIndex: 1 }}>
+                <TrendingUp size={32} color="#f97316" strokeWidth={2.5} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

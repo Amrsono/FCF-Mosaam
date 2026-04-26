@@ -164,6 +164,10 @@ export const translations = {
     inventoryStatus: "Inventory",
     pickedUpStatus: "Picked Up",
     returnedStatus: "Returned",
+    transactionCounters: "Transactions Counter",
+    dailyTransactions: "Daily Transactions",
+    weeklyTransactions: "Weekly Transactions",
+    monthlyTransactions: "Monthly Transactions",
   },
   ar: {
     // Sidebar
@@ -330,5 +334,9 @@ export const translations = {
     inventoryStatus: "في المخزن",
     pickedUpStatus: "تم الاستلام",
     returnedStatus: "تم الارجاع",
+    transactionCounters: "عداد المعاملات",
+    dailyTransactions: "المعاملات اليومية",
+    weeklyTransactions: "المعاملات الأسبوعية",
+    monthlyTransactions: "المعاملات الشهرية",
   }
 };

@@ -180,7 +180,7 @@ export default function AnalyticsTab() {
         resolved: callsResolved.length,
         coverage: coveragePct
       },
-      grandTotal: grandTotal - jumiaReturnedAmt - bostaReturnedAmt
+      grandTotal: grandTotal
     };
 
     exportToPPTX(analytics, `FCF_Master_Report_${timeframe}`, language);
@@ -543,9 +543,9 @@ export default function AnalyticsTab() {
                 <td style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{jumiaCash.toLocaleString()} EGP</td>
                 <td style={{ color: 'var(--text-primary)' }}>{jumiaPickedUp.length}</td>
                 <td style={{ color: 'var(--text-primary)' }}><span style={{ color: 'var(--color-danger)' }}>{jumiaReturned.length}</span></td>
-                <td style={{ color: 'var(--color-danger)' }}>{jumiaReturnedAmt.toLocaleString()} EGP</td>
+                <td style={{ color: 'var(--color-danger)' }}>0 EGP</td>
                 <td style={{ color: 'var(--color-success)', fontWeight: 700 }}>
-                  {(jumiaCash - jumiaReturnedAmt).toLocaleString()} EGP
+                  {jumiaCash.toLocaleString()} EGP
                 </td>
               </tr>
               <tr>
@@ -553,9 +553,9 @@ export default function AnalyticsTab() {
                 <td style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{bostaCash.toLocaleString()} EGP</td>
                 <td style={{ color: 'var(--text-primary)' }}>{bostaPickedUp.length}</td>
                 <td style={{ color: 'var(--text-primary)' }}><span style={{ color: 'var(--color-danger)' }}>{bostaReturned.length}</span></td>
-                <td style={{ color: 'var(--color-danger)' }}>{bostaReturnedAmt.toLocaleString()} EGP</td>
+                <td style={{ color: 'var(--color-danger)' }}>0 EGP</td>
                 <td style={{ color: 'var(--color-success)', fontWeight: 700 }}>
-                  {(bostaCash - bostaReturnedAmt).toLocaleString()} EGP
+                  {bostaCash.toLocaleString()} EGP
                 </td>
               </tr>
               <tr>
@@ -579,9 +579,9 @@ export default function AnalyticsTab() {
                 <td style={{ color: 'var(--text-primary)', fontWeight: 800 }}>{grandTotal.toLocaleString()} EGP</td>
                 <td style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{jumiaPickedUp.length + bostaPickedUp.length + activeBasata.length}</td>
                 <td style={{ color: 'var(--color-danger)', fontWeight: 700 }}>{jumiaReturned.length + bostaReturned.length}</td>
-                <td style={{ color: 'var(--color-danger)', fontWeight: 700 }}>{(jumiaReturnedAmt + bostaReturnedAmt).toLocaleString()} EGP</td>
+                <td style={{ color: 'var(--color-danger)', fontWeight: 700 }}>0 EGP</td>
                 <td style={{ color: 'var(--color-success)', fontWeight: 800 }}>
-                  {(grandTotal - jumiaReturnedAmt - bostaReturnedAmt).toLocaleString()} EGP
+                  {grandTotal.toLocaleString()} EGP
                 </td>
               </tr>
             </tbody>

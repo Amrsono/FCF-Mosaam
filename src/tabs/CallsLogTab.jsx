@@ -403,7 +403,7 @@ export default function CallsLogTab() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                     <span style={{ fontWeight: 600, fontFamily: 'monospace', color: 'var(--text-secondary)' }}>{log.orderId}</span>
                     <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                      {log.agentName || '-'} • {log.createdAt ? new Date(log.createdAt).toLocaleDateString() : '-'}
+                      {log.agentName || '-'} • {log.createdAt ? new Date(log.createdAt).toLocaleString(isRTL ? 'ar-EG' : 'en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '-'}
                     </span>
                   </div>
                   {resMeta && (

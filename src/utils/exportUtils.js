@@ -66,16 +66,26 @@ const loadArabicFont = async () => {
 };
 
 /**
- * Safely convert any value to a printable string for PDF cells
+ * Safely convert any value to a printable string for PDF cells.
+ * Also handles Arabic text by reversing it for jsPDF's LTR engine.
  */
 const safeString = (val) => {
   if (val == null) return '';
+  let str = '';
   if (typeof val === 'object') {
-    // Handle Date objects
-    if (val instanceof Date) return val.toLocaleString();
-    return JSON.stringify(val);
+    if (val instanceof Date) str = val.toLocaleString();
+    else str = JSON.stringify(val);
+  } else {
+    str = String(val);
   }
-  return String(val);
+
+  // Detect Arabic characters
+  if (/[\u0600-\u06FF]/.test(str)) {
+    // Reverse the string for LTR PDF engines. 
+    // This is a common workaround when full shaping is not available.
+    return str.split('').reverse().join('');
+  }
+  return str;
 };
 
 export const exportToPDF = async (data, headers, filename, title) => {
@@ -94,13 +104,22 @@ export const exportToPDF = async (data, headers, filename, title) => {
 
     // ── Title ──────────────────────────────────────────────────────
     if (title) {
+      const isRtlTitle = /[\u0600-\u06FF]/.test(title);
       doc.setFontSize(18);
-      doc.text(safeString(title), 14, 22);
+      if (isRtlTitle) {
+        // For RTL titles, align to the right side of the page (A4 width is approx 210mm)
+        doc.text(safeString(title), 196, 22, { align: 'right' });
+      } else {
+        doc.text(safeString(title), 14, 22);
+      }
     }
 
     // ── Table data ─────────────────────────────────────────────────
-    const tableColumn = headers.map(h => safeString(h.label));
-    const tableRows = data.map(item =>
+    // If the title contains Arabic, we assume the whole report should be RTL
+    const isRtl = /[\u0600-\u06FF]/.test(title || '') || headers.some(h => /[\u0600-\u06FF]/.test(h.label));
+    
+    let tableColumn = headers.map(h => safeString(h.label));
+    let tableRows = data.map(item =>
       headers.map(h => {
         try {
           const raw = typeof h.accessor === 'function'
@@ -113,6 +132,12 @@ export const exportToPDF = async (data, headers, filename, title) => {
       })
     );
 
+    // If RTL, reverse the columns order for the table
+    if (isRtl) {
+      tableColumn = tableColumn.reverse();
+      tableRows = tableRows.map(row => row.reverse());
+    }
+
     const fontStyles = fontName ? { font: fontName } : {};
 
     autoTable(doc, {
@@ -120,8 +145,17 @@ export const exportToPDF = async (data, headers, filename, title) => {
       body: tableRows,
       startY: title ? 30 : 14,
       theme: 'grid',
-      headStyles: { fillColor: [80, 60, 255], ...fontStyles },
-      styles: { ...fontStyles, cellPadding: 3, fontSize: 9 },
+      headStyles: { 
+        fillColor: [80, 60, 255], 
+        halign: isRtl ? 'right' : 'left',
+        ...fontStyles 
+      },
+      styles: { 
+        ...fontStyles, 
+        cellPadding: 3, 
+        fontSize: 9,
+        halign: isRtl ? 'right' : 'left'
+      },
     });
 
     doc.save(`${filename}.pdf`);

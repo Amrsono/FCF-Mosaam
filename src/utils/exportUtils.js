@@ -34,20 +34,23 @@ export const exportToExcel = (data, headers, filename) => {
 let _fontCache = null;
 let _fontPromise = null;
 
+const toArabicNumerals = (str) => {
+  return str.replace(/[0-9]/g, (d) => '٠١٢٣٤٥٦٧٨٩'[d]);
+};
+
 const loadArabicFont = async () => {
   if (_fontCache) return _fontCache;
   if (_fontPromise) return _fontPromise;
 
   _fontPromise = (async () => {
     try {
-      // Use a highly reliable Google Font CDN for Amiri
+      // Cairo is the most popular font for Egyptian web/mobile interfaces
       const res = await fetch(
-        'https://fonts.gstatic.com/s/amiri/v27/J7aRnpd8CGxBHqUpvrIw74NL.ttf'
+        'https://fonts.gstatic.com/s/cairo/v28/SLXGc1j96_pY_m48_jw6AnS4_H8f.ttf'
       );
       if (!res.ok) throw new Error(`Font fetch failed: ${res.status}`);
       const buffer = await res.arrayBuffer();
       
-      // Efficiently convert ArrayBuffer to Base64
       const bytes = new Uint8Array(buffer);
       let binary = '';
       const len = bytes.byteLength;
@@ -57,7 +60,7 @@ const loadArabicFont = async () => {
       _fontCache = btoa(binary);
       return _fontCache;
     } catch (err) {
-      console.warn('Could not load Arabic font for PDF:', err);
+      console.warn('Could not load Cairo font for PDF:', err);
       return null;
     } finally {
       _fontPromise = null;
@@ -85,8 +88,10 @@ const safeString = (val) => {
   if (/[\u0600-\u06FF]/.test(str)) {
     // 1. Reshape the Arabic text to join characters correctly
     const reshaped = reshapeArabic(str);
-    // 2. Reverse the string for LTR PDF engines. 
-    return reshaped.split('').reverse().join('');
+    // 2. Convert to Eastern Arabic Numerals (common in Egyptian official reports)
+    const withNumerals = toArabicNumerals(reshaped);
+    // 3. Reverse the string for LTR PDF engines. 
+    return withNumerals.split('').reverse().join('');
   }
   return str;
 };
@@ -99,10 +104,10 @@ export const exportToPDF = async (data, headers, filename, title) => {
     const fontBase64 = await loadArabicFont();
     let fontName = 'helvetica'; // Fallback
     if (fontBase64) {
-      doc.addFileToVFS('Amiri.ttf', fontBase64);
-      doc.addFont('Amiri.ttf', 'Amiri', 'normal', 'Identity-H');
-      doc.setFont('Amiri');
-      fontName = 'Amiri';
+      doc.addFileToVFS('Cairo.ttf', fontBase64);
+      doc.addFont('Cairo.ttf', 'Cairo', 'normal', 'Identity-H');
+      doc.setFont('Cairo');
+      fontName = 'Cairo';
     }
 
     // ── Detect RTL Needs ───────────────────────────────────────────
@@ -112,7 +117,7 @@ export const exportToPDF = async (data, headers, filename, title) => {
     if (title) {
       doc.setFontSize(18);
       if (isRtl) {
-        doc.setFont('Amiri');
+        doc.setFont('Cairo');
         doc.text(safeString(title), 196, 22, { align: 'right' });
       } else {
         doc.text(safeString(title), 14, 22);

@@ -1,7 +1,11 @@
 import * as XLSX from 'xlsx';
 import pdfMake from 'pdfmake/build/pdfmake';
+import pdfFonts from 'pdfmake/build/vfs_fonts';
 import pptxgen from "pptxgenjs";
 import { reshapeArabic } from './arabicReshaper';
+
+// Initialize pdfMake VFS
+pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
 /**
  * Normalizes dataset to have matching columns for exporting
@@ -43,6 +47,7 @@ const loadArabicFont = async () => {
 
   _fontPromise = (async () => {
     try {
+      console.log('Loading Cairo font for PDF...');
       // Cairo is the most popular font for Egyptian web/mobile interfaces
       const res = await fetch(
         'https://fonts.gstatic.com/s/cairo/v28/SLXGc1j96_pY_m48_jw6AnS4_H8f.ttf'
@@ -57,6 +62,7 @@ const loadArabicFont = async () => {
         binary += String.fromCharCode(bytes[i]);
       }
       _fontCache = btoa(binary);
+      console.log('Cairo font loaded successfully.');
 
       // Register with pdfMake
       pdfMake.vfs = pdfMake.vfs || {};
@@ -70,12 +76,13 @@ const loadArabicFont = async () => {
           bolditalics: 'Cairo-Regular.ttf'
         },
         Roboto: {
-          normal: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf',
-          bold: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Medium.ttf',
-          italics: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Italic.ttf',
-          bolditalics: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-MediumItalic.ttf'
+          normal: 'Roboto-Regular.ttf',
+          bold: 'Roboto-Medium.ttf',
+          italics: 'Roboto-Italic.ttf',
+          bolditalics: 'Roboto-MediumItalic.ttf'
         }
       };
+      console.log('pdfMake fonts configured.');
 
       return _fontCache;
     } catch (err) {
@@ -201,6 +208,10 @@ export const exportToPDF = async (data, headers, filename, title) => {
           item.table.body = item.table.body.map(row => row.reverse());
         }
       });
+    }
+
+    if (!pdfMake || typeof pdfMake.createPdf !== 'function') {
+      throw new Error('pdfMake library not properly initialized');
     }
 
     pdfMake.createPdf(docDefinition).download(`${filename}.pdf`);

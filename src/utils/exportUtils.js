@@ -55,11 +55,19 @@ const loadArabicFont = async () => {
 
   _fontPromise = (async () => {
     try {
-      console.log('Loading Cairo font for PDF...');
-      // Cairo is the most popular font for Egyptian web/mobile interfaces
+      console.log('Attempting to load Cairo font...');
+      
+      // Add a timeout to the fetch to prevent hanging indefinitely
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+
       const res = await fetch(
-        'https://fonts.gstatic.com/s/cairo/v28/SLXGc1j96_pY_m48_jw6AnS4_H8f.ttf'
+        'https://fonts.gstatic.com/s/cairo/v28/SLXGc1j96_pY_m48_jw6AnS4_H8f.ttf',
+        { signal: controller.signal }
       );
+      
+      clearTimeout(timeoutId);
+      
       if (!res.ok) throw new Error(`Font fetch failed: ${res.status}`);
       const buffer = await res.arrayBuffer();
       
@@ -70,7 +78,7 @@ const loadArabicFont = async () => {
         binary += String.fromCharCode(bytes[i]);
       }
       _fontCache = btoa(binary);
-      console.log('Cairo font loaded successfully.');
+      console.log('Cairo font cached.');
 
       // Register with _pdfMake
       if (_pdfMake) {
@@ -91,12 +99,23 @@ const loadArabicFont = async () => {
             bolditalics: 'Roboto-MediumItalic.ttf'
           }
         };
-        console.log('_pdfMake fonts configured.');
+        console.log('Fonts registered with _pdfMake.');
       }
 
       return _fontCache;
     } catch (err) {
-      console.warn('Could not load Cairo font for PDF:', err);
+      console.warn('Font loading failed, falling back to standard fonts:', err);
+      // Ensure Roboto is still configured as fallback
+      if (_pdfMake) {
+        _pdfMake.fonts = _pdfMake.fonts || {
+          Roboto: {
+            normal: 'Roboto-Regular.ttf',
+            bold: 'Roboto-Medium.ttf',
+            italics: 'Roboto-Italic.ttf',
+            bolditalics: 'Roboto-MediumItalic.ttf'
+          }
+        };
+      }
       return null;
     } finally {
       _fontPromise = null;
@@ -182,7 +201,7 @@ export const exportToPDF = async (data, headers, filename, title) => {
         }
       ],
       defaultStyle: {
-        font: 'Cairo',
+        font: _fontCache ? 'Cairo' : 'Roboto',
         fontSize: 10
       },
       styles: {

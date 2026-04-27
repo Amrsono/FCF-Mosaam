@@ -94,108 +94,126 @@ function AppContent() {
         {/* Sidebar Footer: Theme, Language, User, Logout */}
         <div style={{ 
           borderTop: '1px solid var(--border-color)', 
-          padding: '1.25rem 1rem 1.25rem', 
+          padding: '1.5rem 1.25rem', 
           marginTop: 'auto', 
           display: 'flex', 
           flexDirection: 'column', 
-          gap: '1rem' 
+          gap: '1.25rem',
+          userSelect: 'none'
         }}>
           
-          {/* Theme Switcher */}
-          <div style={{ 
-            display: 'flex', 
-            background: 'var(--bg-main)', 
-            borderRadius: 'var(--radius-md)', 
-            padding: '2px', 
-            border: '1px solid var(--border-color)',
-            height: '40px',
-            overflow: 'hidden'
-          }}>
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+            {/* Theme Switcher */}
+            <div style={{ 
+              display: 'flex', 
+              background: 'var(--bg-main)', 
+              borderRadius: '12px', 
+              padding: '3px', 
+              border: '1px solid var(--border-color)',
+              flex: 1,
+              height: '38px'
+            }}>
+              <button 
+                className={`btn ${theme === 'dark' ? 'btn-primary' : ''}`} 
+                style={{ flex: 1, padding: 0, border: 'none', background: theme === 'dark' ? undefined : 'transparent', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
+                onClick={() => toggleTheme('dark')}
+                title="Dark Mode"
+              >
+                <Moon size={14} />
+              </button>
+              <button 
+                className={`btn ${theme === 'medium' ? 'btn-primary' : ''}`} 
+                style={{ flex: 1, padding: 0, border: 'none', background: theme === 'medium' ? undefined : 'transparent', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
+                onClick={() => toggleTheme('medium')}
+                title="Medium Mode"
+              >
+                <Monitor size={14} />
+              </button>
+              <button 
+                className={`btn ${theme === 'light' ? 'btn-primary' : ''}`} 
+                style={{ flex: 1, padding: 0, border: 'none', background: theme === 'light' ? undefined : 'transparent', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
+                onClick={() => toggleTheme('light')}
+                title="Light Mode"
+              >
+                <Sun size={14} />
+              </button>
+            </div>
+
+            {/* Language Toggle */}
             <button 
-              className={`btn ${theme === 'dark' ? 'btn-primary' : ''}`} 
-              style={{ flex: 1, padding: 0, border: 'none', background: theme === 'dark' ? undefined : 'transparent', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
-              onClick={() => toggleTheme('dark')}
+              className="btn btn-outline" 
+              onClick={toggleLanguage}
+              style={{ 
+                width: '40px', 
+                height: '38px',
+                padding: 0,
+                borderRadius: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}
+              title={language === 'en' ? 'Switch to Arabic' : 'Switch to English'}
             >
-              <Moon size={14} />
-            </button>
-            <button 
-              className={`btn ${theme === 'medium' ? 'btn-primary' : ''}`} 
-              style={{ flex: 1, padding: 0, border: 'none', background: theme === 'medium' ? undefined : 'transparent', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
-              onClick={() => toggleTheme('medium')}
-            >
-              <Monitor size={14} />
-            </button>
-            <button 
-              className={`btn ${theme === 'light' ? 'btn-primary' : ''}`} 
-              style={{ flex: 1, padding: 0, border: 'none', background: theme === 'light' ? undefined : 'transparent', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
-              onClick={() => toggleTheme('light')}
-            >
-              <Sun size={14} />
+              <Languages size={16} />
             </button>
           </div>
 
-          {/* Language Toggle */}
-          <button 
-            className="btn btn-outline" 
-            onClick={toggleLanguage}
-            style={{ 
-              width: '100%', 
-              justifyContent: 'center', 
-              gap: '0.6rem', 
-              fontSize: '0.85rem',
-              height: '40px',
-              fontWeight: 500
-            }}
-          >
-            <Languages size={15} />
-            <span>{language === 'en' ? 'العربية' : 'English'}</span>
-          </button>
-
-          {/* User Profile Card */}
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '0.75rem', 
-            padding: '0.75rem', 
-            background: 'var(--bg-overlay)', 
-            border: '1px solid var(--border-color)', 
-            borderRadius: 'var(--radius-md)',
-            width: '100%'
-          }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {/* User Profile Card */}
             <div style={{ 
-              width: '36px', 
-              height: '36px', 
-              borderRadius: '8px', 
-              background: 'linear-gradient(135deg, var(--color-primary), var(--color-accent))', 
               display: 'flex', 
               alignItems: 'center', 
-              justifyContent: 'center',
-              flexShrink: 0
+              gap: '0.85rem', 
+              padding: '0.85rem', 
+              background: 'var(--bg-overlay)', 
+              border: '1px solid var(--border-color)', 
+              borderRadius: '16px',
+              width: '100%',
+              transition: 'all 0.2s ease'
             }}>
-              <Shield size={18} color="white" />
+              <div style={{ 
+                width: '40px', 
+                height: '40px', 
+                borderRadius: '12px', 
+                background: 'linear-gradient(135deg, var(--color-primary), var(--color-accent))', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                flexShrink: 0,
+                boxShadow: '0 4px 10px rgba(0,0,0,0.2)'
+              }}>
+                <Shield size={20} color="white" />
+              </div>
+              <div style={{ overflow: 'hidden', flex: 1 }}>
+                <div style={{ color: 'var(--text-primary)', fontWeight: 700, fontSize: '0.9rem', whiteSpace: 'nowrap', textOverflow: 'ellipsis', background: 'transparent' }}>
+                  {user.username}
+                </div>
+                <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'capitalize', background: 'transparent' }}>
+                  {user.role === 'admin' ? t('admin') : t('staff')}
+                </div>
+              </div>
             </div>
-            <div style={{ overflow: 'hidden', flex: 1 }}>
-              <div style={{ color: 'var(--text-primary)', fontWeight: 700, fontSize: '0.88rem', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{user.username}</div>
-              <div style={{ color: 'var(--text-muted)', fontSize: '0.72rem', textTransform: 'capitalize' }}>{user.role === 'admin' ? t('admin') : t('staff')}</div>
-            </div>
-          </div>
 
-          {/* Logout */}
-          <button
-            className="btn btn-outline"
-            style={{ 
-              width: '100%', 
-              justifyContent: 'center', 
-              color: 'var(--color-danger)', 
-              borderColor: 'rgba(239,68,68,0.2)',
-              height: '40px',
-              fontSize: '0.85rem'
-            }}
-            onClick={logout}
-          >
-            <LogOut size={15} /> 
-            <span style={{ fontWeight: 600 }}>{t('signOut')}</span>
-          </button>
+            {/* Logout */}
+            <button
+              className="btn btn-outline"
+              style={{ 
+                width: '100%', 
+                justifyContent: 'center', 
+                color: 'var(--color-danger)', 
+                borderColor: 'rgba(239,68,68,0.15)',
+                height: '42px',
+                fontSize: '0.88rem',
+                borderRadius: '14px',
+                background: 'rgba(239,68,68,0.02)'
+              }}
+              onClick={logout}
+            >
+              <LogOut size={16} /> 
+              <span style={{ fontWeight: 600, background: 'transparent' }}>{t('signOut')}</span>
+            </button>
+          </div>
         </div>
       </aside>
 

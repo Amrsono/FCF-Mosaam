@@ -4,14 +4,16 @@ import pdfFonts from 'pdfmake/build/vfs_fonts';
 import pptxgen from "pptxgenjs";
 import { reshapeArabic } from './arabicReshaper';
 
-// Defensive VFS initialization
-try {
-  if (pdfMake && pdfFonts && pdfFonts.pdfMake) {
-    pdfMake.vfs = pdfFonts.pdfMake.vfs;
+// Initialize pdfMake VFS with a safer approach
+const getPdfMake = () => {
+  const instance = pdfMake.default || pdfMake;
+  if (instance && pdfFonts && pdfFonts.pdfMake) {
+    instance.vfs = pdfFonts.pdfMake.vfs;
   }
-} catch (e) {
-  console.warn('pdfMake VFS initialization delayed or failed:', e);
-}
+  return instance;
+};
+
+const _pdfMake = getPdfMake();
 
 /**
  * Normalizes dataset to have matching columns for exporting
@@ -70,25 +72,27 @@ const loadArabicFont = async () => {
       _fontCache = btoa(binary);
       console.log('Cairo font loaded successfully.');
 
-      // Register with pdfMake
-      pdfMake.vfs = pdfMake.vfs || {};
-      pdfMake.vfs['Cairo-Regular.ttf'] = _fontCache;
-      
-      pdfMake.fonts = {
-        Cairo: {
-          normal: 'Cairo-Regular.ttf',
-          bold: 'Cairo-Regular.ttf',
-          italics: 'Cairo-Regular.ttf',
-          bolditalics: 'Cairo-Regular.ttf'
-        },
-        Roboto: {
-          normal: 'Roboto-Regular.ttf',
-          bold: 'Roboto-Medium.ttf',
-          italics: 'Roboto-Italic.ttf',
-          bolditalics: 'Roboto-MediumItalic.ttf'
-        }
-      };
-      console.log('pdfMake fonts configured.');
+      // Register with _pdfMake
+      if (_pdfMake) {
+        _pdfMake.vfs = _pdfMake.vfs || {};
+        _pdfMake.vfs['Cairo-Regular.ttf'] = _fontCache;
+        
+        _pdfMake.fonts = {
+          Cairo: {
+            normal: 'Cairo-Regular.ttf',
+            bold: 'Cairo-Regular.ttf',
+            italics: 'Cairo-Regular.ttf',
+            bolditalics: 'Cairo-Regular.ttf'
+          },
+          Roboto: {
+            normal: 'Roboto-Regular.ttf',
+            bold: 'Roboto-Medium.ttf',
+            italics: 'Roboto-Italic.ttf',
+            bolditalics: 'Roboto-MediumItalic.ttf'
+          }
+        };
+        console.log('_pdfMake fonts configured.');
+      }
 
       return _fontCache;
     } catch (err) {
@@ -216,11 +220,11 @@ export const exportToPDF = async (data, headers, filename, title) => {
       });
     }
 
-    if (!pdfMake || typeof pdfMake.createPdf !== 'function') {
+    if (!_pdfMake || typeof _pdfMake.createPdf !== 'function') {
       throw new Error('pdfMake library not properly initialized');
     }
 
-    pdfMake.createPdf(docDefinition).download(`${filename}.pdf`);
+    _pdfMake.createPdf(docDefinition).download(`${filename}.pdf`);
   } catch (error) {
     console.error('PDF export failed:', error);
     alert('PDF export failed: ' + (error.message || 'Unknown error'));

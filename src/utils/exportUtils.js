@@ -300,8 +300,8 @@ export const exportToPPTX = async (analytics, filename, language = 'en') => {
     slide6.addText(language === 'ar' ? "الملخص المالي النهائي" : "Final Financial Summary", { x: 0.5, y: 0.5, fontSize: 24, bold: true, color: "10b981" });
     const fStats = [
       [language === 'ar' ? 'القناة' : 'Channel', language === 'ar' ? 'صافي المركز' : 'Net Position'],
-      [" J ", `${(analytics.jumia.cash - analytics.jumia.returnedAmt).toLocaleString()} EGP`],
-      ["Bosta", `${(analytics.bosta.cash - analytics.bosta.returnedAmt).toLocaleString()} EGP`],
+      [" J ", `${analytics.jumia.cash.toLocaleString()} EGP`],
+      ["Bosta", `${analytics.bosta.cash.toLocaleString()} EGP`],
       ["Basata", `${analytics.basata.volume.toLocaleString()} EGP`],
       [language === 'ar' ? 'الإجمالي النهائي' : 'GRAND TOTAL', `${analytics.grandTotal.toLocaleString()} EGP`]
     ];

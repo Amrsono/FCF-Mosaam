@@ -279,7 +279,6 @@ export default function OrdersTab() {
             )}
           </div>
         </div>
-        </div>
 
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
           <button className="btn btn-outline" onClick={() => setShowImportWizard(true)} style={{ color: 'var(--color-primary)', borderColor: 'var(--color-primary)', flex: '1 1 auto' }}>

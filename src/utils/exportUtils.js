@@ -4,8 +4,14 @@ import pdfFonts from 'pdfmake/build/vfs_fonts';
 import pptxgen from "pptxgenjs";
 import { reshapeArabic } from './arabicReshaper';
 
-// Initialize pdfMake VFS
-pdfMake.vfs = pdfFonts.pdfMake.vfs;
+// Defensive VFS initialization
+try {
+  if (pdfMake && pdfFonts && pdfFonts.pdfMake) {
+    pdfMake.vfs = pdfFonts.pdfMake.vfs;
+  }
+} catch (e) {
+  console.warn('pdfMake VFS initialization delayed or failed:', e);
+}
 
 /**
  * Normalizes dataset to have matching columns for exporting

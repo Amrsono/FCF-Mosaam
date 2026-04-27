@@ -11,6 +11,9 @@ export default function BostaTab() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('Inventory');
   const [filterCategory, setFilterCategory] = useState('All');
+  const [filterOutlet, setFilterOutlet] = useState('All');
+  const [filterDateStart, setFilterDateStart] = useState('');
+  const [filterDateEnd, setFilterDateEnd] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [showCrossSellModal, setShowCrossSellModal] = useState(false);
   const [pendingOrderId, setPendingOrderId] = useState(null);
@@ -49,9 +52,29 @@ export default function BostaTab() {
                             o.customerPhone.includes(searchTerm);
       const matchesStatus = filterStatus === 'All' || o.status === filterStatus;
       const matchesCategory = filterCategory === 'All' || o.category === filterCategory;
-      return matchesSearch && matchesStatus && matchesCategory;
+      const matchesOutlet = filterOutlet === 'All' || (o.outlet || 'وبور الثلج') === filterOutlet;
+
+      // Date Filter
+      let matchesDate = true;
+      if (filterDateStart || filterDateEnd) {
+        const orderDate = new Date(o.receivedAt);
+        orderDate.setHours(0, 0, 0, 0);
+        
+        if (filterDateStart) {
+          const start = new Date(filterDateStart);
+          start.setHours(0, 0, 0, 0);
+          if (orderDate < start) matchesDate = false;
+        }
+        if (filterDateEnd) {
+          const end = new Date(filterDateEnd);
+          end.setHours(23, 59, 59, 999);
+          if (orderDate > end) matchesDate = false;
+        }
+      }
+
+      return matchesSearch && matchesStatus && matchesCategory && matchesOutlet && matchesDate;
     }).sort((a, b) => new Date(b.receivedAt) - new Date(a.receivedAt));
-  }, [bostaOrders, customers, searchTerm, filterStatus, filterCategory, language]);
+  }, [bostaOrders, customers, searchTerm, filterStatus, filterCategory, filterOutlet, filterDateStart, filterDateEnd, language]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -152,6 +175,13 @@ export default function BostaTab() {
             <option value="Picked Up">{t('pickedUpStatus')}</option>
             <option value="Returned">{t('returnedStatus')}</option>
           </select>
+          <select className="input-field" style={{ flex: '1 1 120px' }} value={filterOutlet} onChange={e => setFilterOutlet(e.target.value)}>
+             <option value="All">{language === 'ar' ? 'جميع المنافذ' : 'All Outlets'}</option>
+             <option value="وبور الثلج">وبور الثلج</option>
+             <option value="تجاره">تجاره</option>
+             <option value="المستشفى">المستشفى</option>
+          </select>
+
           <select className="input-field" style={{ flex: '1 1 120px' }} value={filterCategory} onChange={e => setFilterCategory(e.target.value)}>
              <option value="All">{language === 'ar' ? 'جميع الفئات' : 'All Categories'}</option>
              <option value="Electronics">{language === 'ar' ? 'إلكترونيات' : 'Electronics'}</option>
@@ -159,6 +189,47 @@ export default function BostaTab() {
              <option value="Home">{language === 'ar' ? 'منزل' : 'Home'}</option>
              <option value="Groceries">{language === 'ar' ? 'بقاليات' : 'Groceries'}</option>
           </select>
+          
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flex: '1 1 300px' }}>
+            <div style={{ position: 'relative', flex: 1 }}>
+              <input 
+                type="date" 
+                className="input-field" 
+                style={{ fontSize: '0.8rem' }}
+                value={filterDateStart}
+                onChange={e => setFilterDateStart(e.target.value)}
+                title={language === 'ar' ? 'من تاريخ' : 'From Date'}
+              />
+            </div>
+            <span style={{ color: 'var(--text-muted)' }}>-</span>
+            <div style={{ position: 'relative', flex: 1 }}>
+              <input 
+                type="date" 
+                className="input-field" 
+                style={{ fontSize: '0.8rem' }}
+                value={filterDateEnd}
+                onChange={e => setFilterDateEnd(e.target.value)}
+                title={language === 'ar' ? 'إلى تاريخ' : 'To Date'}
+              />
+            </div>
+            {(filterDateStart || filterDateEnd || filterOutlet !== 'All' || searchTerm || filterStatus !== 'Inventory' || filterCategory !== 'All') && (
+              <button 
+                onClick={() => {
+                  setSearchTerm('');
+                  setFilterStatus('Inventory');
+                  setFilterCategory('All');
+                  setFilterOutlet('All');
+                  setFilterDateStart('');
+                  setFilterDateEnd('');
+                }}
+                className="btn btn-outline" 
+                style={{ padding: '0.4rem', borderColor: 'var(--color-danger)', color: 'var(--color-danger)' }}
+                title={language === 'ar' ? 'إعادة تعيين' : 'Reset Filters'}
+              >
+                <RotateCcw size={16} />
+              </button>
+            )}
+          </div>
         </div>
         <button className="btn btn-primary" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', flex: '1 1 auto' }} onClick={() => setShowModal(true)}>
           <Plus size={18} /> {t('receiveBostaOrder')}

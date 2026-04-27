@@ -13,6 +13,9 @@ export default function OrdersTab() {
   const [filterCategory, setFilterCategory] = useState('All');
   const [filterTier, setFilterTier] = useState('All');
   const [filterStatus, setFilterStatus] = useState('Inventory');
+  const [filterOutlet, setFilterOutlet] = useState('All');
+  const [filterDateStart, setFilterDateStart] = useState('');
+  const [filterDateEnd, setFilterDateEnd] = useState('');
 
   const [showSimulateModal, setShowSimulateModal] = useState(false);
   const [showImportWizard, setShowImportWizard] = useState(false);
@@ -80,10 +83,30 @@ export default function OrdersTab() {
       const matchesTier = filterTier === 'All' || order.tier === filterTier;
       // Status Filter
       const matchesStatus = filterStatus === 'All' || order.status === filterStatus;
+      // Outlet Filter
+      const matchesOutlet = filterOutlet === 'All' || (order.outlet || 'وبور الثلج') === filterOutlet;
+      
+      // Date Filter
+      let matchesDate = true;
+      if (filterDateStart || filterDateEnd) {
+        const orderDate = new Date(order.receivedAt);
+        orderDate.setHours(0, 0, 0, 0);
+        
+        if (filterDateStart) {
+          const start = new Date(filterDateStart);
+          start.setHours(0, 0, 0, 0);
+          if (orderDate < start) matchesDate = false;
+        }
+        if (filterDateEnd) {
+          const end = new Date(filterDateEnd);
+          end.setHours(23, 59, 59, 999);
+          if (orderDate > end) matchesDate = false;
+        }
+      }
 
-      return matchesSearch && matchesCategory && matchesTier && matchesStatus;
+      return matchesSearch && matchesCategory && matchesTier && matchesStatus && matchesOutlet && matchesDate;
     }).sort((a, b) => new Date(b.receivedAt) - new Date(a.receivedAt));
-  }, [orders, customers, searchTerm, filterCategory, filterTier, filterStatus, calculatePenalty, language]);
+  }, [orders, customers, searchTerm, filterCategory, filterTier, filterStatus, filterOutlet, filterDateStart, filterDateEnd, calculatePenalty, language]);
 
   // Aggregated Summary Data — derived from the already-filtered orderList
   const summaryByOutlet = useMemo(() => {
@@ -191,6 +214,13 @@ export default function OrdersTab() {
             <option value="Returned">{t('returnedStatus')}</option>
           </select>
 
+          <select className="input-field" style={{ flex: '1 1 120px' }} value={filterOutlet} onChange={e => setFilterOutlet(e.target.value)}>
+             <option value="All">{language === 'ar' ? 'جميع المنافذ' : 'All Outlets'}</option>
+             <option value="وبور الثلج">وبور الثلج</option>
+             <option value="تجاره">تجاره</option>
+             <option value="المستشفى">المستشفى</option>
+          </select>
+
           <select className="input-field" style={{ flex: '1 1 120px' }} value={filterCategory} onChange={e => setFilterCategory(e.target.value)}>
              <option value="All">{language === 'ar' ? 'جميع الفئات' : 'All Categories'}</option>
              <option value="Electronics">{language === 'ar' ? 'إلكترونيات' : 'Electronics'}</option>
@@ -201,6 +231,55 @@ export default function OrdersTab() {
 
           <select className="input-field" style={{ flex: '1 1 100px' }} value={filterTier} onChange={e => setFilterTier(e.target.value)}>
              <option value="All">{language === 'ar' ? 'جميع المستويات' : 'All Tiers'}</option>
+             <option value="New">{t('newCustomer')}</option>
+             <option value="Bronze">Bronze</option>
+             <option value="Silver">Silver</option>
+             <option value="Gold">Gold</option>
+          </select>
+          
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flex: '1 1 300px' }}>
+            <div style={{ position: 'relative', flex: 1 }}>
+              <input 
+                type="date" 
+                className="input-field" 
+                style={{ fontSize: '0.8rem' }}
+                value={filterDateStart}
+                onChange={e => setFilterDateStart(e.target.value)}
+                title={language === 'ar' ? 'من تاريخ' : 'From Date'}
+              />
+            </div>
+            <span style={{ color: 'var(--text-muted)' }}>-</span>
+            <div style={{ position: 'relative', flex: 1 }}>
+              <input 
+                type="date" 
+                className="input-field" 
+                style={{ fontSize: '0.8rem' }}
+                value={filterDateEnd}
+                onChange={e => setFilterDateEnd(e.target.value)}
+                title={language === 'ar' ? 'إلى تاريخ' : 'To Date'}
+              />
+            </div>
+            {(filterDateStart || filterDateEnd || filterOutlet !== 'All' || searchTerm || filterStatus !== 'Inventory' || filterCategory !== 'All' || filterTier !== 'All') && (
+              <button 
+                onClick={() => {
+                  setSearchTerm('');
+                  setFilterStatus('Inventory');
+                  setFilterCategory('All');
+                  setFilterTier('All');
+                  setFilterOutlet('All');
+                  setFilterDateStart('');
+                  setFilterDateEnd('');
+                }}
+                className="btn btn-outline" 
+                style={{ padding: '0.4rem', borderColor: 'var(--color-danger)', color: 'var(--color-danger)' }}
+                title={language === 'ar' ? 'إعادة تعيين' : 'Reset Filters'}
+              >
+                <RotateCcw size={16} />
+              </button>
+            )}
+          </div>
+        </div>
+ion>
              <option value="New">{t('newCustomer')}</option>
              <option value="Bronze">Bronze</option>
              <option value="Silver">Silver</option>

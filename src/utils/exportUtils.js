@@ -1,6 +1,5 @@
 import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import pdfMake from 'pdfmake/build/pdfmake';
 import pptxgen from "pptxgenjs";
 import { reshapeArabic } from './arabicReshaper';
 
@@ -58,6 +57,26 @@ const loadArabicFont = async () => {
         binary += String.fromCharCode(bytes[i]);
       }
       _fontCache = btoa(binary);
+
+      // Register with pdfMake
+      pdfMake.vfs = pdfMake.vfs || {};
+      pdfMake.vfs['Cairo-Regular.ttf'] = _fontCache;
+      
+      pdfMake.fonts = {
+        Cairo: {
+          normal: 'Cairo-Regular.ttf',
+          bold: 'Cairo-Regular.ttf',
+          italics: 'Cairo-Regular.ttf',
+          bolditalics: 'Cairo-Regular.ttf'
+        },
+        Roboto: {
+          normal: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf',
+          bold: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Medium.ttf',
+          italics: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Italic.ttf',
+          bolditalics: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-MediumItalic.ttf'
+        }
+      };
+
       return _fontCache;
     } catch (err) {
       console.warn('Could not load Cairo font for PDF:', err);
@@ -78,7 +97,7 @@ const loadArabicFont = async () => {
  * Safely convert any value to a printable string for PDF cells.
  * Also handles Arabic text by reshaping (joining) and then reversing it for jsPDF's LTR engine.
  */
-const safeString = (val) => {
+const safeString = (val, isPdfMake = false) => {
   if (val == null) return '';
   let str = '';
   if (typeof val === 'object') {
@@ -92,87 +111,99 @@ const safeString = (val) => {
   if (/[\u0600-\u06FF]/.test(str)) {
     // 1. Reshape the Arabic text to join characters correctly
     const reshaped = reshapeArabic(str);
-    // 2. Reverse the string for LTR PDF engines. 
-    return reshaped.split('').reverse().join('');
+    // 2. If using pdfMake with RTL support, we do NOT reverse the string.
+    // jsPDF needs reversing because it draws LTR only.
+    return isPdfMake ? reshaped : reshaped.split('').reverse().join('');
   }
   return str;
 };
 
 export const exportToPDF = async (data, headers, filename, title) => {
   try {
-    const doc = new jsPDF();
+    await loadArabicFont();
 
-    // ── Register Arabic font ───────────────────────────────────────
-    const fontBase64 = await loadArabicFont();
-    let fontName = 'helvetica'; // Fallback
-    if (fontBase64) {
-      doc.addFileToVFS('Cairo.ttf', fontBase64);
-      doc.addFont('Cairo.ttf', 'Cairo', 'normal', 'Identity-H');
-      doc.setFont('Cairo');
-      fontName = 'Cairo';
-    }
-
-    // ── Detect RTL Needs ───────────────────────────────────────────
+    // Detect RTL Needs
     const isRtl = /[\u0600-\u06FF]/.test(title || '') || headers.some(h => /[\u0600-\u06FF]/.test(h.label));
 
-    // ── Title ──────────────────────────────────────────────────────
-    if (title) {
-      doc.setFontSize(18);
-      if (isRtl) {
-        doc.setFont('Cairo');
-        doc.text(safeString(title), 196, 22, { align: 'right' });
-      } else {
-        doc.text(safeString(title), 14, 22);
-      }
-    }
+    // Prepare table headers and rows
+    const tableHeaders = headers.map(h => ({
+      text: safeString(h.label, true),
+      style: 'tableHeader'
+    }));
 
-    // ── Table data ─────────────────────────────────────────────────
-    let tableColumn = headers.map(h => safeString(h.label));
-    let tableRows = data.map(item =>
+    const tableRows = data.map(item =>
       headers.map(h => {
-        try {
-          const raw = typeof h.accessor === 'function'
-            ? h.accessor(item)
-            : item[h.accessor];
-          return safeString(raw);
-        } catch {
-          return '';
-        }
+        const raw = typeof h.accessor === 'function' ? h.accessor(item) : item[h.accessor];
+        return {
+          text: safeString(raw, true),
+          style: 'tableCell'
+        };
       })
     );
 
-    // If RTL, reverse the columns order manually for the table
+    const docDefinition = {
+      content: [
+        title ? { 
+          text: safeString(title, true), 
+          style: 'header', 
+          alignment: isRtl ? 'right' : 'left',
+          rtl: isRtl 
+        } : null,
+        {
+          table: {
+            headerRows: 1,
+            widths: headers.map(() => '*'),
+            body: [tableHeaders, ...tableRows]
+          },
+          layout: {
+            fillColor: (rowIndex) => {
+              if (rowIndex === 0) return '#503CFF';
+              return (rowIndex % 2 === 0) ? '#F5F5FF' : null;
+            }
+          },
+          rtl: isRtl
+        }
+      ],
+      defaultStyle: {
+        font: 'Cairo',
+        fontSize: 10
+      },
+      styles: {
+        header: {
+          fontSize: 18,
+          bold: true,
+          margin: [0, 0, 0, 10]
+        },
+        tableHeader: {
+          bold: true,
+          fontSize: 11,
+          color: 'white',
+          alignment: isRtl ? 'right' : 'left',
+          margin: [3, 5, 3, 5]
+        },
+        tableCell: {
+          fontSize: 9,
+          alignment: isRtl ? 'right' : 'left',
+          margin: [3, 3, 3, 3]
+        }
+      },
+      // Essential for Arabic/RTL support in pdfmake
+      pageOrientation: 'portrait',
+      pageMargins: [40, 40, 40, 40]
+    };
+
+    // If RTL, set the direction
     if (isRtl) {
-      tableColumn = tableColumn.reverse();
-      tableRows = tableRows.map(row => row.reverse());
+      // pdfMake handles the direction of the whole document or specific blocks
+      docDefinition.content.forEach(item => {
+        if (item && item.table) {
+          // Reverse column order for RTL table layout
+          item.table.body = item.table.body.map(row => row.reverse());
+        }
+      });
     }
 
-    autoTable(doc, {
-      head: [tableColumn],
-      body: tableRows,
-      startY: title ? 30 : 14,
-      theme: 'grid',
-      headStyles: { 
-        fillColor: [80, 60, 255], 
-        halign: isRtl ? 'right' : 'left',
-        font: fontName,
-        fontStyle: 'normal',
-        textColor: [255, 255, 255]
-      },
-      styles: { 
-        font: fontName,
-        fontStyle: 'normal',
-        cellPadding: 3, 
-        fontSize: 9,
-        halign: isRtl ? 'right' : 'left',
-        textColor: [0, 0, 0]
-      },
-      alternateRowStyles: {
-        fillColor: [245, 245, 255]
-      }
-    });
-
-    doc.save(`${filename}.pdf`);
+    pdfMake.createPdf(docDefinition).download(`${filename}.pdf`);
   } catch (error) {
     console.error('PDF export failed:', error);
     alert('PDF export failed: ' + (error.message || 'Unknown error'));

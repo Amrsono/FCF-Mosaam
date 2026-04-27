@@ -54,6 +54,29 @@ function AppContent() {
 
   return (
     <div className="app-container" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+      {/* Main Panel */}
+      <main className="main-content">
+        <header className="header">
+          <button className="menu-toggle" onClick={() => setIsMobileMenuOpen(true)}>
+            <Menu size={24} />
+          </button>
+          <h2>{tabs.find(t => t.id === activeTab)?.label}</h2>
+        </header>
+
+        <section className="content-area">
+          {activeTab === 'orders'    && <OrdersTab />}
+          {activeTab === 'customers' && <CustomersTab />}
+          {activeTab === 'sla'       && <SLATab />}
+          {activeTab === 'penalties' && <ParkedPenaltiesTab />}
+          {activeTab === 'basata'    && <BasataTab />}
+          {activeTab === 'bosta'     && <BostaTab />}
+          {activeTab === 'returned'  && <ReturnedTab />}
+          {activeTab === 'calls'     && <CallsLogTab />}
+          {activeTab === 'analytics' && user?.role === 'admin' && <AnalyticsTab />}
+          {activeTab === 'logs'      && user?.role === 'admin' && <LogsTab />}
+        </section>
+      </main>
+
       {/* Mobile Overlay */}
       <div className={`mobile-overlay ${isMobileMenuOpen ? 'open' : ''}`} onClick={() => setIsMobileMenuOpen(false)}></div>
 
@@ -217,29 +240,6 @@ function AppContent() {
           </div>
         </div>
       </aside>
-
-      {/* Main Panel */}
-      <main className="main-content">
-        <header className="header">
-          <button className="menu-toggle" onClick={() => setIsMobileMenuOpen(true)}>
-            <Menu size={24} />
-          </button>
-          <h2>{tabs.find(t => t.id === activeTab)?.label}</h2>
-        </header>
-
-        <section className="content-area">
-          {activeTab === 'orders'    && <OrdersTab />}
-          {activeTab === 'customers' && <CustomersTab />}
-          {activeTab === 'sla'       && <SLATab />}
-          {activeTab === 'penalties' && <ParkedPenaltiesTab />}
-          {activeTab === 'basata'    && <BasataTab />}
-          {activeTab === 'bosta'     && <BostaTab />}
-          {activeTab === 'returned'  && <ReturnedTab />}
-          {activeTab === 'calls'     && <CallsLogTab />}
-          {activeTab === 'analytics' && user?.role === 'admin' && <AnalyticsTab />}
-          {activeTab === 'logs'      && user?.role === 'admin' && <LogsTab />}
-        </section>
-      </main>
     </div>
   );
 }

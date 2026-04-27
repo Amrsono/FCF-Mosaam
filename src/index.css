@@ -424,6 +424,7 @@ h3 { font-size: 1rem; font-weight: 500; color: var(--text-secondary); }
     transition: transform var(--transition-normal);
     box-shadow: var(--shadow-lg);
     overflow-y: auto; /* Allow the entire sidebar to scroll if content is too tall */
+    z-index: 1000; /* Ensure sidebar is above all other content */
   }
 
   /* Make sidebar footer more compact on mobile */
@@ -459,7 +460,7 @@ h3 { font-size: 1rem; font-weight: 500; color: var(--text-secondary); }
     inset: 0;
     background: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(2px);
-    z-index: 5;
+    z-index: 999;
     opacity: 0;
     visibility: hidden;
     transition: all var(--transition-normal);

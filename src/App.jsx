@@ -62,7 +62,7 @@ function AppContent() {
         <button className="sidebar-close" onClick={() => setIsMobileMenuOpen(false)}>
           <X size={24} />
         </button>
-        <div style={{ padding: '1rem 0', marginBottom: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div style={{ padding: '2rem 1.5rem 1rem', marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
             {t('fcf')} <span style={{ color: 'var(--color-accent)' }}>{t('mosaam')}</span>
           </div>
@@ -74,7 +74,7 @@ function AppContent() {
           </div>
         </div>
 
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 }}>
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1, padding: '0 1.25rem', overflowY: 'auto' }}>
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -94,12 +94,13 @@ function AppContent() {
         {/* Sidebar Footer: Theme, Language, User, Logout */}
         <div style={{ 
           borderTop: '1px solid var(--border-color)', 
-          padding: '1.5rem 1.25rem', 
+          padding: '1.25rem 1.25rem 2rem', 
           marginTop: 'auto', 
           display: 'flex', 
           flexDirection: 'column', 
           gap: '1.25rem',
-          userSelect: 'none'
+          userSelect: 'none',
+          background: 'rgba(0,0,0,0.05)'
         }}>
           
           <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>

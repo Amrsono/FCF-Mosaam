@@ -279,12 +279,6 @@ export default function OrdersTab() {
             )}
           </div>
         </div>
-ion>
-             <option value="New">{t('newCustomer')}</option>
-             <option value="Bronze">Bronze</option>
-             <option value="Silver">Silver</option>
-             <option value="Gold">Gold</option>
-          </select>
         </div>
 
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>

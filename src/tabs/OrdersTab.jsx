@@ -64,6 +64,13 @@ export default function OrdersTab() {
   ];
 
   // Derived Data (computed first so summaryByOutlet can consume it)
+  const getOutletLabel = (val) => {
+    if (val === 'Banha 1') return t('banha1');
+    if (val === 'Banha 2') return t('banha2');
+    if (val === 'Banha 3') return t('banha3');
+    return val;
+  };
+
   const orderList = useMemo(() => {
     return orders.map(order => {
       const cust = customers.find(c => c.phone === order.customerPhone);
@@ -221,9 +228,9 @@ export default function OrdersTab() {
 
           <select className="input-field" style={{ flex: '1 1 120px' }} value={filterOutlet} onChange={e => setFilterOutlet(e.target.value)}>
              <option value="All">{language === 'ar' ? 'جميع المنافذ' : 'All Outlets'}</option>
-             <option value="Banha 1">Banha 1</option>
-             <option value="Banha 2">Banha 2</option>
-             <option value="Banha 3">Banha 3</option>
+             <option value="Banha 1">{t('banha1')}</option>
+             <option value="Banha 2">{t('banha2')}</option>
+             <option value="Banha 3">{t('banha3')}</option>
           </select>
 
           <select className="input-field" style={{ flex: '1 1 120px' }} value={filterCategory} onChange={e => setFilterCategory(e.target.value)}>
@@ -331,7 +338,7 @@ export default function OrdersTab() {
             <tbody>
               {summaryByOutlet.map((row, i) => (
                 <tr key={i}>
-                  <td style={{ fontWeight: 700, color: 'white' }}>{row.outlet}</td>
+                  <td style={{ fontWeight: 700, color: 'white' }}>{getOutletLabel(row.outlet)}</td>
                   <td>{row.received}</td>
                   <td style={{ color: 'var(--color-success)' }}>{row.delivered}</td>
                   <td style={{ color: 'var(--color-danger)' }}>{row.returned}</td>
@@ -400,7 +407,7 @@ export default function OrdersTab() {
                       <span style={{ fontSize: '0.85rem', color: 'var(--color-primary)', fontWeight: 700 }}>{order.totalValue} EGP</span>
                       <span className="badge badge-neutral" style={{ fontSize: '0.65rem' }}>{order.size}</span>
                     </div>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{order.category} • {order.outlet}</span>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{order.category} • {getOutletLabel(order.outlet)}</span>
                   </div>
                 </td>
                 <td>
@@ -509,9 +516,9 @@ export default function OrdersTab() {
                 <div className="input-group" style={{ flex: 1 }}>
                   <label className="input-label">{language === 'ar' ? 'المنفذ' : 'Outlet'}</label>
                   <select className="input-field" value={newOrder.outlet} onChange={e => setNewOrder({...newOrder, outlet: e.target.value})}>
-                     <option value="Banha 1">Banha 1</option>
-                    <option value="Banha 2">Banha 2</option>
-                    <option value="Banha 3">Banha 3</option>
+                     <option value="Banha 1">{t('banha1')}</option>
+                    <option value="Banha 2">{t('banha2')}</option>
+                    <option value="Banha 3">{t('banha3')}</option>
                   </select>
                 </div>
                 <div className="input-group" style={{ flex: 1 }}>

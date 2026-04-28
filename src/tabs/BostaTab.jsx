@@ -7,6 +7,13 @@ import { useLanguage } from '../context/LanguageContext';
 export default function BostaTab() {
   const { bostaOrders, customers, receiveBostaOrder, markBostaOrderPickedUp, returnBostaOrder, updateCustomer } = useDashboard();
   const { t, language } = useLanguage();
+  
+  const getOutletLabel = (val) => {
+    if (val === 'Banha 1') return t('banha1');
+    if (val === 'Banha 2') return t('banha2');
+    if (val === 'Banha 3') return t('banha3');
+    return val;
+  };
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('Inventory');
@@ -177,9 +184,9 @@ export default function BostaTab() {
           </select>
           <select className="input-field" style={{ flex: '1 1 120px' }} value={filterOutlet} onChange={e => setFilterOutlet(e.target.value)}>
              <option value="All">{language === 'ar' ? 'جميع المنافذ' : 'All Outlets'}</option>
-              <option value="Banha 1">Banha 1</option>
-              <option value="Banha 2">Banha 2</option>
-              <option value="Banha 3">Banha 3</option>
+              <option value="Banha 1">{t('banha1')}</option>
+              <option value="Banha 2">{t('banha2')}</option>
+              <option value="Banha 3">{t('banha3')}</option>
           </select>
 
           <select className="input-field" style={{ flex: '1 1 120px' }} value={filterCategory} onChange={e => setFilterCategory(e.target.value)}>
@@ -285,7 +292,7 @@ export default function BostaTab() {
                     <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{order.category}</span>
                   </div>
                 </td>
-                <td style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{order.outlet || 'وبور الثلج'}</td>
+                <td style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{getOutletLabel(order.outlet)}</td>
                 <td>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
                     {/* Date line */}
@@ -430,9 +437,9 @@ export default function BostaTab() {
               <div className="input-group">
                 <label className="input-label">{language === 'ar' ? 'المنفذ (فرع الاستلام)' : 'Outlet (Receiving Branch)'}</label>
                 <select className="input-field" value={newOrder.outlet} onChange={e => setNewOrder({ ...newOrder, outlet: e.target.value })}>
-                  <option value="Banha 1">Banha 1</option>
-                  <option value="Banha 2">Banha 2</option>
-                  <option value="Banha 3">Banha 3</option>
+                  <option value="Banha 1">{t('banha1')}</option>
+                  <option value="Banha 2">{t('banha2')}</option>
+                  <option value="Banha 3">{t('banha3')}</option>
                 </select>
               </div>
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>

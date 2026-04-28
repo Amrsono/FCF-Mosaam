@@ -7,6 +7,14 @@ import { useLanguage } from '../context/LanguageContext';
 export default function ParkedPenaltiesTab() {
   const { orders, bostaOrders, customers, calculatePenalty } = useDashboard();
   const { t, language } = useLanguage();
+  
+  const getOutletLabel = (val) => {
+    if (val === 'Banha 1') return t('banha1');
+    if (val === 'Banha 2') return t('banha2');
+    if (val === 'Banha 3') return t('banha3');
+    return val;
+  };
+
   const [filterSource, setFilterSource] = React.useState('all'); // 'all' | 'jumia' | 'bosta'
 
   const exportHeaders = [
@@ -79,7 +87,7 @@ export default function ParkedPenaltiesTab() {
             <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{order.customerPhone}</span>
           </div>
         </td>
-        <td style={{ fontWeight: 700, color: 'white' }}>{order.outlet || 'Banha 1'}</td>
+        <td style={{ fontWeight: 700, color: 'white' }}>{getOutletLabel(order.outlet)}</td>
         <td>{new Date(order.receivedAt).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</td>
         <td>
           <span className="badge badge-warning">{order.daysParked} {language === 'ar' ? 'أيام' : 'Days'}</span>

@@ -100,6 +100,9 @@ export const translations = {
     visa: "Visa",
     creditCard: "Credit Card",
     jumiaPay: "Jumia Pay",
+    banha1: "Banha 1",
+    banha2: "Banha 2",
+    banha3: "Banha 3",
 
     // Bosta Tab
     bostaInventory: "Bosta Orders Inventory",
@@ -273,6 +276,9 @@ export const translations = {
     visa: "فيزا",
     creditCard: "بطاقة ائتمان",
     jumiaPay: "جوميا باي",
+    banha1: "Banha 1 (وبور التلج)",
+    banha2: "Banha 2 (تجارة)",
+    banha3: "Banha 3 (المستشفي)",
 
     // Bosta Tab
     bostaInventory: "مخزون طلبات بوسطة",

@@ -99,7 +99,7 @@ export const DashboardProvider = ({ children }) => {
                     description: row.description || 'Imported Items',
                     totalValue: Number(row.totalValue) || 0,
                     category: row.category || 'General',
-                    outlet: row.outlet || "وبور الثلج",
+                    outlet: row.outlet || "Banha 1",
                     size: row.size || "M",
                     paymentMethod: row.paymentMethod || "Cash",
                     orderCost: Number(row.orderCost) || 0

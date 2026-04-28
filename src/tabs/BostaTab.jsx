@@ -20,7 +20,7 @@ export default function BostaTab() {
   const [customerUpdateData, setCustomerUpdateData] = useState({ name: '', email: '', address: '', phone: '' });
 
   const [newOrder, setNewOrder] = useState({
-    id: '', customerPhone: '', customerName: '', description: '', totalValue: '', category: 'Electronics', outlet: 'وبور الثلج'
+    id: '', customerPhone: '', customerName: '', description: '', totalValue: '', category: 'Electronics', outlet: 'Banha 1'
   });
 
   const exportHeaders = [
@@ -177,9 +177,9 @@ export default function BostaTab() {
           </select>
           <select className="input-field" style={{ flex: '1 1 120px' }} value={filterOutlet} onChange={e => setFilterOutlet(e.target.value)}>
              <option value="All">{language === 'ar' ? 'جميع المنافذ' : 'All Outlets'}</option>
-             <option value="وبور الثلج">وبور الثلج</option>
-             <option value="تجاره">تجاره</option>
-             <option value="المستشفى">المستشفى</option>
+              <option value="Banha 1">Banha 1</option>
+              <option value="Banha 2">Banha 2</option>
+              <option value="Banha 3">Banha 3</option>
           </select>
 
           <select className="input-field" style={{ flex: '1 1 120px' }} value={filterCategory} onChange={e => setFilterCategory(e.target.value)}>
@@ -430,9 +430,9 @@ export default function BostaTab() {
               <div className="input-group">
                 <label className="input-label">{language === 'ar' ? 'المنفذ (فرع الاستلام)' : 'Outlet (Receiving Branch)'}</label>
                 <select className="input-field" value={newOrder.outlet} onChange={e => setNewOrder({ ...newOrder, outlet: e.target.value })}>
-                  <option value="وبور الثلج">وبور الثلج</option>
-                  <option value="تجاره">تجاره</option>
-                  <option value="المستشفى">المستشفى</option>
+                  <option value="Banha 1">Banha 1</option>
+                  <option value="Banha 2">Banha 2</option>
+                  <option value="Banha 3">Banha 3</option>
                 </select>
               </div>
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>

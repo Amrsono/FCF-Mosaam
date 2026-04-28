@@ -21,7 +21,7 @@ export default async function handler(req, res) {
           customerName: customerName || 'Unknown',
           description: description || '',
           reason: reason || null,
-          outlet: outlet || 'وبور الثلج'
+          outlet: outlet || 'Banha 1'
         }
       });
 

@@ -79,7 +79,7 @@ export default function ParkedPenaltiesTab() {
             <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{order.customerPhone}</span>
           </div>
         </td>
-        <td style={{ fontWeight: 700, color: 'white' }}>{order.outlet || 'وبور الثلج'}</td>
+        <td style={{ fontWeight: 700, color: 'white' }}>{order.outlet || 'Banha 1'}</td>
         <td>{new Date(order.receivedAt).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</td>
         <td>
           <span className="badge badge-warning">{order.daysParked} {language === 'ar' ? 'أيام' : 'Days'}</span>

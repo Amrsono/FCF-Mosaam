@@ -111,7 +111,7 @@ export default function OrdersTab() {
 
   // Aggregated Summary Data — derived from the already-filtered orderList
   const summaryByOutlet = useMemo(() => {
-    const outlets = ['وبور الثلج', 'تجاره', 'المستشفى'];
+    const outlets = ['Banha 1', 'Banha 2', 'Banha 3'];
     return outlets.map(outletName => {
       const outletOrders = orderList.filter(o => (o.outlet || "وبور الثلج") === outletName);
       const received = outletOrders.length;
@@ -221,9 +221,9 @@ export default function OrdersTab() {
 
           <select className="input-field" style={{ flex: '1 1 120px' }} value={filterOutlet} onChange={e => setFilterOutlet(e.target.value)}>
              <option value="All">{language === 'ar' ? 'جميع المنافذ' : 'All Outlets'}</option>
-             <option value="وبور الثلج">وبور الثلج</option>
-             <option value="تجاره">تجاره</option>
-             <option value="المستشفى">المستشفى</option>
+             <option value="Banha 1">Banha 1</option>
+             <option value="Banha 2">Banha 2</option>
+             <option value="Banha 3">Banha 3</option>
           </select>
 
           <select className="input-field" style={{ flex: '1 1 120px' }} value={filterCategory} onChange={e => setFilterCategory(e.target.value)}>
@@ -509,9 +509,9 @@ export default function OrdersTab() {
                 <div className="input-group" style={{ flex: 1 }}>
                   <label className="input-label">{language === 'ar' ? 'المنفذ' : 'Outlet'}</label>
                   <select className="input-field" value={newOrder.outlet} onChange={e => setNewOrder({...newOrder, outlet: e.target.value})}>
-                     <option value="وبور الثلج">وبور الثلج</option>
-                     <option value="تجاره">تجاره</option>
-                     <option value="المستشفى">المستشفى</option>
+                     <option value="Banha 1">Banha 1</option>
+                    <option value="Banha 2">Banha 2</option>
+                    <option value="Banha 3">Banha 3</option>
                   </select>
                 </div>
                 <div className="input-group" style={{ flex: 1 }}>

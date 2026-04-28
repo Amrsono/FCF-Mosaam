@@ -33,7 +33,7 @@ model Order {
   returnedAt    DateTime?
 
   // New fields for detailed inventory reporting
-  outlet        String    @default("وبور الثلج")
+  outlet        String    @default("Banha 1")
   size          String    @default("M")
   paymentMethod String    @default("Cash")
   orderCost     Float     @default(0)
@@ -65,7 +65,7 @@ model BostaOrder {
   returnedAt    DateTime?
 
   // New fields for detailed inventory reporting
-  outlet        String    @default("وبور الثلج")
+  outlet        String    @default("Banha 1")
   size          String    @default("M")
   paymentMethod String    @default("Cash")
   orderCost     Float     @default(0)
@@ -96,7 +96,7 @@ model CustomerReturn {
   customerName  String    @default("Unknown")
   description   String
   reason        String?
-  outlet        String    @default("وبور الثلج") // Which branch received the return
+  outlet        String    @default("Banha 1") // Which branch received the return
   status        String    @default("At Station") // "At Station" | "Returned to Jumia"
   receivedAt    DateTime  @default(now())
   returnedAt    DateTime? // When marked as returned to Jumia

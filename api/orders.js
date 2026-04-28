@@ -54,10 +54,14 @@ export default async function handler(req, res) {
       const { id, action } = req.body; // action: 'PICK_UP' or 'RETURN'
 
       if (action === 'PICK_UP') {
+        const { paymentMethod } = req.body;
         const updated = await prisma.$transaction(async (tx) => {
+          const updateData = { status: 'Picked Up', pickedUpAt: new Date() };
+          if (paymentMethod) updateData.paymentMethod = paymentMethod;
+
           const order = await tx.order.update({
             where: { id },
-            data: { status: 'Picked Up', pickedUpAt: new Date() }
+            data: updateData
           });
 
           // Increment customer delivery count

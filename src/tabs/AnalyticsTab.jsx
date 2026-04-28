@@ -94,9 +94,19 @@ export default function AnalyticsTab() {
     return d >= 5;
   }).length;
   const jumiaSlaNear = jumiaInventory.filter(o => {
-    const d = Math.floor(Math.abs(new Date() - new Date(o.receivedAt)) / 86400000);
     return d >= 3 && d < 5;
   }).length;
+  
+  // Payment Methods Breakdown for Jumia
+  const jumiaPayTotal = jumiaPickedUp.filter(o => o.paymentMethod?.toLowerCase().includes('jumia')).reduce((s, o) => s + o.totalValue, 0);
+  const jumiaCardTotal = jumiaPickedUp.filter(o => o.paymentMethod?.toLowerCase().includes('card') || o.paymentMethod?.toLowerCase().includes('visa')).reduce((s, o) => s + o.totalValue, 0);
+  const jumiaCashTotal = jumiaPickedUp.filter(o => !o.paymentMethod || o.paymentMethod?.toLowerCase() === 'cash').reduce((s, o) => s + o.totalValue, 0);
+  
+  const jumiaPaymentData = [
+    { name: t('cash'), value: jumiaCashTotal, color: '#f97316' },
+    { name: t('creditCard'), value: jumiaCardTotal, color: '#22c55e' },
+    { name: t('jumiaPay'), value: jumiaPayTotal, color: '#6366f1' },
+  ].filter(d => d.value > 0);
 
   // --- BOSTA ---
   const bostaPickedUp = bostaOrders.filter(o => o.status === 'Picked Up' && new Date(o.pickedUpAt) >= thresholdDate);
@@ -160,6 +170,9 @@ export default function AnalyticsTab() {
       jumia: {
         pickedUpCount: jumiaPickedUp.length,
         cash: jumiaCash,
+        cashTotal: jumiaCashTotal,
+        cardTotal: jumiaCardTotal,
+        jumiaPayTotal: jumiaPayTotal,
         returnedCount: stdReturned.length,
         returnedAmt: jumiaReturnedAmt,
         penalties: activePenalties
@@ -424,6 +437,26 @@ export default function AnalyticsTab() {
               <Bar dataKey="jumia" name={t('jumia')} fill={CHART_COLORS.jumia} radius={[6, 6, 0, 0]} />
               <Bar dataKey="bosta" name={t('bosta')} fill={CHART_COLORS.bosta} radius={[6, 6, 0, 0]} />
             </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title={language === 'ar' ? 'طرق دفع  J ' : ' J  Payment Methods'} icon={<DollarSign size={16} color={CHART_COLORS.jumia} />}>
+          <ResponsiveContainer width="100%" height={260}>
+            <PieChart>
+              <Pie
+                data={jumiaPaymentData}
+                cx="50%" cy="50%"
+                innerRadius={60} outerRadius={100}
+                paddingAngle={4}
+                dataKey="value"
+              >
+                {jumiaPaymentData.map((entry, i) => (
+                  <Cell key={i} fill={entry.color} stroke="transparent" />
+                ))}
+              </Pie>
+              <Tooltip content={<CustomTooltip language={language} />} formatter={(v) => `${v.toLocaleString()} EGP`} />
+              <Legend formatter={(val) => <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem' }}>{val}</span>} />
+            </PieChart>
           </ResponsiveContainer>
         </ChartCard>
       </div>

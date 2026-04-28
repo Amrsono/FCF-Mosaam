@@ -154,12 +154,12 @@ export const DashboardProvider = ({ children }) => {
     }
   };
 
-  const markOrderPickedUp = async (orderId) => {
+  const markOrderPickedUp = async (orderId, paymentMethod = null) => {
     try {
       const res = await fetch('/api/orders', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: orderId, action: 'PICK_UP' })
+        body: JSON.stringify({ id: orderId, action: 'PICK_UP', paymentMethod })
       });
       if (res.ok) {
         await fetchData(); // Resync

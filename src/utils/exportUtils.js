@@ -284,7 +284,10 @@ export const exportToPPTX = async (analytics, filename, language = 'en') => {
     const jStats = [
       [language === 'ar' ? 'المؤشر' : 'Metric', language === 'ar' ? 'القيمة' : 'Value'],
       [language === 'ar' ? 'الطلبات المستلمة' : 'Orders Handled', String(analytics.jumia.pickedUpCount)],
-      [language === 'ar' ? 'الإيرادات النقدي' : 'Cash Revenue', `${analytics.jumia.cash.toLocaleString()} EGP`],
+      [language === 'ar' ? 'إجمالي الإيرادات' : 'Total Revenue', `${analytics.jumia.cash.toLocaleString()} EGP`],
+      [`  - ${language === 'ar' ? 'نقدي' : 'Cash'}`, `${(analytics.jumia.cashTotal || 0).toLocaleString()} EGP`],
+      [`  - ${language === 'ar' ? 'بطاقة / فيزا' : 'Card / Visa'}`, `${(analytics.jumia.cardTotal || 0).toLocaleString()} EGP`],
+      [`  - ${language === 'ar' ? 'جوميا باي' : 'Jumia Pay'}`, `${(analytics.jumia.jumiaPayTotal || 0).toLocaleString()} EGP`],
       [language === 'ar' ? 'المرتجع' : 'Returns', String(analytics.jumia.returnedCount)],
       [language === 'ar' ? 'غرامات التخزين' : 'Storage Penalties', `${analytics.jumia.penalties.toLocaleString()} EGP`]
     ];

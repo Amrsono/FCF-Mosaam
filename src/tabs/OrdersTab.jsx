@@ -46,6 +46,7 @@ export default function OrdersTab() {
     { label: language === 'ar' ? 'رسوم التخزين' : 'Storage Fees', accessor: 'penalty' },
     { label: language === 'ar' ? 'المنفذ' : 'Outlet', accessor: 'outlet' },
     { label: language === 'ar' ? 'المقاس' : 'Size', accessor: 'size' },
+    { label: t('paymentMethod'), accessor: 'paymentMethod' },
     { label: t('status'), accessor: 'status' },
     { label: t('daysInInv'), accessor: 'daysParked' }
   ];
@@ -59,7 +60,7 @@ export default function OrdersTab() {
     { key: 'category', label: t('category'), required: false },
     { key: 'outlet', label: language === 'ar' ? 'المنفذ' : 'Outlet', required: false },
     { key: 'size', label: language === 'ar' ? 'المقاس' : 'Size', required: false },
-    { key: 'paymentMethod', label: language === 'ar' ? 'طريقة الدفع' : 'Payment Method', required: false }
+    { key: 'paymentMethod', label: t('paymentMethod'), required: false }
   ];
 
   // Derived Data (computed first so summaryByOutlet can consume it)
@@ -125,8 +126,11 @@ export default function OrdersTab() {
       const paid = outletOrders.filter(o => o.status === 'Picked Up').reduce((sum, o) => sum + o.totalValue, 0);
       
       // JumiaPay: include all jumiapay orders
-      const jumiaPay = outletOrders.filter(o => o.status !== 'Returned' && o.paymentMethod?.toLowerCase().includes('jumiapay')).reduce((sum, o) => sum + o.totalValue, 0);
+      const jumiaPay = outletOrders.filter(o => o.status !== 'Returned' && o.paymentMethod?.toLowerCase().includes('jumia')).reduce((sum, o) => sum + o.totalValue, 0);
       
+      // Credit Card: include all card/visa orders
+      const creditCard = outletOrders.filter(o => o.status !== 'Returned' && (o.paymentMethod?.toLowerCase().includes('card') || o.paymentMethod?.toLowerCase().includes('visa'))).reduce((sum, o) => sum + o.totalValue, 0);
+
       const sCount = outletOrders.filter(o => o.size === 'S').length;
       const mCount = outletOrders.filter(o => o.size === 'M').length;
       const lCount = outletOrders.filter(o => o.size === 'L').length;
@@ -144,6 +148,7 @@ export default function OrdersTab() {
         totalMoney,
         paid,
         jumiaPay,
+        creditCard,
         storageFees,
         totalIncome,
         sCount,
@@ -315,6 +320,7 @@ export default function OrdersTab() {
                 <th>{language === 'ar' ? 'اجمالي الفلوس' : 'Total Money'}</th>
                 <th>{language === 'ar' ? 'تم سداد' : 'Paid'}</th>
                 <th> J  Pay</th>
+                <th>{t('creditCard')}</th>
                 <th style={{ color: 'var(--color-primary)' }}>{language === 'ar' ? 'رسوم التخزين' : 'Storage Fees'}</th>
                 <th style={{ color: 'var(--color-success)' }}>{language === 'ar' ? 'دخل المخزن' : 'WH Income'}</th>
                 <th>S</th>
@@ -333,6 +339,7 @@ export default function OrdersTab() {
                   <td>{row.totalMoney.toLocaleString()}</td>
                   <td>{row.paid.toLocaleString()}</td>
                   <td style={{ color: 'var(--color-primary)' }}>{row.jumiaPay.toLocaleString()}</td>
+                  <td style={{ color: 'var(--color-success)' }}>{row.creditCard.toLocaleString()}</td>
                   <td style={{ fontWeight: 600 }}>{row.storageFees.toLocaleString()}</td>
                   <td style={{ fontWeight: 700, color: 'var(--color-success)' }}>{row.totalIncome.toLocaleString()}</td>
                   <td>{row.sCount}</td>
@@ -349,6 +356,7 @@ export default function OrdersTab() {
                 <td>{summaryByOutlet.reduce((s, r) => s + r.totalMoney, 0).toLocaleString()}</td>
                 <td>{summaryByOutlet.reduce((s, r) => s + r.paid, 0).toLocaleString()}</td>
                 <td>{summaryByOutlet.reduce((s, r) => s + r.jumiaPay, 0).toLocaleString()}</td>
+                <td>{summaryByOutlet.reduce((s, r) => s + r.creditCard, 0).toLocaleString()}</td>
                 <td>{summaryByOutlet.reduce((s, r) => s + r.storageFees, 0).toLocaleString()}</td>
                 <td style={{ color: 'var(--color-success)' }}>{summaryByOutlet.reduce((s, r) => s + r.totalIncome, 0).toLocaleString()}</td>
                 <td>{summaryByOutlet.reduce((s, r) => s + r.sCount, 0)}</td>
@@ -369,6 +377,7 @@ export default function OrdersTab() {
               <th>{t('customer')}</th>
               <th>{t('description')}</th>
               <th>{t('status')}</th>
+              <th>{t('paymentMethod')}</th>
               <th>{language === 'ar' ? 'معلومات التوقف' : 'Parked Info'}</th>
               <th>{t('actions')}</th>
             </tr>
@@ -400,6 +409,15 @@ export default function OrdersTab() {
                   </span>
                 </td>
                 <td>
+                  <span className="badge badge-neutral" style={{ fontSize: '0.75rem' }}>
+                    {order.paymentMethod === 'Cash' ? t('cash') : 
+                     order.paymentMethod?.toLowerCase().includes('jumia') ? t('jumiaPay') : 
+                     order.paymentMethod?.toLowerCase().includes('visa') ? t('visa') : 
+                     order.paymentMethod?.toLowerCase().includes('card') ? t('creditCard') : 
+                     order.paymentMethod}
+                  </span>
+                </td>
+                <td>
                   {order.status === 'Inventory' ? (
                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
@@ -427,6 +445,7 @@ export default function OrdersTab() {
                             email: cust?.email || '',
                             address: cust?.address || ''
                           });
+                          setNewOrder({...newOrder, paymentMethod: order.paymentMethod});
                           setPendingOrderId(order.id); 
                           setShowCrossSellModal(true); 
                         }}>
@@ -441,7 +460,7 @@ export default function OrdersTab() {
               </tr>
             )) : (
               <tr>
-                <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>{t('noData')}</td>
+                <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>{t('noData')}</td>
               </tr>
             )}
           </tbody>
@@ -509,8 +528,9 @@ export default function OrdersTab() {
                 <div className="input-group" style={{ flex: 1 }}>
                   <label className="input-label">{language === 'ar' ? 'طريقة الدفع' : 'Payment Method'}</label>
                   <select className="input-field" value={newOrder.paymentMethod} onChange={e => setNewOrder({...newOrder, paymentMethod: e.target.value})}>
-                     <option value="Cash">Cash</option>
-                     <option value="JumiaPay"> J  Pay</option>
+                     <option value="Cash">{t('cash')}</option>
+                     <option value="JumiaPay">{t('jumiaPay')}</option>
+                     <option value="Visa">{t('visa')}</option>
                   </select>
                 </div>
               </div>
@@ -571,6 +591,22 @@ export default function OrdersTab() {
                     />
                   </div>
                </div>
+               
+               <div style={{ marginTop: '1rem', textAlign: 'right' }}>
+                  <label className="input-label" style={{ fontSize: '0.85rem', color: 'var(--color-primary)' }}>
+                    {language === 'ar' ? 'تأكيد طريقة الدفع عند الاستلام' : 'Confirm Final Payment Method'}
+                  </label>
+                  <select 
+                    className="input-field" 
+                    style={{ marginTop: '0.5rem', background: 'rgba(255,255,255,0.05)' }}
+                    value={newOrder.paymentMethod} 
+                    onChange={e => setNewOrder({...newOrder, paymentMethod: e.target.value})}
+                  >
+                    <option value="Cash">{t('cash')}</option>
+                    <option value="Credit Card">{t('creditCard')}</option>
+                    <option value="JumiaPay">{t('jumiaPay')}</option>
+                  </select>
+               </div>
             </div>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -579,7 +615,7 @@ export default function OrdersTab() {
                  style={{ width: '100%', padding: '1rem' }}
                  onClick={async () => {
                    if (updateCustomer) await updateCustomer(customerUpdateData);
-                   markOrderPickedUp(pendingOrderId);
+                   markOrderPickedUp(pendingOrderId, newOrder.paymentMethod);
                    setShowCrossSellModal(false);
                    setPendingOrderId(null);
                  }}
@@ -591,7 +627,7 @@ export default function OrdersTab() {
                  className="btn btn-outline" 
                  style={{ width: '100%' }}
                  onClick={() => {
-                   markOrderPickedUp(pendingOrderId);
+                   markOrderPickedUp(pendingOrderId, newOrder.paymentMethod);
                    setShowCrossSellModal(false);
                    setPendingOrderId(null);
                  }}

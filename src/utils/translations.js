@@ -97,6 +97,9 @@ export const translations = {
     bankingAndCash: "Banking & Cash",
     cashDeposit: "Cash Deposit",
     cashWithdrawal: "Cash Withdrawal",
+    visa: "Visa",
+    creditCard: "Credit Card",
+    jumiaPay: "Jumia Pay",
 
     // Bosta Tab
     bostaInventory: "Bosta Orders Inventory",
@@ -267,6 +270,9 @@ export const translations = {
     bankingAndCash: "خدمات بنكية وكاش",
     cashDeposit: "إيداع نقدي",
     cashWithdrawal: "سحب نقدي",
+    visa: "فيزا",
+    creditCard: "بطاقة ائتمان",
+    jumiaPay: "جوميا باي",
 
     // Bosta Tab
     bostaInventory: "مخزون طلبات بوسطة",

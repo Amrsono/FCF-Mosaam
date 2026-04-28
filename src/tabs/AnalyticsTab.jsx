@@ -94,6 +94,7 @@ export default function AnalyticsTab() {
     return d >= 5;
   }).length;
   const jumiaSlaNear = jumiaInventory.filter(o => {
+    const d = Math.floor(Math.abs(new Date() - new Date(o.receivedAt)) / 86400000);
     return d >= 3 && d < 5;
   }).length;
   

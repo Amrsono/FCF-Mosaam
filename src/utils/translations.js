@@ -44,6 +44,9 @@ export const translations = {
     edit: "Edit",
     view: "View",
     all: "All",
+    from: "From",
+    to: "To",
+    custom: "Custom Range",
 
     // Orders Tab
     receiveNewOrder: "Receive New Order",
@@ -220,6 +223,9 @@ export const translations = {
     edit: "تعديل",
     view: "عرض",
     all: "الكل",
+    from: "من",
+    to: "إلى",
+    custom: "فترة مخصصة",
 
     // Orders Tab
     receiveNewOrder: "استلام طلب جديد",

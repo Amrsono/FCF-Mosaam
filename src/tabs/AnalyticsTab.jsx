@@ -4,7 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import {
   TrendingUp, PackageCheck, AlertOctagon, Users, DollarSign,
   Zap, BarChart2, Activity,
-  ArrowUpRight, ArrowDownRight, ShieldAlert, Clock, Phone
+  ArrowUpRight, ArrowDownRight, ShieldAlert, Clock, Phone,
+  Calendar
 } from 'lucide-react';
 import ExportActions from '../components/ExportActions';
 import {
@@ -51,7 +52,34 @@ export default function AnalyticsTab() {
   const { orders, customers, basataTransactions, bostaOrders, callLogs, customerReturns } = useDashboard();
   const { user } = useAuth();
   const { t, language } = useLanguage();
+  
+  const formatDate = (date) => {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  };
+
+  const [startDate, setStartDate] = useState(() => formatDate(new Date()));
+  const [endDate, setEndDate] = useState(() => formatDate(new Date()));
   const [timeframe, setTimeframe] = useState('daily');
+
+  const handleTimeframeChange = (tf) => {
+    setTimeframe(tf);
+    const now = new Date();
+    let start = new Date();
+    
+    if (tf === 'daily') {
+      // today is already handled by start = new Date()
+    } else if (tf === 'weekly') {
+      start.setDate(now.getDate() - 7);
+    } else if (tf === 'monthly') {
+      start.setDate(now.getDate() - 30);
+    }
+    
+    setStartDate(formatDate(start));
+    setEndDate(formatDate(now));
+  };
 
   const isAdminAccount = user?.username === 'admin';
 
@@ -62,18 +90,24 @@ export default function AnalyticsTab() {
   ];
 
   // Time boundary
-  const now = new Date();
-  const msInDay = 86400000;
-  const timeLimitMs = timeframe === 'daily' ? msInDay : timeframe === 'weekly' ? msInDay * 7 : msInDay * 30;
-  const thresholdDate = new Date(now.getTime() - timeLimitMs);
+  const startLimit = new Date(startDate);
+  startLimit.setHours(0, 0, 0, 0);
+  const endLimit = new Date(endDate);
+  endLimit.setHours(23, 59, 59, 999);
+
+  const isInRange = (dateStr) => {
+    if (!dateStr) return false;
+    const d = new Date(dateStr);
+    return d >= startLimit && d <= endLimit;
+  };
 
   // --- JUMIA ---
-  const jumiaPickedUp = orders.filter(o => o.status === 'Picked Up' && new Date(o.pickedUpAt) >= thresholdDate);
+  const jumiaPickedUp = orders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt));
   const jumiaInventory = orders.filter(o => o.status === 'Inventory');
   
   // Include Customer Returns that were sent back to Jumia
-  const stdReturned = orders.filter(o => o.status === 'Returned' && new Date(o.returnedAt) >= thresholdDate);
-  const custReturned = (customerReturns || []).filter(r => r.status === 'Returned to Jumia' && new Date(r.returnedAt) >= thresholdDate);
+  const stdReturned = orders.filter(o => o.status === 'Returned' && isInRange(o.returnedAt));
+  const custReturned = (customerReturns || []).filter(r => r.status === 'Returned to Jumia' && isInRange(r.returnedAt));
   const jumiaReturned = [...stdReturned, ...custReturned];
   
   const jumiaCash = jumiaPickedUp.reduce((s, o) => s + o.totalValue, 0);
@@ -110,14 +144,14 @@ export default function AnalyticsTab() {
   ].filter(d => d.value > 0);
 
   // --- BOSTA ---
-  const bostaPickedUp = bostaOrders.filter(o => o.status === 'Picked Up' && new Date(o.pickedUpAt) >= thresholdDate);
-  const bostaReturned = bostaOrders.filter(o => o.status === 'Returned' && new Date(o.returnedAt) >= thresholdDate);
+  const bostaPickedUp = bostaOrders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt));
+  const bostaReturned = bostaOrders.filter(o => o.status === 'Returned' && isInRange(o.returnedAt));
   const bostaInventory = bostaOrders.filter(o => o.status === 'Inventory');
   const bostaCash = bostaPickedUp.reduce((s, o) => s + o.totalValue, 0);
   const bostaReturnedAmt = bostaReturned.reduce((s, o) => s + o.totalValue, 0);
 
   // --- BASATA ---
-  const activeBasata = basataTransactions.filter(t => new Date(t.performedAt) >= thresholdDate);
+  const activeBasata = basataTransactions.filter(t => isInRange(t.performedAt));
   const basataVolume = activeBasata.reduce((s, t) => s + t.amount, 0);
   const basataCategories = activeBasata.reduce((acc, t) => {
     acc[t.category] = (acc[t.category] || 0) + t.amount;
@@ -132,15 +166,15 @@ export default function AnalyticsTab() {
   const grandTotal = jumiaCash + bostaCash + basataVolume + activePenalties;
 
   // --- CALLS LOG ANALYTICS ---
-  const callsInPeriod = (callLogs || []).filter(l => l.createdAt && new Date(l.createdAt) >= thresholdDate);
+  const callsInPeriod = (callLogs || []).filter(l => isInRange(l.createdAt));
   const callsMade   = callsInPeriod.filter(l => l.agentName);
   const callsResolved= callsInPeriod.filter(l => l.resolution);
   const callsClosed  = callsInPeriod.filter(l => l.isClosed);
 
   // Urgent orders in period (2–3 days) — total received within period from both sources
   const allOrdersInPeriod = [
-    ...orders.filter(o => new Date(o.receivedAt) >= thresholdDate),
-    ...bostaOrders.filter(o => new Date(o.receivedAt) >= thresholdDate)
+    ...orders.filter(o => isInRange(o.receivedAt)),
+    ...bostaOrders.filter(o => isInRange(o.receivedAt))
   ];
   const urgentInPeriod = allOrdersInPeriod.filter(o => {
     const d = Math.floor(Math.abs(new Date() - new Date(o.receivedAt)) / 86400000);
@@ -154,12 +188,12 @@ export default function AnalyticsTab() {
   const callsVsOrdersData = [
     {
       name: language === 'ar' ? 'J' : 'J',
-      [language === 'ar' ? 'طلبات مستلمة' : 'Orders Received']: orders.filter(o => new Date(o.receivedAt) >= thresholdDate).length,
+      [language === 'ar' ? 'طلبات مستلمة' : 'Orders Received']: orders.filter(o => isInRange(o.receivedAt)).length,
       [language === 'ar' ? 'مكالمات' : 'Calls Made']: callsInPeriod.filter(l => l.orderSource !== 'bosta').length,
     },
     {
       name: language === 'ar' ? 'بوسطة' : 'Bosta',
-      [language === 'ar' ? 'طلبات مستلمة' : 'Orders Received']: bostaOrders.filter(o => new Date(o.receivedAt) >= thresholdDate).length,
+      [language === 'ar' ? 'طلبات مستلمة' : 'Orders Received']: bostaOrders.filter(o => isInRange(o.receivedAt)).length,
       [language === 'ar' ? 'مكالمات' : 'Calls Made']: callsInPeriod.filter(l => l.orderSource === 'bosta').length,
     },
   ];
@@ -197,7 +231,10 @@ export default function AnalyticsTab() {
       grandTotal: grandTotal
     };
 
-    exportToPPTX(analytics, `FCF_Master_Report_${timeframe}`, language);
+    const filename = timeframe === 'custom' 
+      ? `FCF_Master_Report_${startDate}_to_${endDate}` 
+      : `FCF_Master_Report_${timeframe}_${startDate}`;
+    exportToPPTX(analytics, filename, language);
   };
 
   // Resolution breakdown pie
@@ -314,10 +351,67 @@ export default function AnalyticsTab() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'var(--bg-panel)', borderRadius: 'var(--radius-md)', padding: '0.4rem', border: '1px solid var(--border-color)', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', gap: '0.15rem', flexWrap: 'wrap' }}>
             {['daily', 'weekly', 'monthly'].map(tf => (
-              <button key={tf} className={`btn ${timeframe === tf ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none', padding: '0.4rem 0.8rem', fontSize: '0.85rem' }} onClick={() => setTimeframe(tf)}>
+              <button key={tf} className={`btn ${timeframe === tf ? 'btn-primary' : 'btn-outline'}`} style={{ border: 'none', padding: '0.4rem 0.8rem', fontSize: '0.85rem' }} onClick={() => handleTimeframeChange(tf)}>
                 {tf === 'daily' ? (language === 'ar' ? 'يومي' : 'Daily') : tf === 'weekly' ? (language === 'ar' ? 'أسبوعي' : 'Weekly') : (language === 'ar' ? 'شهري' : 'Monthly')}
               </button>
             ))}
+            {timeframe === 'custom' && (
+              <button className="btn btn-primary" style={{ border: 'none', padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}>
+                {t('custom')}
+              </button>
+            )}
+          </div>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center',
+            gap: '0.75rem',
+            [language === 'ar' ? 'paddingRight' : 'paddingLeft']: '0.75rem', 
+            [language === 'ar' ? 'borderRight' : 'borderLeft']: '1px solid var(--border-color)' 
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('from')}</span>
+              <input 
+                type="date" 
+                value={startDate} 
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  setTimeframe('custom');
+                }}
+                className="date-input-premium"
+                style={{ 
+                  background: 'rgba(255,255,255,0.05)', 
+                  border: '1px solid var(--border-color)', 
+                  borderRadius: '6px', 
+                  color: 'white', 
+                  fontSize: '0.8rem', 
+                  padding: '0.3rem 0.5rem',
+                  outline: 'none',
+                  cursor: 'pointer'
+                }}
+              />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('to')}</span>
+              <input 
+                type="date" 
+                value={endDate} 
+                onChange={(e) => {
+                  setEndDate(e.target.value);
+                  setTimeframe('custom');
+                }}
+                className="date-input-premium"
+                style={{ 
+                  background: 'rgba(255,255,255,0.05)', 
+                  border: '1px solid var(--border-color)', 
+                  borderRadius: '6px', 
+                  color: 'white', 
+                  fontSize: '0.8rem', 
+                  padding: '0.3rem 0.5rem',
+                  outline: 'none',
+                  cursor: 'pointer'
+                }}
+              />
+            </div>
           </div>
           <div style={{ 
             display: 'flex', 
@@ -358,8 +452,8 @@ export default function AnalyticsTab() {
                 { group: 'Calls Log', metric: 'Coverage Rate', value: `${coveragePct}%` },
               ]}
               headers={exportHeaders}
-              filename={`Analytics_${timeframe}`}
-              title={`${t('analytics')} (${timeframe.toUpperCase()})`}
+              filename={`Analytics_${timeframe === 'custom' ? `${startDate}_to_${endDate}` : timeframe}`}
+              title={`${t('analytics')} (${timeframe === 'custom' ? `${startDate} - ${endDate}` : t(timeframe)})`}
             />
           </div>
         </div>

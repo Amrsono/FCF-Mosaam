@@ -87,7 +87,7 @@ export default function ParkedPenaltiesTab() {
             <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{order.customerPhone}</span>
           </div>
         </td>
-        <td style={{ fontWeight: 700, color: 'white' }}>{getOutletLabel(order.outlet)}</td>
+        <td style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{getOutletLabel(order.outlet)}</td>
         <td>{new Date(order.receivedAt).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</td>
         <td>
           <span className="badge badge-warning">{order.daysParked} {language === 'ar' ? 'أيام' : 'Days'}</span>
@@ -105,7 +105,7 @@ export default function ParkedPenaltiesTab() {
       {/* Top Banner */}
       <div className="glass-panel" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(135deg, rgba(245,158,11,0.15), rgba(239,68,68,0.1))', flexWrap: 'wrap', gap: '1.5rem', padding: '1.5rem' }}>
         <div style={{ flex: '1 1 200px' }}>
-          <h2 style={{ color: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.25rem' }}>
+          <h2 style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.25rem' }}>
             <Banknote size={24} color="var(--color-warning)" /> 
             {t('parkedPenalties')}
           </h2>

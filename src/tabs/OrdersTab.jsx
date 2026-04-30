@@ -568,7 +568,7 @@ export default function OrdersTab() {
       {showSimulateModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '1rem' }}>
           <div className="glass-panel" style={{ width: '100%', maxWidth: '400px', background: 'var(--bg-main)' }}>
-            <h3 style={{ marginBottom: '1.5rem', color: 'white' }}>{t('receiveNewOrder')}</h3>
+            <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-primary)' }}>{t('receiveNewOrder')}</h3>
             <form onSubmit={handleSimulateReceive}>
               <div className="input-group">
                 <label className="input-label">{t('orderId')}</label>

@@ -298,7 +298,7 @@ export default function AnalyticsTab() {
           </span>
         )}
       </div>
-      <div style={{ fontSize: '1.8rem', fontWeight: 700, color: 'white', lineHeight: 1 }}>{value}</div>
+      <div style={{ fontSize: '1.8rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1 }}>{value}</div>
       {sub && <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{sub}</div>}
     </div>
   );
@@ -307,7 +307,7 @@ export default function AnalyticsTab() {
     <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', ...style }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
         {icon}
-        <h4 style={{ color: 'white', margin: 0, fontSize: '0.95rem' }}>{title}</h4>
+        <h4 style={{ color: 'var(--text-primary)', margin: 0, fontSize: '0.95rem' }}>{title}</h4>
       </div>
       {children}
     </div>
@@ -345,7 +345,7 @@ export default function AnalyticsTab() {
 
       {/* Sticky Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10, background: 'var(--bg-main)', paddingBottom: '0.75rem', flexWrap: 'wrap', gap: '1rem' }}>
-        <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'white', margin: 0, fontSize: '1.25rem' }}>
+        <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-primary)', margin: 0, fontSize: '1.25rem' }}>
           <TrendingUp size={22} color="var(--color-primary)" /> {t('analytics')}
         </h2>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'var(--bg-panel)', borderRadius: 'var(--radius-md)', padding: '0.4rem', border: '1px solid var(--border-color)', flexWrap: 'wrap' }}>
@@ -382,7 +382,7 @@ export default function AnalyticsTab() {
                   background: 'rgba(255,255,255,0.05)', 
                   border: '1px solid var(--border-color)', 
                   borderRadius: '6px', 
-                  color: 'white', 
+                  color: 'var(--text-primary)', 
                   fontSize: '0.8rem', 
                   padding: '0.3rem 0.5rem',
                   outline: 'none',
@@ -404,7 +404,7 @@ export default function AnalyticsTab() {
                   background: 'rgba(255,255,255,0.05)', 
                   border: '1px solid var(--border-color)', 
                   borderRadius: '6px', 
-                  color: 'white', 
+                  color: 'var(--text-primary)', 
                   fontSize: '0.8rem', 
                   padding: '0.3rem 0.5rem',
                   outline: 'none',
@@ -466,7 +466,7 @@ export default function AnalyticsTab() {
             <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem' }}>
               <Activity size={14} /> {language === 'ar' ? 'إجمالي إيرادات المحطة' : 'Total Station Revenue'}
             </div>
-            <div style={{ fontSize: 'clamp(2.5rem, 10vw, 3.5rem)', fontWeight: 800, color: 'white', lineHeight: 1 }}>
+            <div style={{ fontSize: 'clamp(2.5rem, 10vw, 3.5rem)', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>
               {grandTotal.toLocaleString()}
               <span style={{ fontSize: '0.4em', color: 'var(--text-muted)', [language === 'ar' ? 'marginRight' : 'marginLeft']: '0.5rem' }}>EGP</span>
             </div>
@@ -784,7 +784,7 @@ export default function AnalyticsTab() {
       {/* Admin Transaction Counters */}
       {isAdminAccount && (
         <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem', paddingBottom: '2rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: 'white', marginBottom: '0.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
             <div style={{ background: 'var(--color-primary)', padding: '0.4rem', borderRadius: '8px', display: 'flex' }}>
               <Activity size={18} color="white" />
             </div>
@@ -804,7 +804,7 @@ export default function AnalyticsTab() {
               <div style={{ position: 'absolute', top: '-10px', right: '-10px', width: '80px', height: '80px', background: 'rgba(34, 197, 94, 0.05)', borderRadius: '50%', filter: 'blur(20px)' }} />
               <div style={{ position: 'relative', zIndex: 1 }}>
                 <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.6rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t('dailyTransactions')}</div>
-                <div style={{ fontSize: '2.8rem', fontWeight: 900, color: 'white', lineHeight: 1 }}>{dailyCount.toLocaleString()}</div>
+                <div style={{ fontSize: '2.8rem', fontWeight: 900, color: 'var(--text-primary)', lineHeight: 1 }}>{dailyCount.toLocaleString()}</div>
               </div>
               <div style={{ background: 'rgba(34, 197, 94, 0.15)', padding: '1rem', borderRadius: '1.25rem', display: 'flex', position: 'relative', zIndex: 1 }}>
                 <Zap size={32} color="#22c55e" strokeWidth={2.5} />
@@ -824,7 +824,7 @@ export default function AnalyticsTab() {
               <div style={{ position: 'absolute', top: '-10px', right: '-10px', width: '80px', height: '80px', background: 'rgba(99, 102, 241, 0.05)', borderRadius: '50%', filter: 'blur(20px)' }} />
               <div style={{ position: 'relative', zIndex: 1 }}>
                 <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.6rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t('weeklyTransactions')}</div>
-                <div style={{ fontSize: '2.8rem', fontWeight: 900, color: 'white', lineHeight: 1 }}>{weeklyCount.toLocaleString()}</div>
+                <div style={{ fontSize: '2.8rem', fontWeight: 900, color: 'var(--text-primary)', lineHeight: 1 }}>{weeklyCount.toLocaleString()}</div>
               </div>
               <div style={{ background: 'rgba(99, 102, 241, 0.15)', padding: '1rem', borderRadius: '1.25rem', display: 'flex', position: 'relative', zIndex: 1 }}>
                 <BarChart2 size={32} color="#6366f1" strokeWidth={2.5} />
@@ -844,7 +844,7 @@ export default function AnalyticsTab() {
               <div style={{ position: 'absolute', top: '-10px', right: '-10px', width: '80px', height: '80px', background: 'rgba(249, 115, 22, 0.05)', borderRadius: '50%', filter: 'blur(20px)' }} />
               <div style={{ position: 'relative', zIndex: 1 }}>
                 <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.6rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t('monthlyTransactions')}</div>
-                <div style={{ fontSize: '2.8rem', fontWeight: 900, color: 'white', lineHeight: 1 }}>{monthlyCount.toLocaleString()}</div>
+                <div style={{ fontSize: '2.8rem', fontWeight: 900, color: 'var(--text-primary)', lineHeight: 1 }}>{monthlyCount.toLocaleString()}</div>
               </div>
               <div style={{ background: 'rgba(249, 115, 22, 0.15)', padding: '1rem', borderRadius: '1.25rem', display: 'flex', position: 'relative', zIndex: 1 }}>
                 <TrendingUp size={32} color="#f97316" strokeWidth={2.5} />

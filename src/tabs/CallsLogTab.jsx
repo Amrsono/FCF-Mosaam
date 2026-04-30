@@ -161,7 +161,7 @@ export default function CallsLogTab() {
             <Phone size={24} color="var(--color-warning)" />
           </div>
           <div>
-            <h3 style={{ color: 'white', margin: 0, fontSize: '1.2rem', fontWeight: 700 }}>
+            <h3 style={{ color: 'var(--text-primary)', margin: 0, fontSize: '1.2rem', fontWeight: 700 }}>
               {t('callsLog')}
             </h3>
             <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.8rem' }}>
@@ -245,7 +245,7 @@ export default function CallsLogTab() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.75rem' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', flex: '1 1 200px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-                    <span style={{ fontWeight: 700, fontSize: '1rem', color: 'white', fontFamily: 'monospace' }}>{order.id}</span>
+                    <span style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-primary)', fontFamily: 'monospace' }}>{order.id}</span>
                     {/* Source badge */}
                     <span style={{
                       fontSize: '0.7rem', fontWeight: 700, padding: '0.15rem 0.55rem',

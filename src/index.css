@@ -80,9 +80,9 @@
   --bg-panel-hover: hsl(var(--hue-primary), 15%, 94%);
   --border-color: hsl(var(--hue-primary), 15%, 88%);
   
-  --text-primary: hsl(var(--hue-primary), 10%, 12%);
-  --text-secondary: hsl(var(--hue-primary), 10%, 35%);
-  --text-muted: hsl(var(--hue-primary), 10%, 55%);
+  --text-primary: hsl(25, 30%, 15%); /* Dark Brown */
+  --text-secondary: hsl(25, 20%, 35%);
+  --text-muted: hsl(25, 15%, 55%);
 
   --color-primary: hsl(var(--hue-primary), 70%, 55%);
   --color-primary-hover: hsl(var(--hue-primary), 70%, 45%);

@@ -14,7 +14,8 @@ export default function BostaTab() {
     updateCustomer, 
     updateBostaOrder,
     cancelBostaOrder,
-    deleteBostaOrder
+    deleteBostaOrder,
+    revertBostaOrderToInventory
   } = useDashboard();
   const { t, language } = useLanguage();
   
@@ -50,6 +51,7 @@ export default function BostaTab() {
   const [cancelReason, setCancelReason] = useState('');
   const [deleteReason, setDeleteReason] = useState('');
   const [targetOrder, setTargetOrder] = useState(null);
+  const [originalOrderId, setOriginalOrderId] = useState(null);
 
   const [newOrder, setNewOrder] = useState({
     id: '', customerPhone: '', customerName: '', description: '', totalValue: '', category: 'Electronics', outlet: 'Banha 1'
@@ -400,7 +402,7 @@ export default function BostaTab() {
                         className="btn btn-outline"
                         style={{ padding: '0.4rem', color: 'var(--color-primary)' }}
                         title={language === 'ar' ? 'تعديل' : 'Edit'}
-                        onClick={() => setEditingOrder(order)}
+                        onClick={() => { setEditingOrder(order); setOriginalOrderId(order.id); }}
                       >
                         <Pencil size={16} />
                       </button>
@@ -449,14 +451,34 @@ export default function BostaTab() {
                     </div>
                   )}
                   {order.status === 'Cancelled' && (
-                     <button
-                       className="btn btn-outline"
-                       style={{ padding: '0.4rem', color: 'var(--color-danger)' }}
-                       title={language === 'ar' ? 'إرجاع لبوسطة' : 'Return to Bosta'}
-                       onClick={() => returnBostaOrder(order.id)}
-                     >
-                       <RefreshCw size={16} />
-                     </button>
+                     <div style={{ display: 'flex', gap: '0.5rem' }}>
+                       <button
+                         className="btn btn-outline"
+                         style={{ padding: '0.4rem', color: 'var(--color-danger)' }}
+                         title={language === 'ar' ? 'إرجاع لبوسطة' : 'Return to Bosta'}
+                         onClick={() => returnBostaOrder(order.id)}
+                       >
+                         <RefreshCw size={16} />
+                       </button>
+                       <button
+                         className="btn btn-outline"
+                         style={{ padding: '0.4rem', color: 'var(--color-primary)' }}
+                         title={language === 'ar' ? 'إعادة للمخزن' : 'Revert to Inventory'}
+                         onClick={() => revertBostaOrderToInventory(order.id)}
+                       >
+                         <RotateCcw size={16} />
+                       </button>
+                     </div>
+                  )}
+                  {order.status === 'Returned' && (
+                    <button
+                      className="btn btn-outline"
+                      style={{ padding: '0.4rem', color: 'var(--color-primary)' }}
+                      title={language === 'ar' ? 'إعادة للمخزن' : 'Revert to Inventory'}
+                      onClick={() => revertBostaOrderToInventory(order.id)}
+                    >
+                      <RotateCcw size={16} />
+                    </button>
                   )}
                 </td>
               </tr>
@@ -543,7 +565,12 @@ export default function BostaTab() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div className="form-group">
                 <label className="label">{language === 'ar' ? 'رقم الطلب' : 'Order ID'}</label>
-                <input type="text" className="input-field" value={editingOrder.id} disabled style={{ opacity: 0.6 }} />
+                <input 
+                  type="text" 
+                  className="input-field" 
+                  value={editingOrder.id} 
+                  onChange={e => setEditingOrder({...editingOrder, id: e.target.value})}
+                />
               </div>
 
               <div className="form-group">
@@ -599,7 +626,8 @@ export default function BostaTab() {
                   className="btn btn-primary" 
                   style={{ flex: 1, background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
                   onClick={async () => {
-                    const res = await updateBostaOrder(editingOrder.id, {
+                    const res = await updateBostaOrder(originalOrderId, {
+                      newId: editingOrder.id,
                       description: editingOrder.description,
                       totalValue: editingOrder.totalValue,
                       category: editingOrder.category,
@@ -607,6 +635,7 @@ export default function BostaTab() {
                     });
                     if (res.success) {
                       setEditingOrder(null);
+                      setOriginalOrderId(null);
                     } else {
                       alert("Error updating order: " + res.error);
                     }

@@ -19,7 +19,8 @@ export default function OrdersTab() {
     markReturnedToJumia,
     updateOrder,
     cancelOrder,
-    deleteOrder
+    deleteOrder,
+    revertOrderToInventory
   } = useDashboard();
   const { t, language } = useLanguage();
   
@@ -42,6 +43,7 @@ export default function OrdersTab() {
   const [cancelReason, setCancelReason] = useState('');
   const [deleteReason, setDeleteReason] = useState('');
   const [targetOrder, setTargetOrder] = useState(null);
+  const [originalOrderId, setOriginalOrderId] = useState(null);
 
   // Customer Returns state
   const [showReturnModal, setShowReturnModal] = useState(false);
@@ -443,7 +445,7 @@ export default function OrdersTab() {
                   <td>
                     {order.status === 'Inventory' && (
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button className="btn btn-outline" style={{ padding: '0.4rem', color: 'var(--color-primary)' }} title={language === 'ar' ? 'تعديل' : 'Edit'} onClick={() => setEditingOrder(order)}>
+                        <button className="btn btn-outline" style={{ padding: '0.4rem', color: 'var(--color-primary)' }} title={language === 'ar' ? 'تعديل' : 'Edit'} onClick={() => { setEditingOrder(order); setOriginalOrderId(order.id); }}>
                           <Pencil size={16} />
                         </button>
                         <button className="btn btn-outline" style={{ padding: '0.4rem', color: 'var(--color-success)' }} title={t('markPickedUp')} onClick={() => { 
@@ -472,8 +474,18 @@ export default function OrdersTab() {
                       </div>
                     )}
                     {order.status === 'Cancelled' && (
-                       <button className="btn btn-outline" style={{ padding: '0.4rem', color: 'var(--color-danger)' }} title={t('markReturned')} onClick={() => returnOrder(order.id)}>
-                         <RefreshCw size={16} />
+                       <div style={{ display: 'flex', gap: '0.5rem' }}>
+                         <button className="btn btn-outline" style={{ padding: '0.4rem', color: 'var(--color-danger)' }} title={t('markReturned')} onClick={() => returnOrder(order.id)}>
+                           <RefreshCw size={16} />
+                         </button>
+                         <button className="btn btn-outline" style={{ padding: '0.4rem', color: 'var(--color-primary)' }} title={language === 'ar' ? 'إعادة للمخزن' : 'Revert to Inventory'} onClick={() => revertOrderToInventory(order.id)}>
+                           <RotateCcw size={16} />
+                         </button>
+                       </div>
+                    )}
+                    {order.status === 'Returned' && (
+                       <button className="btn btn-outline" style={{ padding: '0.4rem', color: 'var(--color-primary)' }} title={language === 'ar' ? 'إعادة للمخزن' : 'Revert to Inventory'} onClick={() => revertOrderToInventory(order.id)}>
+                         <RotateCcw size={16} />
                        </button>
                     )}
                   </td>
@@ -650,6 +662,16 @@ export default function OrdersTab() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               <div className="form-group">
+                <label className="label" style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '0.4rem', display: 'block' }}>{language === 'ar' ? 'رقم الطلب' : 'Order ID'}</label>
+                <input 
+                  type="text" 
+                  className="input-field" 
+                  value={editingOrder.id} 
+                  onChange={e => setEditingOrder({...editingOrder, id: e.target.value})}
+                />
+              </div>
+
+              <div className="form-group">
                 <label className="label" style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '0.4rem', display: 'block' }}>{t('description')}</label>
                 <textarea 
                   className="input-field" 
@@ -685,12 +707,26 @@ export default function OrdersTab() {
                 </div>
               </div>
 
+              <div className="form-group">
+                <label className="label" style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '0.4rem', display: 'block' }}>{language === 'ar' ? 'المنفذ' : 'Outlet'}</label>
+                <select 
+                  className="input-field" 
+                  value={editingOrder.outlet} 
+                  onChange={e => setEditingOrder({...editingOrder, outlet: e.target.value})}
+                >
+                  <option value="Banha 1">{t('banha1')}</option>
+                  <option value="Banha 2">{t('banha2')}</option>
+                  <option value="Banha 3">{t('banha3')}</option>
+                </select>
+              </div>
+
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
                 <button 
                   className="btn btn-primary" 
                   style={{ flex: 1 }}
                   onClick={async () => {
-                    const res = await updateOrder(editingOrder.id, {
+                    const res = await updateOrder(originalOrderId, {
+                      newId: editingOrder.id,
                       description: editingOrder.description,
                       totalValue: parseFloat(editingOrder.totalValue),
                       category: editingOrder.category,
@@ -698,8 +734,10 @@ export default function OrdersTab() {
                       size: editingOrder.size,
                       paymentMethod: editingOrder.paymentMethod
                     });
-                    if (res.success) setEditingOrder(null);
-                    else alert("Error: " + res.error);
+                    if (res.success) {
+                      setEditingOrder(null);
+                      setOriginalOrderId(null);
+                    } else alert("Error: " + res.error);
                   }}
                 >
                   {language === 'ar' ? 'حفظ' : 'Save'}

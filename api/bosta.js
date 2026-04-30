@@ -106,10 +106,11 @@ export default async function handler(req, res) {
       }
 
       if (action === 'UPDATE_INFO') {
-        const { description, totalValue, category, outlet, size, paymentMethod, orderCost } = req.body;
+        const { newId, description, totalValue, category, outlet, size, paymentMethod, orderCost } = req.body;
         const updated = await prisma.bostaOrder.update({
           where: { id },
           data: {
+            id: newId,
             description,
             totalValue: totalValue !== undefined ? parseFloat(totalValue) : undefined,
             category,
@@ -119,7 +120,28 @@ export default async function handler(req, res) {
             orderCost: orderCost !== undefined ? parseFloat(orderCost) : undefined
           }
         });
+
+        // Also update any linked CallLogs if ID changed
+        if (newId && newId !== id) {
+          await prisma.callLog.updateMany({
+            where: { orderId: id, orderSource: 'bosta' },
+            data: { orderId: newId }
+          });
+        }
+
         return res.status(200).json(updated);
+      }
+
+      if (action === 'REVERT_TO_INVENTORY') {
+        const order = await prisma.bostaOrder.update({
+          where: { id },
+          data: { 
+            status: 'Inventory',
+            returnedAt: null,
+            cancellationReason: null 
+          }
+        });
+        return res.status(200).json(order);
       }
 
       return res.status(400).json({ error: 'Invalid action' });

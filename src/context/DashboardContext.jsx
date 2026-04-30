@@ -226,6 +226,25 @@ export const DashboardProvider = ({ children }) => {
     }
   };
 
+  const revertOrderToInventory = async (orderId) => {
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: orderId, action: 'REVERT_TO_INVENTORY' })
+      });
+      if (res.ok) {
+        await fetchData();
+        logUserAction('Revert Order to Inventory', { id: orderId });
+        return { success: true };
+      }
+      return { success: false, error: await res.text() };
+    } catch (err) {
+      console.error(err);
+      return { success: false, error: err.message };
+    }
+  };
+
   // Returns daily storage rate based on package size (Jumia only)
   const getJumiaDailyRate = (order) => {
     const size = (order.size || 'M').toUpperCase();
@@ -325,6 +344,25 @@ export const DashboardProvider = ({ children }) => {
       if (res.ok) {
         await fetchData();
         logUserAction('Delete Bosta Order', { id: orderId, reason });
+        return { success: true };
+      }
+      return { success: false, error: await res.text() };
+    } catch (err) {
+      console.error(err);
+      return { success: false, error: err.message };
+    }
+  };
+
+  const revertBostaOrderToInventory = async (orderId) => {
+    try {
+      const res = await fetch('/api/bosta', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: orderId, action: 'REVERT_TO_INVENTORY' })
+      });
+      if (res.ok) {
+        await fetchData();
+        logUserAction('Revert Bosta Order to Inventory', { id: orderId });
         return { success: true };
       }
       return { success: false, error: await res.text() };
@@ -556,7 +594,9 @@ export const DashboardProvider = ({ children }) => {
       cancelOrder,
       deleteOrder,
       cancelBostaOrder,
-      deleteBostaOrder
+      deleteBostaOrder,
+      revertOrderToInventory,
+      revertBostaOrderToInventory
     }}>
       {children}
     </DashboardContext.Provider>

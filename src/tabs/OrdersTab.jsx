@@ -45,6 +45,7 @@ export default function OrdersTab() {
   const [deleteReason, setDeleteReason] = useState('');
   const [targetOrder, setTargetOrder] = useState(null);
   const [originalOrderId, setOriginalOrderId] = useState(null);
+  const [pendingOrderId, setPendingOrderId] = useState(null);
 
   // Customer Returns state
   const [showReturnModal, setShowReturnModal] = useState(false);
@@ -391,6 +392,7 @@ export default function OrdersTab() {
                 <th>{t('customer')}</th>
                 <th>{t('description')}</th>
                 <th>{t('category')}</th>
+                <th>{language === 'ar' ? 'المنفذ' : 'Outlet'}</th>
                 <th>{t('status')}</th>
                 <th>{t('daysInInv')}</th>
                 <th>{t('actions')}</th>
@@ -418,6 +420,9 @@ export default function OrdersTab() {
                        {order.category === 'Electronics' && <Gift size={14} color="#6366f1" />}
                        <span style={{ fontSize: '0.85rem' }}>{order.category}</span>
                     </div>
+                  </td>
+                  <td>
+                    <span className="badge badge-neutral" style={{ fontSize: '0.8rem' }}>{getOutletLabel(order.outlet)}</span>
                   </td>
                   <td>
                     <span className={`badge ${order.status === 'Inventory' ? 'badge-warning' : order.status === 'Picked Up' ? 'badge-success' : order.status === 'Cancelled' ? 'badge-warning' : 'badge-danger'}`}>

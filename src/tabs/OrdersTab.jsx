@@ -265,7 +265,7 @@ export default function OrdersTab() {
           </select>
           
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flex: '1 1 300px' }}>
-            <div style={{ position: 'relative', flex 1 }}>
+            <div style={{ position: 'relative', flex: 1 }}>
               <input 
                 type="date" 
                 className="input-field" 

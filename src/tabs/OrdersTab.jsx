@@ -17,6 +17,7 @@ export default function OrdersTab() {
     customerReturns, 
     receiveCustomerReturn, 
     markReturnedToJumia,
+    revertCustomerReturn,
     updateOrder,
     cancelOrder,
     deleteOrder,
@@ -583,6 +584,16 @@ export default function OrdersTab() {
                         onClick={() => markReturnedToJumia(ret.id)}
                       >
                         <Check size={14} />
+                      </button>
+                    )}
+                    {ret.status === 'Returned to Jumia' && (
+                      <button 
+                        className="btn btn-outline" 
+                        style={{ padding: '0.4rem', color: 'var(--color-primary)' }} 
+                        title={language === 'ar' ? 'إعادة للمخزن' : 'Revert to Inventory'}
+                        onClick={() => revertCustomerReturn(ret.id)}
+                      >
+                        <RotateCcw size={14} />
                       </button>
                     )}
                   </td>

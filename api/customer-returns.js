@@ -28,10 +28,30 @@ export default async function handler(req, res) {
       return res.status(201).json(newReturn);
     }
 
-    // PATCH: Mark a customer return as "Returned to Jumia"
+    // PATCH: Update status (Mark as Returned to Jumia or REVERT)
     if (req.method === 'PATCH') {
-      const { id } = req.body;
+      const { id, action } = req.body;
 
+      if (action === 'REVERT') {
+        const updated = await prisma.$transaction(async (tx) => {
+          const ret = await tx.customerReturn.update({
+            where: { id },
+            data: { status: 'At Station', returnedAt: null }
+          });
+
+          if (ret.orderId) {
+            // Also move the main order back to inventory if it exists
+            await tx.order.updateMany({
+              where: { id: ret.orderId },
+              data: { status: 'Inventory', returnedAt: null }
+            });
+          }
+          return ret;
+        });
+        return res.status(200).json(updated);
+      }
+
+      // Default: Mark as Returned to Jumia
       const updated = await prisma.customerReturn.update({
         where: { id },
         data: { status: 'Returned to Jumia', returnedAt: new Date() }

@@ -483,6 +483,22 @@ export const DashboardProvider = ({ children }) => {
     }
   };
 
+  const revertCustomerReturn = async (returnId) => {
+    try {
+      const res = await fetch('/api/customer-returns', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: returnId, action: 'REVERT' })
+      });
+      if (res.ok) {
+        await fetchData();
+        logUserAction('Revert Customer Return', { id: returnId });
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   // ── Calls Log ────────────────────────────────────────────────────────
   const createOrGetCallLog = async (orderId, orderSource, customerPhone) => {
     try {
@@ -584,6 +600,7 @@ export const DashboardProvider = ({ children }) => {
       logBasataService,
       receiveCustomerReturn,
       markReturnedToJumia,
+      revertCustomerReturn,
       createOrGetCallLog,
       takeCallOwnership,
       resolveCall,

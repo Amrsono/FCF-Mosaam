@@ -5,7 +5,20 @@ import ExportActions from '../components/ExportActions';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function OrdersTab() {
-  const { orders, customers, receiveOrder, calculatePenalty, calculateStorageFee, markOrderPickedUp, returnOrder, updateCustomer, customerReturns, receiveCustomerReturn, markReturnedToJumia, updateOrder } = useDashboard();
+  const { 
+    orders, 
+    customers, 
+    receiveOrder, 
+    calculatePenalty, 
+    calculateStorageFee, 
+    markOrderPickedUp, 
+    returnOrder, 
+    updateCustomer, 
+    customerReturns, 
+    receiveCustomerReturn, 
+    markReturnedToJumia,
+    updateOrder
+  } = useDashboard();
   const { t, language } = useLanguage();
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -26,13 +39,25 @@ export default function OrdersTab() {
   const [showReturnModal, setShowReturnModal] = useState(false);
   const [returnFilterStatus, setReturnFilterStatus] = useState('At Station');
   const [newReturn, setNewReturn] = useState({
-    orderId: '', customerPhone: '', customerName: '', description: '', reason: '', outlet: 'Banha 1'
+    orderId: '',
+    customerPhone: '',
+    customerName: '',
+    description: '',
+    reason: '',
+    outlet: 'Banha 1'
   });
 
   // Form for new order simulation
   const [newOrder, setNewOrder] = useState({
-    id: '', customerPhone: '', description: '', totalValue: '', category: 'Electronics', customerName: '',
-    outlet: 'Banha 1', size: 'M', paymentMethod: 'Cash'
+    id: '',
+    customerPhone: '',
+    description: '',
+    totalValue: '',
+    category: 'Electronics',
+    customerName: '',
+    outlet: 'Banha 1',
+    size: 'M',
+    paymentMethod: 'Cash'
   });
 
   const exportHeaders = [
@@ -50,7 +75,6 @@ export default function OrdersTab() {
     { label: t('daysInInv'), accessor: 'daysParked' }
   ];
 
-  // Derived Data
   const getOutletLabel = (val) => {
     if (val === 'Banha 1' || val === 'وبور الثلج' || val === 'وبور التلج') return t('banha1');
     if (val === 'Banha 2' || val === 'تجارة' || val === 'تجاره') return t('banha2');
@@ -65,7 +89,7 @@ export default function OrdersTab() {
     return val;
   };
 
-  // Stage 1: Filter by everything EXCEPT status
+  // Base filtering logic (excluding status for summary)
   const baseFilteredOrders = useMemo(() => {
     return orders.map(order => {
       const cust = customers.find(c => c.phone === order.customerPhone);
@@ -98,41 +122,65 @@ export default function OrdersTab() {
           if (orderDate > end) matchesDate = false;
         }
       }
+      
       return matchesSearch && matchesCategory && matchesTier && matchesOutlet && matchesDate;
     });
   }, [orders, customers, searchTerm, filterCategory, filterTier, filterOutlet, filterDateStart, filterDateEnd, calculatePenalty, language]);
 
-  // Stage 2: Final list for display
+  // Display filtering logic (including status)
   const orderList = useMemo(() => {
     return baseFilteredOrders
       .filter(order => filterStatus === 'All' || order.status === filterStatus)
       .sort((a, b) => new Date(b.receivedAt) - new Date(a.receivedAt));
   }, [baseFilteredOrders, filterStatus]);
 
-  // Summary Data
+  // Summary by Outlet (calculated from base filtered data)
   const summaryByOutlet = useMemo(() => {
     const outlets = ['Banha 1', 'Banha 2', 'Banha 3'];
     return outlets.map(outletName => {
       const outletOrders = baseFilteredOrders.filter(o => normalizeOutlet(o.outlet) === outletName);
+      
       const received = outletOrders.length;
       const delivered = outletOrders.filter(o => o.status === 'Picked Up').length;
       const returned = outletOrders.filter(o => o.status === 'Returned').length;
       const available = outletOrders.filter(o => o.status === 'Inventory').length;
+      
       const totalMoney = outletOrders.filter(o => o.status !== 'Returned').reduce((sum, o) => sum + o.totalValue, 0);
       const paid = outletOrders.filter(o => o.status === 'Picked Up').reduce((sum, o) => sum + o.totalValue, 0);
+      
       const jumiaPay = outletOrders.filter(o => o.status !== 'Returned' && o.paymentMethod?.toLowerCase().includes('jumia')).reduce((sum, o) => sum + o.totalValue, 0);
       const creditCard = outletOrders.filter(o => o.status !== 'Returned' && (o.paymentMethod?.toLowerCase().includes('card') || o.paymentMethod?.toLowerCase().includes('visa'))).reduce((sum, o) => sum + o.totalValue, 0);
+
       const sCount = outletOrders.filter(o => o.size === 'S').length;
       const mCount = outletOrders.filter(o => o.size === 'M').length;
       const lCount = outletOrders.filter(o => o.size === 'L').length;
+
       const storageFees = outletOrders.filter(o => o.status !== 'Returned').reduce((sum, o) => sum + calculateStorageFee(o), 0);
-      return { outlet: outletName, received, delivered, returned, available, totalMoney, paid, jumiaPay, creditCard, storageFees, totalIncome: storageFees, sCount, mCount, lCount };
+      const totalIncome = storageFees;
+
+      return {
+        outlet: outletName,
+        received,
+        delivered,
+        returned,
+        available,
+        totalMoney,
+        paid,
+        jumiaPay,
+        creditCard,
+        storageFees,
+        totalIncome,
+        sCount,
+        mCount,
+        lCount
+      };
     });
   }, [baseFilteredOrders, calculateStorageFee]);
 
   const handleSimulateReceive = (e) => {
     e.preventDefault();
     if (!newOrder.id || !newOrder.customerPhone) return;
+    
     receiveOrder({
       id: newOrder.id,
       customerPhone: newOrder.customerPhone,
@@ -169,6 +217,7 @@ export default function OrdersTab() {
         {/* Header Actions */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
           
+          {/* Search & Filters */}
           <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', flex: '1 1 300px' }}>
             <div style={{ position: 'relative', width: '100%', maxWidth: '250px', flex: '1 1 200px' }}>
                <Search size={18} style={{ position: 'absolute', [language === 'ar' ? 'right' : 'left']: '10px', top: '10px', color: 'var(--text-muted)' }} />
@@ -196,6 +245,22 @@ export default function OrdersTab() {
                <option value="Banha 3">{t('banha3')}</option>
             </select>
 
+            <select className="input-field" style={{ flex: '1 1 120px' }} value={filterCategory} onChange={e => setFilterCategory(e.target.value)}>
+               <option value="All">{language === 'ar' ? 'جميع الفئات' : 'All Categories'}</option>
+               <option value="Electronics">{language === 'ar' ? 'إلكترونيات' : 'Electronics'}</option>
+               <option value="Apparel">{language === 'ar' ? 'ملابس' : 'Apparel'}</option>
+               <option value="Home">{language === 'ar' ? 'منزل' : 'Home'}</option>
+               <option value="Groceries">{language === 'ar' ? 'بقاليات' : 'Groceries'}</option>
+            </select>
+
+            <select className="input-field" style={{ flex: '1 1 120px' }} value={filterTier} onChange={e => setFilterTier(e.target.value)}>
+               <option value="All">{language === 'ar' ? 'جميع المستويات' : 'All Tiers'}</option>
+               <option value="New">{t('newCustomer')}</option>
+               <option value="Bronze">Bronze</option>
+               <option value="Silver">Silver</option>
+               <option value="Gold">Gold</option>
+            </select>
+            
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flex: '1 1 300px' }}>
               <div style={{ position: 'relative', flex: 1 }}>
                 <input 
@@ -204,6 +269,7 @@ export default function OrdersTab() {
                   style={{ fontSize: '0.8rem' }}
                   value={filterDateStart}
                   onChange={e => setFilterDateStart(e.target.value)}
+                  title={language === 'ar' ? 'من تاريخ' : 'From Date'}
                 />
               </div>
               <span style={{ color: 'var(--text-muted)' }}>-</span>
@@ -214,14 +280,17 @@ export default function OrdersTab() {
                   style={{ fontSize: '0.8rem' }}
                   value={filterDateEnd}
                   onChange={e => setFilterDateEnd(e.target.value)}
+                  title={language === 'ar' ? 'إلى تاريخ' : 'To Date'}
                 />
               </div>
-              {(filterDateStart || filterDateEnd || filterOutlet !== 'All' || searchTerm || filterStatus !== 'Inventory') && (
+              {(filterDateStart || filterDateEnd || filterOutlet !== 'All' || searchTerm || filterStatus !== 'Inventory' || filterCategory !== 'All' || filterTier !== 'All') && (
                 <button 
                   onClick={() => {
                     setSearchTerm('');
                     setFilterStatus('Inventory');
                     setFilterOutlet('All');
+                    setFilterCategory('All');
+                    setFilterTier('All');
                     setFilterDateStart('');
                     setFilterDateEnd('');
                   }}
@@ -234,15 +303,23 @@ export default function OrdersTab() {
             </div>
           </div>
 
-          <button className="btn btn-primary" onClick={() => setShowSimulateModal(true)}>
-            <Plus size={18} /> {t('receiveNewOrder')}
-          </button>
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <ExportActions 
+              data={orderList} 
+              headers={exportHeaders} 
+              filename="Inventory_Export" 
+              title={t('inventory')} 
+            />
+            <button className="btn btn-primary" onClick={() => setShowSimulateModal(true)}>
+              <Plus size={18} /> {t('receiveNewOrder')}
+            </button>
+          </div>
         </div>
 
         {/* Inventory Summary Table */}
-        <div className="glass-panel" style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}>
-          <h4 style={{ color: 'var(--color-primary)', marginBottom: '1rem', fontSize: '1rem', fontWeight: 700 }}>
-            {language === 'ar' ? 'ملخص مخزون الطلبات' : 'Orders Inventory Summary'}
+        <div className="glass-panel" style={{ background: 'rgba(255,255,255,0.02)', padding: '1.25rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <h4 style={{ color: 'var(--color-primary)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1rem', fontWeight: 700 }}>
+             <Filter size={18} /> {language === 'ar' ? 'ملخص مخزون الطلبات' : 'Orders Inventory Summary'}
           </h4>
           <div className="table-container">
             <table className="data-table" style={{ fontSize: '0.85rem' }}>
@@ -276,7 +353,7 @@ export default function OrdersTab() {
           </div>
         </div>
 
-        {/* Data Table */}
+        {/* Inventory Table */}
         <div className="table-container" style={{ flex: 1 }}>
           <table className="data-table">
             <thead>
@@ -284,24 +361,33 @@ export default function OrdersTab() {
                 <th>{t('orderId')}</th>
                 <th>{t('customer')}</th>
                 <th>{t('description')}</th>
+                <th>{t('category')}</th>
                 <th>{t('status')}</th>
+                <th>{t('daysInInv')}</th>
                 <th>{t('actions')}</th>
               </tr>
             </thead>
             <tbody>
               {orderList.length > 0 ? orderList.map(order => (
-                <tr key={order.id}>
+                <tr key={order.id} style={{ opacity: order.status === 'Returned' ? 0.6 : 1 }}>
                   <td style={{ fontWeight: 600 }}>{order.id}</td>
                   <td>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span>{order.customerName}</span>
+                      <span style={{ fontWeight: 500 }}>{order.customerName}</span>
                       <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{order.customerPhone}</span>
+                      <span className="badge badge-neutral" style={{ fontSize: '0.65rem', padding: '1px 5px', width: 'fit-content', marginTop: '2px' }}>{order.tier}</span>
                     </div>
                   </td>
                   <td>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span>{order.description}</span>
+                      <span style={{ fontSize: '0.9rem' }}>{order.description}</span>
                       <span style={{ fontSize: '0.85rem', color: 'var(--color-primary)', fontWeight: 700 }}>{order.totalValue} EGP</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                       {order.category === 'Electronics' && <Gift size={14} color="#6366f1" />}
+                       <span style={{ fontSize: '0.85rem' }}>{order.category}</span>
                     </div>
                   </td>
                   <td>
@@ -310,15 +396,45 @@ export default function OrdersTab() {
                     </span>
                   </td>
                   <td>
+                    {order.status === 'Inventory' ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div style={{ 
+                          width: '8px', height: '8px', borderRadius: '50%', 
+                          background: order.daysParked >= 4 ? 'var(--color-danger)' : order.daysParked >= 2 ? 'var(--color-warning)' : 'var(--color-success)'
+                        }}></div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                          <span style={{ fontWeight: 600 }}>{order.daysParked} {t('days')}</span>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--color-primary)' }}>{order.penalty} EGP {t('penalty')}</span>
+                        </div>
+                        {order.daysParked >= 4 && (
+                          <div className="badge badge-danger" style={{ fontSize: '0.6rem', padding: '2px 6px' }}>
+                            {language === 'ar' ? 'يجب الارجاع' : 'RETURN REQ'}
+                          </div>
+                        )}
+                      </div>
+                    ) : <span style={{ color: 'var(--text-muted)' }}>-</span>}
+                  </td>
+                  <td>
                     {order.status === 'Inventory' && (
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button className="btn btn-outline" style={{ padding: '0.4rem', color: 'var(--color-primary)' }} onClick={() => setEditingOrder(order)}>
+                        <button className="btn btn-outline" style={{ padding: '0.4rem', color: 'var(--color-primary)' }} title={language === 'ar' ? 'تعديل' : 'Edit'} onClick={() => setEditingOrder(order)}>
                           <Pencil size={16} />
                         </button>
-                        <button className="btn btn-outline" style={{ padding: '0.4rem', color: 'var(--color-success)' }} onClick={() => { setPendingOrderId(order.id); setShowCrossSellModal(true); }}>
+                        <button className="btn btn-outline" style={{ padding: '0.4rem', color: 'var(--color-success)' }} title={t('markPickedUp')} onClick={() => { 
+                          const cust = customers.find(c => c.phone === order.customerPhone);
+                          setCustomerUpdateData({
+                            phone: cust?.phone || order.customerPhone,
+                            name: cust?.name || '',
+                            email: cust?.email || '',
+                            address: cust?.address || ''
+                          });
+                          setNewOrder({...newOrder, paymentMethod: order.paymentMethod});
+                          setPendingOrderId(order.id); 
+                          setShowCrossSellModal(true); 
+                        }}>
                           <UserCheck size={16} />
                         </button>
-                        <button className="btn btn-outline" style={{ padding: '0.4rem', color: 'var(--color-danger)' }} onClick={() => returnOrder(order.id)}>
+                        <button className="btn btn-outline" style={{ padding: '0.4rem', color: 'var(--color-danger)' }} title={t('markReturned')} onClick={() => returnOrder(order.id)}>
                           <RefreshCw size={16} />
                         </button>
                       </div>
@@ -327,7 +443,7 @@ export default function OrdersTab() {
                 </tr>
               )) : (
                 <tr>
-                  <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>{t('noData')}</td>
+                  <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>{t('noData')}</td>
                 </tr>
               )}
             </tbody>
@@ -336,60 +452,143 @@ export default function OrdersTab() {
       </div>
 
       {/* ═══════════════════ Customer Returns Section ═══════════════════ */}
-      <div className="glass-panel" style={{ background: 'var(--bg-overlay)', borderTop: '3px solid #a855f7', marginTop: '1.5rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h4 style={{ color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <RotateCcw size={20} color="#a855f7" /> {t('customerReturns')}
-          </h4>
-          <button className="btn btn-outline" style={{ color: '#a855f7' }} onClick={() => setShowReturnModal(true)}>
-            <PackageX size={16} /> {t('receiveCustomerReturn')}
-          </button>
+      <div className="glass-panel" style={{
+        background: 'var(--bg-overlay)',
+        border: '1px solid rgba(168,85,247,0.2)',
+        borderTop: '3px solid #a855f7',
+        marginTop: '1rem'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+          <div style={{ flex: '1 1 200px' }}>
+            <h4 style={{ color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.1rem' }}>
+              <RotateCcw size={20} color="#a855f7" /> {t('customerReturns')}
+            </h4>
+            <p style={{ color: 'var(--text-secondary)', margin: '0.3rem 0 0 0', fontSize: '0.8rem' }}>
+              {t('customerReturnsDesc')}
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <select className="input-field" style={{ fontSize: '0.85rem', padding: '0.4rem 0.8rem' }} value={returnFilterStatus} onChange={e => setReturnFilterStatus(e.target.value)}>
+              <option value="At Station">{t('atStation')}</option>
+              <option value="Returned to Jumia">{t('returnedToJumia')}</option>
+              <option value="All">{language === 'ar' ? 'الكل' : 'All'}</option>
+            </select>
+            <ExportActions
+              data={(customerReturns || []).filter(r => returnFilterStatus === 'All' || r.status === returnFilterStatus)}
+              headers={[
+                { label: t('orderId'), accessor: 'orderId' },
+                { label: t('customer'), accessor: 'customerName' },
+                { label: t('phone'), accessor: 'customerPhone' },
+                { label: t('description'), accessor: 'description' },
+                { label: t('returnReason'), accessor: 'reason' },
+                { label: t('receivedAt'), accessor: r => new Date(r.receivedAt).toLocaleString() },
+                { label: t('status'), accessor: r => r.status === 'At Station' ? t('atStation') : t('returnedToJumia') },
+                { label: language === 'ar' ? 'تاريخ الارجاع لـ J' : 'Returned to J Date', accessor: r => r.returnedAt ? new Date(r.returnedAt).toLocaleString() : '-' }
+              ]}
+              filename="Customer_Returns_Export"
+              title={t('customerReturns')}
+            />
+            <button className="btn btn-outline" style={{ color: '#a855f7', borderColor: 'rgba(168,85,247,0.4)', padding: '0.4rem 0.8rem', fontSize: '0.85rem' }} onClick={() => setShowReturnModal(true)}>
+              <PackageX size={16} /> {t('receiveCustomerReturn')}
+            </button>
+          </div>
         </div>
+
         <div className="table-container">
           <table className="data-table" style={{ fontSize: '0.85rem' }}>
             <thead>
               <tr>
                 <th>{t('orderId')}</th>
                 <th>{t('customer')}</th>
+                <th>{t('description')}</th>
+                <th>{t('returnReason')}</th>
+                <th>{t('receivedAt')}</th>
                 <th>{t('status')}</th>
                 <th>{t('actions')}</th>
               </tr>
             </thead>
             <tbody>
-              {(customerReturns || []).map(ret => (
+              {(customerReturns || []).filter(r => returnFilterStatus === 'All' || r.status === returnFilterStatus).length > 0 ? (customerReturns || []).filter(r => returnFilterStatus === 'All' || r.status === returnFilterStatus).map(ret => (
                 <tr key={ret.id}>
-                  <td style={{ fontWeight: 600 }}>{ret.orderId}</td>
-                  <td>{ret.customerName}</td>
+                  <td style={{ fontWeight: 600 }}>{ret.orderId || '-'}</td>
+                  <td>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontWeight: 500 }}>{ret.customerName}</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{ret.customerPhone}</span>
+                    </div>
+                  </td>
+                  <td>{ret.description}</td>
+                  <td><span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{ret.reason || '-'}</span></td>
+                  <td>{new Date(ret.receivedAt).toLocaleString()}</td>
                   <td>
                     <span className={`badge ${ret.status === 'At Station' ? 'badge-warning' : 'badge-success'}`}>
-                      {ret.status}
+                      {ret.status === 'At Station' ? t('atStation') : t('returnedToJumia')}
                     </span>
                   </td>
                   <td>
                     {ret.status === 'At Station' && (
-                      <button className="btn btn-outline" onClick={() => markReturnedToJumia(ret.id)}>
+                      <button 
+                        className="btn btn-outline" 
+                        style={{ padding: '0.4rem', color: 'var(--color-primary)' }} 
+                        title={t('markReturnedToJumia')}
+                        onClick={() => markReturnedToJumia(ret.id)}
+                      >
                         <Check size={14} />
                       </button>
                     )}
                   </td>
                 </tr>
-              ))}
+              )) : (
+                <tr>
+                  <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                    <PackageX size={30} style={{ margin: '0 auto 0.5rem', opacity: 0.4, display: 'block' }} />
+                    {language === 'ar' ? 'لا توجد مرتجعات عملاء.' : 'No customer returns found.'}
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Modals */}
+      {/* ═══════════════════ Modals ═══════════════════ */}
+      
+      {/* Simulation Modal */}
       {showSimulateModal && (
-        <div className="modal-overlay">
-          <div className="modal-content glass-panel" style={{ maxWidth: '400px' }}>
-            <h3 style={{ marginBottom: '1.5rem' }}>{t('receiveNewOrder')}</h3>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '1rem' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '400px', background: 'var(--bg-main)' }}>
+            <h3 style={{ marginBottom: '1.5rem', color: 'white' }}>{t('receiveNewOrder')}</h3>
             <form onSubmit={handleSimulateReceive}>
               <div className="input-group">
-                <input required className="input-field" placeholder={t('orderId')} value={newOrder.id} onChange={e => setNewOrder({...newOrder, id: e.target.value})} />
+                <label className="input-label">{t('orderId')}</label>
+                <input required className="input-field" value={newOrder.id} onChange={e => setNewOrder({...newOrder, id: e.target.value})} placeholder="e.g. ORD-9999" />
               </div>
               <div className="input-group">
-                <input required className="input-field" placeholder={t('phone')} value={newOrder.customerPhone} onChange={e => setNewOrder({...newOrder, customerPhone: e.target.value})} />
+                <label className="input-label">{t('phone')}</label>
+                <input required className="input-field" value={newOrder.customerPhone} onChange={e => setNewOrder({...newOrder, customerPhone: e.target.value})} placeholder="01..." />
+              </div>
+              <div className="input-group">
+                 <label className="input-label">{t('customer')}</label>
+                 <input className="input-field" value={newOrder.customerName} onChange={e => setNewOrder({...newOrder, customerName: e.target.value})} placeholder={t('name')} />
+              </div>
+              <div className="input-group">
+                <label className="input-label">{t('description')}</label>
+                <input required className="input-field" value={newOrder.description} onChange={e => setNewOrder({...newOrder, description: e.target.value})} placeholder="Items..." />
+              </div>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <div className="input-group" style={{ flex: 1 }}>
+                  <label className="input-label">{language === 'ar' ? 'اجمالي الفلوس' : 'Total Value'}</label>
+                  <input required type="number" className="input-field" value={newOrder.totalValue} onChange={e => setNewOrder({...newOrder, totalValue: e.target.value})} placeholder="0.00" />
+                </div>
+                <div className="input-group" style={{ flex: 1 }}>
+                  <label className="input-label">{t('category')}</label>
+                  <select className="input-field" value={newOrder.category} onChange={e => setNewOrder({...newOrder, category: e.target.value})}>
+                     <option value="Electronics">Electronics</option>
+                     <option value="Apparel">Apparel</option>
+                     <option value="Home">Home</option>
+                     <option value="Groceries">Groceries</option>
+                  </select>
+                </div>
               </div>
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
                 <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>{t('confirm')}</button>
@@ -400,60 +599,92 @@ export default function OrdersTab() {
         </div>
       )}
 
+      {/* Edit Order Modal */}
       {editingOrder && (
-        <div className="modal-overlay">
-          <div className="modal-content glass-panel" style={{ maxWidth: '500px' }}>
-            <h3 style={{ marginBottom: '1.5rem' }}>{t('editOrder')}</h3>
-            <div className="form-group">
-              <label className="label">{t('description')}</label>
-              <textarea 
-                className="input-field" 
-                value={editingOrder.description} 
-                onChange={e => setEditingOrder({...editingOrder, description: e.target.value})}
-                rows={3}
-              />
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '500px', background: 'var(--bg-panel)', border: '1px solid var(--border-color)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
+              <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-primary)' }}>
+                <Pencil size={20} color="var(--color-primary)" />
+                {language === 'ar' ? 'تعديل بيانات الطلب' : 'Edit Order Details'}
+              </h3>
+              <button className="btn-outline" style={{ border: 'none', background: 'transparent', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--text-secondary)' }} onClick={() => setEditingOrder(null)}>&times;</button>
             </div>
-            <div className="form-group">
-              <label className="label">{t('value')} (EGP)</label>
-              <input 
-                type="number" 
-                className="input-field" 
-                value={editingOrder.totalValue} 
-                onChange={e => setEditingOrder({...editingOrder, totalValue: e.target.value})}
-              />
-            </div>
-            <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
-              <button 
-                className="btn btn-primary" 
-                style={{ flex: 1 }}
-                onClick={async () => {
-                  const res = await updateOrder(editingOrder.id, {
-                    description: editingOrder.description,
-                    totalValue: editingOrder.totalValue,
-                    category: editingOrder.category,
-                    outlet: editingOrder.outlet,
-                    size: editingOrder.size,
-                    paymentMethod: editingOrder.paymentMethod
-                  });
-                  if (res.success) setEditingOrder(null);
-                }}
-              >
-                {t('confirm')}
-              </button>
-              <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => setEditingOrder(null)}>
-                {t('cancel')}
-              </button>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div className="form-group">
+                <label className="label" style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '0.4rem', display: 'block' }}>{t('description')}</label>
+                <textarea 
+                  className="input-field" 
+                  value={editingOrder.description} 
+                  onChange={e => setEditingOrder({...editingOrder, description: e.target.value})}
+                  rows={3}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-group">
+                  <label className="label" style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '0.4rem', display: 'block' }}>{t('value')} (EGP)</label>
+                  <input 
+                    type="number" 
+                    className="input-field" 
+                    value={editingOrder.totalValue} 
+                    onChange={e => setEditingOrder({...editingOrder, totalValue: e.target.value})}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="label" style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '0.4rem', display: 'block' }}>{t('category')}</label>
+                  <select 
+                    className="input-field" 
+                    value={editingOrder.category} 
+                    onChange={e => setEditingOrder({...editingOrder, category: e.target.value})}
+                  >
+                    <option value="Electronics">Electronics</option>
+                    <option value="Apparel">Apparel</option>
+                    <option value="Home">Home</option>
+                    <option value="Groceries">Groceries</option>
+                    <option value="General">General</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                <button 
+                  className="btn btn-primary" 
+                  style={{ flex: 1 }}
+                  onClick={async () => {
+                    const res = await updateOrder(editingOrder.id, {
+                      description: editingOrder.description,
+                      totalValue: parseFloat(editingOrder.totalValue),
+                      category: editingOrder.category,
+                      outlet: editingOrder.outlet,
+                      size: editingOrder.size,
+                      paymentMethod: editingOrder.paymentMethod
+                    });
+                    if (res.success) setEditingOrder(null);
+                    else alert("Error: " + res.error);
+                  }}
+                >
+                  {language === 'ar' ? 'حفظ' : 'Save'}
+                </button>
+                <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => setEditingOrder(null)}>
+                  {t('cancel')}
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
 
+      {/* Cross-Sell Modal */}
       {showCrossSellModal && (
-        <div className="modal-overlay">
-          <div className="modal-content glass-panel" style={{ maxWidth: '450px', textAlign: 'center' }}>
-            <CreditCard size={32} color="var(--color-primary)" style={{ marginBottom: '1rem' }} />
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '1rem' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '450px', background: 'var(--bg-main)', textAlign: 'center', border: '1px solid var(--color-primary)' }}>
+            <div style={{ width: '64px', height: '64px', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+               <CreditCard size={32} color="var(--color-primary)" />
+            </div>
             <h3>{language === 'ar' ? 'عرض كارت ميزة' : 'Meeza Card Offer'}</h3>
-            <p style={{ margin: '1rem 0' }}>{language === 'ar' ? 'هل قمت بعرض كارت ميزة على العميل؟' : 'Did you offer Meeza Card to the customer?'}</p>
+            <p style={{ margin: '1rem 0', color: 'var(--text-secondary)' }}>{language === 'ar' ? 'هل قمت بعرض كارت ميزة على العميل؟' : 'Did you offer Meeza Card to the customer?'}</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                <button className="btn btn-primary" onClick={() => { markOrderPickedUp(pendingOrderId); setShowCrossSellModal(false); }}>
                  {language === 'ar' ? 'نعم (تأكيد)' : 'Yes (Confirm)'}
@@ -466,17 +697,24 @@ export default function OrdersTab() {
         </div>
       )}
 
+      {/* Receive Return Modal */}
       {showReturnModal && (
-        <div className="modal-overlay">
-          <div className="modal-content glass-panel" style={{ maxWidth: '440px' }}>
-            <h3>{t('receiveCustomerReturn')}</h3>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '1rem' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '440px', background: 'var(--bg-main)' }}>
+            <h3 style={{ marginBottom: '1.5rem' }}>{t('receiveCustomerReturn')}</h3>
             <form onSubmit={async (e) => {
               e.preventDefault();
               const res = await receiveCustomerReturn(newReturn);
               if (res.success) setShowReturnModal(false);
             }}>
-              <input required className="input-field" placeholder={t('phone')} value={newReturn.customerPhone} onChange={e => setNewReturn({...newReturn, customerPhone: e.target.value})} />
-              <textarea className="input-field" placeholder={t('description')} value={newReturn.description} onChange={e => setNewReturn({...newReturn, description: e.target.value})} />
+              <div className="input-group">
+                <label className="input-label">{t('phone')}</label>
+                <input required className="input-field" value={newReturn.customerPhone} onChange={e => setNewReturn({...newReturn, customerPhone: e.target.value})} />
+              </div>
+              <div className="input-group" style={{ marginTop: '1rem' }}>
+                <label className="input-label">{t('description')}</label>
+                <textarea className="input-field" required value={newReturn.description} onChange={e => setNewReturn({...newReturn, description: e.target.value})} rows={3} />
+              </div>
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
                 <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>{t('confirm')}</button>
                 <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowReturnModal(false)}>{t('cancel')}</button>

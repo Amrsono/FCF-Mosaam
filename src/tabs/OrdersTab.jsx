@@ -348,6 +348,17 @@ export default function OrdersTab() {
                     <td style={{ fontWeight: 600 }}>{row.storageFees.toLocaleString()}</td>
                   </tr>
                 ))}
+                {/* Grand Total Row */}
+                <tr style={{ background: 'rgba(var(--hue-primary), 80%, 65%, 0.1)', borderTop: '2px solid var(--color-primary)' }}>
+                  <td style={{ fontWeight: 800, color: 'var(--color-primary)' }}>{language === 'ar' ? 'الإجمالي' : 'GRAND TOTAL'}</td>
+                  <td style={{ fontWeight: 700 }}>{summaryByOutlet.reduce((sum, r) => sum + r.received, 0)}</td>
+                  <td style={{ fontWeight: 700, color: 'var(--color-success)' }}>{summaryByOutlet.reduce((sum, r) => sum + r.delivered, 0)}</td>
+                  <td style={{ fontWeight: 700, color: 'var(--color-danger)' }}>{summaryByOutlet.reduce((sum, r) => sum + r.returned, 0)}</td>
+                  <td style={{ fontWeight: 800 }}>{summaryByOutlet.reduce((sum, r) => sum + r.available, 0)}</td>
+                  <td style={{ fontWeight: 700 }}>{summaryByOutlet.reduce((sum, r) => sum + r.totalMoney, 0).toLocaleString()}</td>
+                  <td style={{ fontWeight: 700 }}>{summaryByOutlet.reduce((sum, r) => sum + r.paid, 0).toLocaleString()}</td>
+                  <td style={{ fontWeight: 800, color: 'var(--color-primary)' }}>{summaryByOutlet.reduce((sum, r) => sum + r.storageFees, 0).toLocaleString()}</td>
+                </tr>
               </tbody>
             </table>
           </div>

@@ -462,22 +462,22 @@ export default function BostaTab() {
                        </button>
                        <button
                          className="btn btn-outline"
-                         style={{ padding: '0.4rem', color: 'var(--color-primary)' }}
-                         title={language === 'ar' ? 'إعادة للمخزن' : 'Revert to Inventory'}
+                         style={{ padding: '0.4rem 0.8rem', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
                          onClick={() => revertBostaOrderToInventory(order.id)}
                        >
                          <RotateCcw size={16} />
+                         <span style={{ fontSize: '0.75rem' }}>{language === 'ar' ? 'إعادة للمخزن' : 'Revert'}</span>
                        </button>
                      </div>
                   )}
                   {order.status === 'Returned' && (
                     <button
                       className="btn btn-outline"
-                      style={{ padding: '0.4rem', color: 'var(--color-primary)' }}
-                      title={language === 'ar' ? 'إعادة للمخزن' : 'Revert to Inventory'}
+                      style={{ padding: '0.4rem 0.8rem', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
                       onClick={() => revertBostaOrderToInventory(order.id)}
                     >
                       <RotateCcw size={16} />
+                      <span style={{ fontSize: '0.75rem' }}>{language === 'ar' ? 'إعادة للمخزن' : 'Revert'}</span>
                     </button>
                   )}
                 </td>

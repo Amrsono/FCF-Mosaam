@@ -479,14 +479,16 @@ export default function OrdersTab() {
                          <button className="btn btn-outline" style={{ padding: '0.4rem', color: 'var(--color-danger)' }} title={t('markReturned')} onClick={() => returnOrder(order.id)}>
                            <RefreshCw size={16} />
                          </button>
-                         <button className="btn btn-outline" style={{ padding: '0.4rem', color: 'var(--color-primary)' }} title={language === 'ar' ? 'إعادة للمخزن' : 'Revert to Inventory'} onClick={() => revertOrderToInventory(order.id)}>
+                         <button className="btn btn-outline" style={{ padding: '0.4rem 0.8rem', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }} onClick={() => revertOrderToInventory(order.id)}>
                            <RotateCcw size={16} />
+                           <span style={{ fontSize: '0.75rem' }}>{language === 'ar' ? 'إعادة للمخزن' : 'Revert'}</span>
                          </button>
                        </div>
                     )}
                     {order.status === 'Returned' && (
-                       <button className="btn btn-outline" style={{ padding: '0.4rem', color: 'var(--color-primary)' }} title={language === 'ar' ? 'إعادة للمخزن' : 'Revert to Inventory'} onClick={() => revertOrderToInventory(order.id)}>
+                       <button className="btn btn-outline" style={{ padding: '0.4rem 0.8rem', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }} onClick={() => revertOrderToInventory(order.id)}>
                          <RotateCcw size={16} />
+                         <span style={{ fontSize: '0.75rem' }}>{language === 'ar' ? 'إعادة للمخزن' : 'Revert'}</span>
                        </button>
                     )}
                   </td>
@@ -579,21 +581,21 @@ export default function OrdersTab() {
                     {ret.status === 'At Station' && (
                       <button 
                         className="btn btn-outline" 
-                        style={{ padding: '0.4rem', color: 'var(--color-primary)' }} 
-                        title={t('markReturnedToJumia')}
+                        style={{ padding: '0.4rem 0.8rem', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }} 
                         onClick={() => markReturnedToJumia(ret.id)}
                       >
                         <Check size={14} />
+                        <span style={{ fontSize: '0.75rem' }}>{t('markReturnedToJumia')}</span>
                       </button>
                     )}
                     {ret.status === 'Returned to Jumia' && (
                       <button 
                         className="btn btn-outline" 
-                        style={{ padding: '0.4rem', color: 'var(--color-primary)' }} 
-                        title={language === 'ar' ? 'إعادة للمخزن' : 'Revert to Inventory'}
+                        style={{ padding: '0.4rem 0.8rem', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }} 
                         onClick={() => revertCustomerReturn(ret.id)}
                       >
-                        <RotateCcw size={14} />
+                        <RotateCcw size={16} />
+                        <span style={{ fontSize: '0.75rem' }}>{language === 'ar' ? 'إعادة للمخزن' : 'Revert'}</span>
                       </button>
                     )}
                   </td>

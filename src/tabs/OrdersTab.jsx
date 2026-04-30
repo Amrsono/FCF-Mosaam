@@ -1,12 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { useDashboard, getDaysDifference } from '../context/DashboardContext';
-import { Search, Filter, Plus, UserCheck, RefreshCw, FileUp, CreditCard, Gift, AlertCircle, Flag, PackageX, RotateCcw, Check } from 'lucide-react';
+import { Search, Filter, Plus, UserCheck, RefreshCw, FileUp, CreditCard, Gift, AlertCircle, Flag, PackageX, RotateCcw, Check, Pencil } from 'lucide-react';
 import ExportActions from '../components/ExportActions';
 import ImportWizard from '../components/ImportWizard';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function OrdersTab() {
-  const { orders, customers, receiveOrder, bulkReceiveOrders, calculatePenalty, calculateStorageFee, markOrderPickedUp, returnOrder, updateCustomer, customerReturns, receiveCustomerReturn, markReturnedToJumia } = useDashboard();
+  const { orders, customers, receiveOrder, bulkReceiveOrders, calculatePenalty, calculateStorageFee, markOrderPickedUp, returnOrder, updateCustomer, customerReturns, receiveCustomerReturn, markReturnedToJumia, updateOrder } = useDashboard();
   const { t, language } = useLanguage();
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -18,6 +18,7 @@ export default function OrdersTab() {
   const [filterDateEnd, setFilterDateEnd] = useState('');
 
   const [showSimulateModal, setShowSimulateModal] = useState(false);
+  const [editingOrder, setEditingOrder] = useState(null);
   const [showImportWizard, setShowImportWizard] = useState(false);
   const [showCrossSellModal, setShowCrossSellModal] = useState(false);
   const [pendingOrderId, setPendingOrderId] = useState(null);
@@ -27,13 +28,13 @@ export default function OrdersTab() {
   const [showReturnModal, setShowReturnModal] = useState(false);
   const [returnFilterStatus, setReturnFilterStatus] = useState('At Station');
   const [newReturn, setNewReturn] = useState({
-    orderId: '', customerPhone: '', customerName: '', description: '', reason: '', outlet: 'وبور الثلج'
+    orderId: '', customerPhone: '', customerName: '', description: '', reason: '', outlet: 'Banha 1'
   });
 
   // Form for new order simulation
   const [newOrder, setNewOrder] = useState({
     id: '', customerPhone: '', description: '', totalValue: '', category: 'Electronics', customerName: '',
-    outlet: 'وبور الثلج', size: 'M', paymentMethod: 'Cash'
+    outlet: 'Banha 1', size: 'M', paymentMethod: 'Cash'
   });
 
   const exportHeaders = [
@@ -65,13 +66,21 @@ export default function OrdersTab() {
 
   // Derived Data (computed first so summaryByOutlet can consume it)
   const getOutletLabel = (val) => {
-    if (val === 'Banha 1') return t('banha1');
-    if (val === 'Banha 2') return t('banha2');
-    if (val === 'Banha 3') return t('banha3');
+    if (val === 'Banha 1' || val === 'وبور الثلج' || val === 'وبور التلج') return t('banha1');
+    if (val === 'Banha 2' || val === 'تجارة' || val === 'تجاره') return t('banha2');
+    if (val === 'Banha 3' || val === 'المستشفي' || val === 'المستشفى') return t('banha3');
     return val;
   };
 
-  const orderList = useMemo(() => {
+  const normalizeOutlet = (val) => {
+    if (!val || val === 'وبور الثلج' || val === 'وبور التلج') return 'Banha 1';
+    if (val === 'تجارة' || val === 'تجاره') return 'Banha 2';
+    if (val === 'المستشفي' || val === 'المستشفى') return 'Banha 3';
+    return val;
+  };
+
+  // Stage 1: Filter by everything EXCEPT status
+  const baseFilteredOrders = useMemo(() => {
     return orders.map(order => {
       const cust = customers.find(c => c.phone === order.customerPhone);
       return {
@@ -89,10 +98,8 @@ export default function OrdersTab() {
       const matchesCategory = filterCategory === 'All' || order.category === filterCategory;
       // Tier Filter
       const matchesTier = filterTier === 'All' || order.tier === filterTier;
-      // Status Filter
-      const matchesStatus = filterStatus === 'All' || order.status === filterStatus;
       // Outlet Filter
-      const matchesOutlet = filterOutlet === 'All' || (order.outlet || 'وبور الثلج') === filterOutlet;
+      const matchesOutlet = filterOutlet === 'All' || normalizeOutlet(order.outlet) === filterOutlet;
       
       // Date Filter
       let matchesDate = true;
@@ -112,15 +119,22 @@ export default function OrdersTab() {
         }
       }
 
-      return matchesSearch && matchesCategory && matchesTier && matchesStatus && matchesOutlet && matchesDate;
-    }).sort((a, b) => new Date(b.receivedAt) - new Date(a.receivedAt));
-  }, [orders, customers, searchTerm, filterCategory, filterTier, filterStatus, filterOutlet, filterDateStart, filterDateEnd, calculatePenalty, language]);
+      return matchesSearch && matchesCategory && matchesTier && matchesOutlet && matchesDate;
+    });
+  }, [orders, customers, searchTerm, filterCategory, filterTier, filterOutlet, filterDateStart, filterDateEnd, calculatePenalty, language]);
 
-  // Aggregated Summary Data — derived from the already-filtered orderList
+  // Stage 2: Final list for display (filtered by status)
+  const orderList = useMemo(() => {
+    return baseFilteredOrders
+      .filter(order => filterStatus === 'All' || order.status === filterStatus)
+      .sort((a, b) => new Date(b.receivedAt) - new Date(a.receivedAt));
+  }, [baseFilteredOrders, filterStatus]);
+
+  // Aggregated Summary Data — derived from baseFilteredOrders (independent of status filter)
   const summaryByOutlet = useMemo(() => {
     const outlets = ['Banha 1', 'Banha 2', 'Banha 3'];
     return outlets.map(outletName => {
-      const outletOrders = orderList.filter(o => (o.outlet || "وبور الثلج") === outletName);
+      const outletOrders = baseFilteredOrders.filter(o => normalizeOutlet(o.outlet) === outletName);
       const received = outletOrders.length;
       const delivered = outletOrders.filter(o => o.status === 'Picked Up').length;
       const returned = outletOrders.filter(o => o.status === 'Returned').length;
@@ -163,7 +177,7 @@ export default function OrdersTab() {
         lCount
       };
     });
-  }, [orderList, calculateStorageFee]);
+  }, [baseFilteredOrders, calculateStorageFee]);
 
   const handleSimulateReceive = (e) => {
     e.preventDefault();
@@ -183,7 +197,7 @@ export default function OrdersTab() {
     setShowSimulateModal(false);
     setNewOrder({ 
       id: '', customerPhone: '', description: '', totalValue: '', category: 'Electronics', customerName: '',
-      outlet: 'وبور الثلج', size: 'M', paymentMethod: 'Cash'
+      outlet: 'Banha 1', size: 'M', paymentMethod: 'Cash'
     });
   };
 
@@ -225,7 +239,7 @@ export default function OrdersTab() {
             <option value="Picked Up">{t('pickedUpStatus')}</option>
             <option value="Returned">{t('returnedStatus')}</option>
           </select>
-
+          
           <select className="input-field" style={{ flex: '1 1 120px' }} value={filterOutlet} onChange={e => setFilterOutlet(e.target.value)}>
              <option value="All">{language === 'ar' ? 'جميع المنافذ' : 'All Outlets'}</option>
              <option value="Banha 1">{t('banha1')}</option>
@@ -239,6 +253,7 @@ export default function OrdersTab() {
              <option value="Apparel">{language === 'ar' ? 'ملابس' : 'Apparel'}</option>
              <option value="Home">{language === 'ar' ? 'منزل' : 'Home'}</option>
              <option value="Groceries">{language === 'ar' ? 'بقاليات' : 'Groceries'}</option>
+             <option value="General">{language === 'ar' ? 'عام' : 'General'}</option>
           </select>
 
           <select className="input-field" style={{ flex: '1 1 100px' }} value={filterTier} onChange={e => setFilterTier(e.target.value)}>
@@ -250,7 +265,7 @@ export default function OrdersTab() {
           </select>
           
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flex: '1 1 300px' }}>
-            <div style={{ position: 'relative', flex: 1 }}>
+            <div style={{ position: 'relative', flex 1 }}>
               <input 
                 type="date" 
                 className="input-field" 
@@ -442,27 +457,30 @@ export default function OrdersTab() {
                   ) : <span style={{ color: 'var(--text-muted)' }}>-</span>}
                 </td>
                 <td>
-                   {order.status === 'Inventory' && (
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button className="btn btn-outline" style={{ padding: '0.4rem', color: 'var(--color-success)' }} title={t('markPickedUp')} onClick={() => { 
-                          const cust = customers.find(c => c.phone === order.customerPhone);
-                          setCustomerUpdateData({
-                            phone: cust?.phone || order.customerPhone,
-                            name: cust?.name || '',
-                            email: cust?.email || '',
-                            address: cust?.address || ''
-                          });
-                          setNewOrder({...newOrder, paymentMethod: order.paymentMethod});
-                          setPendingOrderId(order.id); 
-                          setShowCrossSellModal(true); 
-                        }}>
-                          <UserCheck size={16} />
-                        </button>
-                        <button className="btn btn-outline" style={{ padding: '0.4rem', color: 'var(--color-danger)' }} title={t('markReturned')} onClick={() => returnOrder(order.id)}>
-                          <RefreshCw size={16} />
-                        </button>
-                      </div>
-                   )}
+                  {order.status === 'Inventory' && (
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button className="btn btn-outline" style={{ padding: '0.4rem', color: 'var(--color-primary)' }} title={language === 'ar' ? 'تعديل' : 'Edit'} onClick={() => setEditingOrder(order)}>
+                        <Pencil size={16} />
+                      </button>
+                      <button className="btn btn-outline" style={{ padding: '0.4rem', color: 'var(--color-success)' }} title={t('markPickedUp')} onClick={() => { 
+                        const cust = customers.find(c => c.phone === order.customerPhone);
+                        setCustomerUpdateData({
+                          phone: cust?.phone || order.customerPhone,
+                          name: cust?.name || '',
+                          email: cust?.email || '',
+                          address: cust?.address || ''
+                        });
+                        setNewOrder({...newOrder, paymentMethod: order.paymentMethod});
+                        setPendingOrderId(order.id); 
+                        setShowCrossSellModal(true); 
+                      }}>
+                        <UserCheck size={16} />
+                      </button>
+                      <button className="btn btn-outline" style={{ padding: '0.4rem', color: 'var(--color-danger)' }} title={t('markReturned')} onClick={() => returnOrder(order.id)}>
+                        <RefreshCw size={16} />
+                      </button>
+                    </div>
+                  )}
                 </td>
               </tr>
             )) : (
@@ -508,6 +526,7 @@ export default function OrdersTab() {
                      <option value="Apparel">{language === 'ar' ? 'ملابس' : 'Apparel'}</option>
                      <option value="Home">{language === 'ar' ? 'منزل' : 'Home'}</option>
                      <option value="Groceries">{language === 'ar' ? 'بقاليات' : 'Groceries'}</option>
+                     <option value="General">{language === 'ar' ? 'عام' : 'General'}</option>
                   </select>
                 </div>
               </div>
@@ -657,7 +676,130 @@ export default function OrdersTab() {
         </div>
       )}
 
+      {/* Edit Order Modal */}
+      {editingOrder && (
+        <div className="modal-overlay">
+          <div className="modal-content glass-panel" style={{ maxWidth: '500px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
+              <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Pencil size={20} color="var(--color-primary)" />
+                {language === 'ar' ? 'تعديل بيانات الطلب' : 'Edit Order Info'}
+              </h3>
+              <button className="btn-close" onClick={() => setEditingOrder(null)}>&times;</button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="form-group">
+                <label className="label">{t('orderId')}</label>
+                <input type="text" className="input-field" value={editingOrder.id} disabled style={{ opacity: 0.6 }} />
+              </div>
+
+              <div className="form-group">
+                <label className="label">{t('description')}</label>
+                <textarea 
+                  className="input-field" 
+                  value={editingOrder.description} 
+                  onChange={e => setEditingOrder({...editingOrder, description: e.target.value})}
+                  rows={2}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-group">
+                  <label className="label">{t('value')} (EGP)</label>
+                  <input 
+                    type="number" 
+                    className="input-field" 
+                    value={editingOrder.totalValue} 
+                    onChange={e => setEditingOrder({...editingOrder, totalValue: e.target.value})}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="label">{t('category')}</label>
+                  <select 
+                    className="input-field" 
+                    value={editingOrder.category} 
+                    onChange={e => setEditingOrder({...editingOrder, category: e.target.value})}
+                  >
+                    <option value="Electronics">{language === 'ar' ? 'إلكترونيات' : 'Electronics'}</option>
+                    <option value="Apparel">{language === 'ar' ? 'ملابس' : 'Apparel'}</option>
+                    <option value="Home">{language === 'ar' ? 'منزل' : 'Home'}</option>
+                    <option value="Groceries">{language === 'ar' ? 'بقاليات' : 'Groceries'}</option>
+                    <option value="General">{language === 'ar' ? 'عام' : 'General'}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-group">
+                  <label className="label">{language === 'ar' ? 'المنفذ' : 'Outlet'}</label>
+                  <select 
+                    className="input-field" 
+                    value={editingOrder.outlet} 
+                    onChange={e => setEditingOrder({...editingOrder, outlet: e.target.value})}
+                  >
+                    <option value="Banha 1">{t('banha1')}</option>
+                    <option value="Banha 2">{t('banha2')}</option>
+                    <option value="Banha 3">{t('banha3')}</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="label">{language === 'ar' ? 'المقاس' : 'Size'}</label>
+                  <select 
+                    className="input-field" 
+                    value={editingOrder.size} 
+                    onChange={e => setEditingOrder({...editingOrder, size: e.target.value})}
+                  >
+                    <option value="S">Small</option>
+                    <option value="M">Medium</option>
+                    <option value="L">Large</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="label">{t('paymentMethod')}</label>
+                <select 
+                  className="input-field" 
+                  value={editingOrder.paymentMethod} 
+                  onChange={e => setEditingOrder({...editingOrder, paymentMethod: e.target.value})}
+                >
+                  <option value="Cash">{t('cash')}</option>
+                  <option value="JumiaPay">{t('jumiaPay')}</option>
+                  <option value="Card">{t('creditCard')}</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                <button 
+                  className="btn btn-primary" 
+                  style={{ flex: 1 }}
+                  onClick={async () => {
+                    const res = await updateOrder(editingOrder.id, {
+                      description: editingOrder.description,
+                      totalValue: editingOrder.totalValue,
+                      category: editingOrder.category,
+                      outlet: editingOrder.outlet,
+                      size: editingOrder.size,
+                      paymentMethod: editingOrder.paymentMethod
+                    });
+                    if (res.success) {
+                      setEditingOrder(null);
+                    } else {
+                      alert("Error updating order: " + res.error);
+                    }
+                  }}
+                >
+                  {language === 'ar' ? 'حفظ التعديلات' : 'Save Changes'}
+                </button>
+                <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => setEditingOrder(null)}>
+                  {t('cancel')}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
+      )}
 
       {/* ═══════════════════ Customer Returns Section ═══════════════════ */}
       <div className="glass-panel" style={{
@@ -736,7 +878,7 @@ export default function OrdersTab() {
                     </td>
                     <td>{ret.description}</td>
                     <td style={{ color: 'var(--text-secondary)' }}>{ret.reason || '-'}</td>
-                    <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{ret.outlet || 'وبور الثلج'}</td>
+                    <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{ret.outlet === 'وبور الثلج' ? 'Banha 1' : (ret.outlet || 'Banha 1')}</td>
                     <td style={{ fontSize: '0.8rem' }}>{new Date(ret.receivedAt).toLocaleString()}</td>
                     <td>
                       <span className={`badge ${ret.status === 'At Station' ? 'badge-warning' : 'badge-success'}`}>
@@ -790,7 +932,7 @@ export default function OrdersTab() {
               const res = await receiveCustomerReturn(newReturn);
               if (res.success) {
                 setShowReturnModal(false);
-                setNewReturn({ orderId: '', customerPhone: '', customerName: '', description: '', reason: '', outlet: 'وبور الثلج' });
+                setNewReturn({ orderId: '', customerPhone: '', customerName: '', description: '', reason: '', outlet: 'Banha 1' });
               } else {
                 alert(res.error || 'Failed to save');
               }
@@ -811,38 +953,28 @@ export default function OrdersTab() {
               </div>
               <div className="input-group">
                 <label className="input-label">{t('description')} *</label>
-                <input required className="input-field" value={newReturn.description} onChange={e => setNewReturn({...newReturn, description: e.target.value})} placeholder={language === 'ar' ? 'وصف المنتج...' : 'Product description...'} />
+                <input required className="input-field" value={newReturn.description} onChange={e => setNewReturn({...newReturn, description: e.target.value})} placeholder="Items being returned..." />
               </div>
               <div className="input-group">
                 <label className="input-label">{t('returnReason')}</label>
-                <input className="input-field" value={newReturn.reason} onChange={e => setNewReturn({...newReturn, reason: e.target.value})} placeholder={language === 'ar' ? 'منتج تالف، خطأ في الطلب...' : 'Damaged, wrong item...'} />
+                <textarea className="input-field" rows={2} value={newReturn.reason} onChange={e => setNewReturn({...newReturn, reason: e.target.value})} placeholder="Why is this being returned?" />
               </div>
               <div className="input-group">
-                <label className="input-label">{language === 'ar' ? 'المنفذ (فرع الاستلام)' : 'Outlet (Receiving Branch)'}</label>
+                <label className="input-label">{language === 'ar' ? 'المنفذ' : 'Outlet'}</label>
                 <select className="input-field" value={newReturn.outlet} onChange={e => setNewReturn({...newReturn, outlet: e.target.value})}>
-                  <option value="وبور الثلج">وبور الثلج</option>
-                  <option value="تجاره">تجاره</option>
-                  <option value="المستشفى">المستشفى</option>
+                   <option value="Banha 1">{t('banha1')}</option>
+                  <option value="Banha 2">{t('banha2')}</option>
+                  <option value="Banha 3">{t('banha3')}</option>
                 </select>
               </div>
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
-                <button type="submit" className="btn btn-primary" style={{ flex: 1, background: 'linear-gradient(135deg, #a855f7, #7c3aed)' }}>{t('confirm')}</button>
+                <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>{t('confirm')}</button>
                 <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowReturnModal(false)}>{t('cancel')}</button>
               </div>
             </form>
           </div>
         </div>
       )}
-
-      {/* Import Wizard */}
-      <ImportWizard 
-        isOpen={showImportWizard}
-        onClose={() => setShowImportWizard(false)}
-        targetFields={importTargetFields}
-        onImport={bulkReceiveOrders}
-        title={language === 'ar' ? 'استيراد طلبات  J ' : 'Import  J  Orders'}
-      />
-
     </div>
   );
 }

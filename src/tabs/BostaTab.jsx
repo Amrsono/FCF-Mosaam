@@ -1,17 +1,24 @@
 import React, { useState, useMemo } from 'react';
 import { useDashboard, getDaysDifference } from '../context/DashboardContext';
-import { Search, Plus, UserCheck, RefreshCw, Package, CreditCard, Gift, AlertCircle, CalendarClock, Clock } from 'lucide-react';
+import { Search, Plus, UserCheck, RefreshCw, Package, CreditCard, Gift, AlertCircle, CalendarClock, Clock, Pencil } from 'lucide-react';
 import ExportActions from '../components/ExportActions';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function BostaTab() {
-  const { bostaOrders, customers, receiveBostaOrder, markBostaOrderPickedUp, returnBostaOrder, updateCustomer } = useDashboard();
+  const { bostaOrders, customers, receiveBostaOrder, markBostaOrderPickedUp, returnBostaOrder, updateCustomer, updateBostaOrder } = useDashboard();
   const { t, language } = useLanguage();
   
   const getOutletLabel = (val) => {
-    if (val === 'Banha 1') return t('banha1');
-    if (val === 'Banha 2') return t('banha2');
-    if (val === 'Banha 3') return t('banha3');
+    if (val === 'Banha 1' || val === 'وبور الثلج' || val === 'وبور التلج') return t('banha1');
+    if (val === 'Banha 2' || val === 'تجارة' || val === 'تجاره') return t('banha2');
+    if (val === 'Banha 3' || val === 'المستشفي' || val === 'المستشفى') return t('banha3');
+    return val;
+  };
+
+  const normalizeOutlet = (val) => {
+    if (!val || val === 'وبور الثلج' || val === 'وبور التلج') return 'Banha 1';
+    if (val === 'تجارة' || val === 'تجاره') return 'Banha 2';
+    if (val === 'المستشفي' || val === 'المستشفى') return 'Banha 3';
     return val;
   };
 
@@ -22,6 +29,7 @@ export default function BostaTab() {
   const [filterDateStart, setFilterDateStart] = useState('');
   const [filterDateEnd, setFilterDateEnd] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [editingOrder, setEditingOrder] = useState(null);
   const [showCrossSellModal, setShowCrossSellModal] = useState(false);
   const [pendingOrderId, setPendingOrderId] = useState(null);
   const [customerUpdateData, setCustomerUpdateData] = useState({ name: '', email: '', address: '', phone: '' });
@@ -44,7 +52,8 @@ export default function BostaTab() {
     { label: 'SLA Status', accessor: o => o.daysParked >= 4 ? t('critical4Days') : o.daysParked >= 2 ? t('warning2Days') : t('onTrack') }
   ];
 
-  const orderList = useMemo(() => {
+  // Stage 1: Filter by everything EXCEPT status
+  const baseFilteredOrders = useMemo(() => {
     return bostaOrders.map(order => {
       const cust = customers.find(c => c.phone === order.customerPhone);
       const daysParked = order.status === 'Inventory' ? getDaysDifference(order.receivedAt) : 0;
@@ -57,9 +66,8 @@ export default function BostaTab() {
     }).filter(o => {
       const matchesSearch = o.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             o.customerPhone.includes(searchTerm);
-      const matchesStatus = filterStatus === 'All' || o.status === filterStatus;
       const matchesCategory = filterCategory === 'All' || o.category === filterCategory;
-      const matchesOutlet = filterOutlet === 'All' || (o.outlet || 'وبور الثلج') === filterOutlet;
+      const matchesOutlet = filterOutlet === 'All' || normalizeOutlet(o.outlet) === filterOutlet;
 
       // Date Filter
       let matchesDate = true;
@@ -79,9 +87,16 @@ export default function BostaTab() {
         }
       }
 
-      return matchesSearch && matchesStatus && matchesCategory && matchesOutlet && matchesDate;
-    }).sort((a, b) => new Date(b.receivedAt) - new Date(a.receivedAt));
-  }, [bostaOrders, customers, searchTerm, filterStatus, filterCategory, filterOutlet, filterDateStart, filterDateEnd, language]);
+      return matchesSearch && matchesCategory && matchesOutlet && matchesDate;
+    });
+  }, [bostaOrders, customers, searchTerm, filterCategory, filterOutlet, filterDateStart, filterDateEnd, language]);
+
+  // Stage 2: Final list for display (filtered by status)
+  const orderList = useMemo(() => {
+    return baseFilteredOrders
+      .filter(o => filterStatus === 'All' || o.status === filterStatus)
+      .sort((a, b) => new Date(b.receivedAt) - new Date(a.receivedAt));
+  }, [baseFilteredOrders, filterStatus]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -96,7 +111,7 @@ export default function BostaTab() {
       outlet: newOrder.outlet
     });
     setShowModal(false);
-    setNewOrder({ id: '', customerPhone: '', customerName: '', description: '', totalValue: '', category: 'Electronics', outlet: 'وبور الثلج' });
+    setNewOrder({ id: '', customerPhone: '', customerName: '', description: '', totalValue: '', category: 'Electronics', outlet: 'Banha 1' });
   };
 
   const getSlaColor = (days) => {
@@ -139,9 +154,10 @@ export default function BostaTab() {
     }
   };
 
-  const inventoryCount = bostaOrders.filter(o => o.status === 'Inventory').length;
-  const pickedUpCount = bostaOrders.filter(o => o.status === 'Picked Up').length;
-  const returnedCount = bostaOrders.filter(o => o.status === 'Returned').length;
+  // Summary counts based on current filters (except status)
+  const inventoryCount = baseFilteredOrders.filter(o => o.status === 'Inventory').length;
+  const pickedUpCount = baseFilteredOrders.filter(o => o.status === 'Picked Up').length;
+  const returnedCount = baseFilteredOrders.filter(o => o.status === 'Returned').length;
 
   return (
     <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: '100%' }}>
@@ -355,6 +371,14 @@ export default function BostaTab() {
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                       <button
                         className="btn btn-outline"
+                        style={{ padding: '0.4rem', color: 'var(--color-primary)' }}
+                        title={language === 'ar' ? 'تعديل' : 'Edit'}
+                        onClick={() => setEditingOrder(order)}
+                      >
+                        <Pencil size={16} />
+                      </button>
+                      <button
+                        className="btn btn-outline"
                         style={{ padding: '0.4rem', color: 'var(--color-success)' }}
                         title={t('markPickedUp')}
                         onClick={() => { 
@@ -450,6 +474,102 @@ export default function BostaTab() {
           </div>
         </div>
       )}
+
+      {/* Edit Order Modal */}
+      {editingOrder && (
+        <div className="modal-overlay">
+          <div className="modal-content glass-panel" style={{ maxWidth: '500px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
+              <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Pencil size={20} color="#6366f1" />
+                {language === 'ar' ? 'تعديل بيانات طلب بوسطة' : 'Edit Bosta Order Info'}
+              </h3>
+              <button className="btn-close" onClick={() => setEditingOrder(null)}>&times;</button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="form-group">
+                <label className="label">{language === 'ar' ? 'رقم الطلب' : 'Order ID'}</label>
+                <input type="text" className="input-field" value={editingOrder.id} disabled style={{ opacity: 0.6 }} />
+              </div>
+
+              <div className="form-group">
+                <label className="label">{t('description')}</label>
+                <textarea 
+                  className="input-field" 
+                  value={editingOrder.description} 
+                  onChange={e => setEditingOrder({...editingOrder, description: e.target.value})}
+                  rows={2}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-group">
+                  <label className="label">{t('value')} (EGP)</label>
+                  <input 
+                    type="number" 
+                    className="input-field" 
+                    value={editingOrder.totalValue} 
+                    onChange={e => setEditingOrder({...editingOrder, totalValue: e.target.value})}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="label">{t('category')}</label>
+                  <select 
+                    className="input-field" 
+                    value={editingOrder.category} 
+                    onChange={e => setEditingOrder({...editingOrder, category: e.target.value})}
+                  >
+                    <option value="Electronics">{language === 'ar' ? 'إلكترونيات' : 'Electronics'}</option>
+                    <option value="Apparel">{language === 'ar' ? 'ملابس' : 'Apparel'}</option>
+                    <option value="Home">{language === 'ar' ? 'منزل' : 'Home'}</option>
+                    <option value="Groceries">{language === 'ar' ? 'بقاليات' : 'Groceries'}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="label">{language === 'ar' ? 'المنفذ' : 'Outlet'}</label>
+                <select 
+                  className="input-field" 
+                  value={editingOrder.outlet} 
+                  onChange={e => setEditingOrder({...editingOrder, outlet: e.target.value})}
+                >
+                  <option value="Banha 1">{t('banha1')}</option>
+                  <option value="Banha 2">{t('banha2')}</option>
+                  <option value="Banha 3">{t('banha3')}</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                <button 
+                  className="btn btn-primary" 
+                  style={{ flex: 1, background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
+                  onClick={async () => {
+                    const res = await updateBostaOrder(editingOrder.id, {
+                      description: editingOrder.description,
+                      totalValue: editingOrder.totalValue,
+                      category: editingOrder.category,
+                      outlet: editingOrder.outlet
+                    });
+                    if (res.success) {
+                      setEditingOrder(null);
+                    } else {
+                      alert("Error updating order: " + res.error);
+                    }
+                  }}
+                >
+                  {language === 'ar' ? 'حفظ التعديلات' : 'Save Changes'}
+                </button>
+                <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => setEditingOrder(null)}>
+                  {t('cancel')}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Cross-Sell Confirmation Modal */}
       {showCrossSellModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: '1rem' }}>

@@ -9,9 +9,9 @@ export default function ParkedPenaltiesTab() {
   const { t, language } = useLanguage();
   
   const getOutletLabel = (val) => {
-    if (val === 'Banha 1') return t('banha1');
-    if (val === 'Banha 2') return t('banha2');
-    if (val === 'Banha 3') return t('banha3');
+    if (val === 'Banha 1' || val === 'وبور الثلج' || val === 'وبور التلج') return t('banha1');
+    if (val === 'Banha 2' || val === 'تجارة' || val === 'تجاره') return t('banha2');
+    if (val === 'Banha 3' || val === 'المستشفي' || val === 'المستشفى') return t('banha3');
     return val;
   };
 

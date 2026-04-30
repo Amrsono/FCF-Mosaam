@@ -51,7 +51,7 @@ export default async function handler(req, res) {
 
     // PATCH: Update order status (Pick Up or Return)
     if (req.method === 'PATCH') {
-      const { id, action } = req.body; // action: 'PICK_UP' or 'RETURN'
+      const { id, action } = req.body; // action: 'PICK_UP', 'RETURN', or 'UPDATE_INFO'
 
       if (action === 'PICK_UP') {
         const { paymentMethod } = req.body;
@@ -81,6 +81,23 @@ export default async function handler(req, res) {
           data: { status: 'Returned', returnedAt: new Date() }
         });
         return res.status(200).json(order);
+      }
+
+      if (action === 'UPDATE_INFO') {
+        const { description, totalValue, category, outlet, size, paymentMethod, orderCost } = req.body;
+        const updated = await prisma.order.update({
+          where: { id },
+          data: {
+            description,
+            totalValue: totalValue !== undefined ? parseFloat(totalValue) : undefined,
+            category,
+            outlet,
+            size,
+            paymentMethod,
+            orderCost: orderCost !== undefined ? parseFloat(orderCost) : undefined
+          }
+        });
+        return res.status(200).json(updated);
       }
 
       return res.status(400).json({ error: 'Invalid action' });

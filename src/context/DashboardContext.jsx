@@ -258,6 +258,48 @@ export const DashboardProvider = ({ children }) => {
     }
   };
 
+  const updateOrder = async (orderId, updatedData) => {
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: orderId, action: 'UPDATE_INFO', ...updatedData })
+      });
+      if (res.ok) {
+        await fetchData();
+        logUserAction('Update Order Info', { id: orderId });
+        return { success: true };
+      } else {
+        const err = await res.json();
+        return { success: false, error: err.error };
+      }
+    } catch (err) {
+      console.error(err);
+      return { success: false, error: 'Network error' };
+    }
+  };
+
+  const updateBostaOrder = async (orderId, updatedData) => {
+    try {
+      const res = await fetch('/api/bosta', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: orderId, action: 'UPDATE_INFO', ...updatedData })
+      });
+      if (res.ok) {
+        await fetchData();
+        logUserAction('Update Bosta Order Info', { id: orderId });
+        return { success: true };
+      } else {
+        const err = await res.json();
+        return { success: false, error: err.error };
+      }
+    } catch (err) {
+      console.error(err);
+      return { success: false, error: 'Network error' };
+    }
+  };
+
   const logBasataService = async (category, serviceProvider, amount, extras = {}) => {
     try {
       const { transactionId, paymentMethod, percentage, performedAt } = extras;
@@ -432,7 +474,9 @@ export const DashboardProvider = ({ children }) => {
       takeCallOwnership,
       resolveCall,
       closeCallLog,
-      reopenCallLog
+      reopenCallLog,
+      updateOrder,
+      updateBostaOrder
     }}>
       {children}
     </DashboardContext.Provider>

@@ -486,10 +486,26 @@ export default function OrdersTab() {
                        </div>
                     )}
                     {order.status === 'Returned' && (
-                       <button className="btn btn-outline" style={{ padding: '0.4rem 0.8rem', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }} onClick={() => revertOrderToInventory(order.id)}>
-                         <RotateCcw size={16} />
-                         <span style={{ fontSize: '0.75rem' }}>{language === 'ar' ? 'إعادة للمخزن' : 'Revert'}</span>
-                       </button>
+                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                         <button 
+                           className="btn" 
+                           style={{ 
+                             padding: '0.4rem 0.8rem', 
+                             background: '#f59e0b', 
+                             color: '#000', 
+                             display: 'flex', 
+                             alignItems: 'center', 
+                             gap: '0.4rem',
+                             fontWeight: 'bold',
+                             border: '1px solid #000'
+                           }} 
+                           onClick={() => revertOrderToInventory(order.id)}
+                         >
+                           <RotateCcw size={16} />
+                           <span style={{ fontSize: '0.75rem' }}>{language === 'ar' ? 'إعادة للمخزن' : 'UNDO RETURN'}</span>
+                         </button>
+                         <span style={{ fontSize: '0.6rem', color: 'red' }}>DEBUG: {order.status}</span>
+                       </div>
                     )}
                   </td>
                 </tr>
@@ -589,14 +605,27 @@ export default function OrdersTab() {
                       </button>
                     )}
                     {ret.status === 'Returned to Jumia' && (
-                      <button 
-                        className="btn btn-outline" 
-                        style={{ padding: '0.4rem 0.8rem', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }} 
-                        onClick={() => revertCustomerReturn(ret.id)}
-                      >
-                        <RotateCcw size={16} />
-                        <span style={{ fontSize: '0.75rem' }}>{language === 'ar' ? 'إعادة للمخزن' : 'Revert'}</span>
-                      </button>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <button 
+                          className="btn" 
+                          style={{ 
+                            padding: '0.5rem 1rem', 
+                            background: '#f59e0b', 
+                            color: '#000', 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '0.5rem',
+                            fontWeight: 'bold',
+                            border: '2px solid #000',
+                            borderRadius: '4px'
+                          }} 
+                          onClick={() => revertCustomerReturn(ret.id)}
+                        >
+                          <RotateCcw size={18} />
+                          <span>{language === 'ar' ? 'إلغاء الإرجاع' : 'UNDO RETURN'}</span>
+                        </button>
+                        <span style={{ fontSize: '0.6rem', color: 'red' }}>DEBUG: {ret.status}</span>
+                      </div>
                     )}
                   </td>
                 </tr>

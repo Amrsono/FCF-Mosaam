@@ -5,6 +5,7 @@ export default async function handler(req, res) {
     // GET: Fetch all active and returned orders
     if (req.method === 'GET') {
       const orders = await prisma.order.findMany({
+        where: { isDeleted: false },
         orderBy: { receivedAt: 'desc' }
       });
       return res.status(200).json(orders);
@@ -51,7 +52,7 @@ export default async function handler(req, res) {
 
     // PATCH: Update order status (Pick Up or Return)
     if (req.method === 'PATCH') {
-      const { id, action } = req.body; // action: 'PICK_UP', 'RETURN', or 'UPDATE_INFO'
+      const { id, action } = req.body; // action: 'PICK_UP', 'RETURN', 'CANCEL', 'DELETE', or 'UPDATE_INFO'
 
       if (action === 'PICK_UP') {
         const { paymentMethod } = req.body;
@@ -79,6 +80,31 @@ export default async function handler(req, res) {
         const order = await prisma.order.update({
           where: { id },
           data: { status: 'Returned', returnedAt: new Date() }
+        });
+        return res.status(200).json(order);
+      }
+
+      if (action === 'CANCEL') {
+        const { reason } = req.body;
+        const order = await prisma.order.update({
+          where: { id },
+          data: { 
+            status: 'Cancelled', 
+            cancellationReason: reason,
+            returnedAt: new Date() // Treat as returned for inventory logic
+          }
+        });
+        return res.status(200).json(order);
+      }
+
+      if (action === 'DELETE') {
+        const { reason } = req.body;
+        const order = await prisma.order.update({
+          where: { id },
+          data: { 
+            isDeleted: true,
+            deletionReason: reason
+          }
         });
         return res.status(200).json(order);
       }

@@ -188,6 +188,44 @@ export const DashboardProvider = ({ children }) => {
     }
   };
 
+  const cancelOrder = async (orderId, reason) => {
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: orderId, action: 'CANCEL', reason })
+      });
+      if (res.ok) {
+        await fetchData();
+        logUserAction('Cancel Order', { id: orderId, reason });
+        return { success: true };
+      }
+      return { success: false, error: await res.text() };
+    } catch (err) {
+      console.error(err);
+      return { success: false, error: err.message };
+    }
+  };
+
+  const deleteOrder = async (orderId, reason) => {
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: orderId, action: 'DELETE', reason })
+      });
+      if (res.ok) {
+        await fetchData();
+        logUserAction('Delete Order', { id: orderId, reason });
+        return { success: true };
+      }
+      return { success: false, error: await res.text() };
+    } catch (err) {
+      console.error(err);
+      return { success: false, error: err.message };
+    }
+  };
+
   // Returns daily storage rate based on package size (Jumia only)
   const getJumiaDailyRate = (order) => {
     const size = (order.size || 'M').toUpperCase();
@@ -255,6 +293,44 @@ export const DashboardProvider = ({ children }) => {
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const cancelBostaOrder = async (orderId, reason) => {
+    try {
+      const res = await fetch('/api/bosta', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: orderId, action: 'CANCEL', reason })
+      });
+      if (res.ok) {
+        await fetchData();
+        logUserAction('Cancel Bosta Order', { id: orderId, reason });
+        return { success: true };
+      }
+      return { success: false, error: await res.text() };
+    } catch (err) {
+      console.error(err);
+      return { success: false, error: err.message };
+    }
+  };
+
+  const deleteBostaOrder = async (orderId, reason) => {
+    try {
+      const res = await fetch('/api/bosta', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: orderId, action: 'DELETE', reason })
+      });
+      if (res.ok) {
+        await fetchData();
+        logUserAction('Delete Bosta Order', { id: orderId, reason });
+        return { success: true };
+      }
+      return { success: false, error: await res.text() };
+    } catch (err) {
+      console.error(err);
+      return { success: false, error: err.message };
     }
   };
 
@@ -476,7 +552,11 @@ export const DashboardProvider = ({ children }) => {
       closeCallLog,
       reopenCallLog,
       updateOrder,
-      updateBostaOrder
+      updateBostaOrder,
+      cancelOrder,
+      deleteOrder,
+      cancelBostaOrder,
+      deleteBostaOrder
     }}>
       {children}
     </DashboardContext.Provider>

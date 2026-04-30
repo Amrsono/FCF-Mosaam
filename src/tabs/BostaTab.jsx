@@ -1,11 +1,21 @@
 import React, { useState, useMemo } from 'react';
 import { useDashboard, getDaysDifference } from '../context/DashboardContext';
-import { Search, Plus, UserCheck, RefreshCw, Package, CreditCard, Gift, AlertCircle, CalendarClock, Clock, Pencil } from 'lucide-react';
+import { Search, Plus, UserCheck, RefreshCw, Package, CreditCard, Gift, AlertCircle, CalendarClock, Clock, Pencil, X, Trash2, RotateCcw } from 'lucide-react';
 import ExportActions from '../components/ExportActions';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function BostaTab() {
-  const { bostaOrders, customers, receiveBostaOrder, markBostaOrderPickedUp, returnBostaOrder, updateCustomer, updateBostaOrder } = useDashboard();
+  const { 
+    bostaOrders, 
+    customers, 
+    receiveBostaOrder, 
+    markBostaOrderPickedUp, 
+    returnBostaOrder, 
+    updateCustomer, 
+    updateBostaOrder,
+    cancelBostaOrder,
+    deleteBostaOrder
+  } = useDashboard();
   const { t, language } = useLanguage();
   
   const getOutletLabel = (val) => {
@@ -33,6 +43,13 @@ export default function BostaTab() {
   const [showCrossSellModal, setShowCrossSellModal] = useState(false);
   const [pendingOrderId, setPendingOrderId] = useState(null);
   const [customerUpdateData, setCustomerUpdateData] = useState({ name: '', email: '', address: '', phone: '' });
+
+  // Cancel/Delete state
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [deleteReason, setDeleteReason] = useState('');
+  const [targetOrder, setTargetOrder] = useState(null);
 
   const [newOrder, setNewOrder] = useState({
     id: '', customerPhone: '', customerName: '', description: '', totalValue: '', category: 'Electronics', outlet: 'Banha 1'
@@ -150,6 +167,7 @@ export default function BostaTab() {
       case 'Inventory': return t('inventoryStatus');
       case 'Picked Up': return t('pickedUpStatus');
       case 'Returned': return t('returnedStatus');
+      case 'Cancelled': return language === 'ar' ? 'ملغي' : 'Cancelled';
       default: return status;
     }
   };
@@ -157,6 +175,7 @@ export default function BostaTab() {
   // Summary counts based on current filters (except status)
   const inventoryCount = baseFilteredOrders.filter(o => o.status === 'Inventory').length;
   const pickedUpCount = baseFilteredOrders.filter(o => o.status === 'Picked Up').length;
+  const cancelledCount = baseFilteredOrders.filter(o => o.status === 'Cancelled').length;
   const returnedCount = baseFilteredOrders.filter(o => o.status === 'Returned').length;
 
   return (
@@ -175,6 +194,10 @@ export default function BostaTab() {
         <div className="glass-panel" style={{ background: 'linear-gradient(135deg, rgba(239,68,68,0.15), transparent)', [language === 'ar' ? 'borderRight' : 'borderLeft']: '3px solid var(--color-danger)', padding: '1rem' }}>
           <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{language === 'ar' ? 'المرتجع لبوسطة' : 'Returned to Bosta'}</div>
           <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--color-danger)' }}>{returnedCount}</div>
+        </div>
+        <div className="glass-panel" style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.15), transparent)', [language === 'ar' ? 'borderRight' : 'borderLeft']: '3px solid #f59e0b', padding: '1rem' }}>
+          <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{language === 'ar' ? 'الملغي' : 'Cancelled'}</div>
+          <div style={{ fontSize: '2rem', fontWeight: 700, color: '#f59e0b' }}>{cancelledCount}</div>
         </div>
       </div>
 
@@ -196,6 +219,7 @@ export default function BostaTab() {
             <option value="All">{language === 'ar' ? 'جميع الحالات' : 'All Statuses'}</option>
             <option value="Inventory">{t('inventoryStatus')}</option>
             <option value="Picked Up">{t('pickedUpStatus')}</option>
+            <option value="Cancelled">{language === 'ar' ? 'طلبات ملغية' : 'Cancelled Orders'}</option>
             <option value="Returned">{t('returnedStatus')}</option>
           </select>
           <select className="input-field" style={{ flex: '1 1 120px' }} value={filterOutlet} onChange={e => setFilterOutlet(e.target.value)}>
@@ -341,7 +365,7 @@ export default function BostaTab() {
                   </div>
                 </td>
                 <td>
-                  <span className={`badge ${order.status === 'Inventory' ? 'badge-warning' : order.status === 'Picked Up' ? 'badge-success' : 'badge-danger'}`}>
+                  <span className={`badge ${order.status === 'Inventory' ? 'badge-warning' : order.status === 'Picked Up' ? 'badge-success' : order.status === 'Cancelled' ? 'badge-warning' : 'badge-danger'}`}>
                     {getStatusLabel(order.status)}
                   </span>
                 </td>
@@ -360,10 +384,13 @@ export default function BostaTab() {
                       }}>
                         {getSlaLabel(order.daysParked)}
                       </span>
-                      {order.daysParked >= 4 && (
-                        <span style={{ color: 'var(--color-danger)', fontSize: '0.75rem' }}>{language === 'ar' ? '⚠ ينصح بالإرجاع لبوسطة' : '⚠ Return to Bosta recommended'}</span>
-                      )}
-                    </div>
+                        {order.daysParked >= 4 && (
+                          <span style={{ color: 'var(--color-danger)', fontSize: '0.75rem' }}>{language === 'ar' ? '⚠ ينصح بالإرجاع لبوسطة' : '⚠ Return to Bosta recommended'}</span>
+                        )}
+                        {order.status === 'Cancelled' && (
+                          <span style={{ color: 'var(--color-danger)', fontSize: '0.75rem', fontWeight: 700 }}>{language === 'ar' ? '⚠ يجب الإرجاع' : '⚠ MUST RETURN'}</span>
+                        )}
+                      </div>
                   ) : <span style={{ color: 'var(--text-muted)' }}>-</span>}
                 </td>
                 <td>
@@ -403,7 +430,33 @@ export default function BostaTab() {
                       >
                         <RefreshCw size={16} />
                       </button>
+                      <button
+                        className="btn btn-outline"
+                        style={{ padding: '0.4rem', color: '#f59e0b' }}
+                        title={language === 'ar' ? 'إلغاء' : 'Cancel'}
+                        onClick={() => { setTargetOrder(order); setShowCancelModal(true); }}
+                      >
+                        <X size={16} />
+                      </button>
+                      <button
+                        className="btn btn-outline"
+                        style={{ padding: '0.4rem', color: 'var(--color-danger)' }}
+                        title={language === 'ar' ? 'حذف' : 'Delete'}
+                        onClick={() => { setTargetOrder(order); setShowDeleteModal(true); }}
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </div>
+                  )}
+                  {order.status === 'Cancelled' && (
+                     <button
+                       className="btn btn-outline"
+                       style={{ padding: '0.4rem', color: 'var(--color-danger)' }}
+                       title={language === 'ar' ? 'إرجاع لبوسطة' : 'Return to Bosta'}
+                       onClick={() => returnBostaOrder(order.id)}
+                     >
+                       <RefreshCw size={16} />
+                     </button>
                   )}
                 </td>
               </tr>
@@ -661,6 +714,75 @@ export default function BostaTab() {
         </div>
       )}
 
+      {/* Cancel Order Modal */}
+      {showCancelModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300, padding: '1rem' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '400px', background: 'var(--bg-main)' }}>
+            <h3 style={{ marginBottom: '1rem', color: '#f59e0b' }}>{language === 'ar' ? 'إلغاء طلب بوسطة' : 'Cancel Bosta Order'}</h3>
+            <p style={{ marginBottom: '1.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+              {language === 'ar' ? `هل أنت متأكد من إلغاء الطلب رقم ${targetOrder?.id}؟ سيتم وضع علامة "يجب الإرجاع".` : `Are you sure you want to cancel bosta order ${targetOrder?.id}? It will be flagged for return.`}
+            </p>
+            <div className="input-group">
+              <label className="input-label">{language === 'ar' ? 'سبب الإلغاء' : 'Cancellation Reason'}</label>
+              <textarea className="input-field" value={cancelReason} onChange={e => setCancelReason(e.target.value)} rows={3} placeholder={language === 'ar' ? 'ادخل السبب هنا...' : 'Enter reason here...'} />
+            </div>
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+              <button 
+                className="btn btn-primary" 
+                style={{ flex: 1, background: '#f59e0b', color: '#000' }}
+                onClick={async () => {
+                  if (!cancelReason.trim()) return alert(language === 'ar' ? 'يرجى إدخال السبب' : 'Please enter a reason');
+                  const res = await cancelBostaOrder(targetOrder.id, cancelReason);
+                  if (res.success) {
+                    setShowCancelModal(false);
+                    setCancelReason('');
+                    setTargetOrder(null);
+                  }
+                }}
+              >
+                {t('confirm')}
+              </button>
+              <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowCancelModal(false)}>{t('cancel')}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Order Modal */}
+      {showDeleteModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300, padding: '1rem' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '400px', background: 'var(--bg-main)' }}>
+            <h3 style={{ marginBottom: '1rem', color: 'var(--color-danger)' }}>{language === 'ar' ? 'حذف طلب بوسطة' : 'Delete Bosta Order'}</h3>
+            <p style={{ marginBottom: '1.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+              {language === 'ar' ? `هل أنت متأكد من حذف الطلب رقم ${targetOrder?.id}؟ سيتم إخفاء الطلب نهائياً.` : `Are you sure you want to delete bosta order ${targetOrder?.id}? This will remove it from the active inventory list.`}
+            </p>
+            <div className="input-group">
+              <label className="input-label">{language === 'ar' ? 'سبب الحذف' : 'Deletion Reason'}</label>
+              <textarea className="input-field" value={deleteReason} onChange={e => setDeleteReason(e.target.value)} rows={3} placeholder={language === 'ar' ? 'ادخل السبب هنا...' : 'Enter reason here...'} />
+            </div>
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+              <button 
+                className="btn btn-primary" 
+                style={{ flex: 1, background: 'var(--color-danger)' }}
+                onClick={async () => {
+                  if (!deleteReason.trim()) return alert(language === 'ar' ? 'يرجى إدخال السبب' : 'Please enter a reason');
+                  const res = await deleteBostaOrder(targetOrder.id, deleteReason);
+                  if (res.success) {
+                    setShowDeleteModal(false);
+                    setDeleteReason('');
+                    setTargetOrder(null);
+                  }
+                }}
+              >
+                {t('confirm')}
+              </button>
+              <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowDeleteModal(false)}>{t('cancel')}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
+
   );
 }

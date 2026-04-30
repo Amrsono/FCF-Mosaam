@@ -27,16 +27,21 @@ model Order {
   description   String
   totalValue    Float     // Using Float for typical DB precision without needing Decimal.js locally 
   category      String
-  status        String    @default("Inventory") // "Inventory", "Picked_Up", "Returned"
-  receivedAt    DateTime  @default(now())
-  pickedUpAt    DateTime?
-  returnedAt    DateTime?
+  status             String    @default("Inventory") // "Inventory", "Picked_Up", "Returned", "Cancelled"
+  receivedAt         DateTime  @default(now())
+  pickedUpAt         DateTime?
+  returnedAt         DateTime?
 
   // New fields for detailed inventory reporting
-  outlet        String    @default("Banha 1")
-  size          String    @default("M")
-  paymentMethod String    @default("Cash")
-  orderCost     Float     @default(0)
+  outlet             String    @default("Banha 1")
+  size               String    @default("M")
+  paymentMethod      String    @default("Cash")
+  orderCost          Float     @default(0)
+
+  // Cancellation and Deletion tracking
+  cancellationReason String?
+  isDeleted          Boolean   @default(false)
+  deletionReason     String?
 
   customer      Customer  @relation(fields: [customerPhone], references: [phone])
 }
@@ -59,18 +64,23 @@ model BostaOrder {
   description   String
   totalValue    Float     
   category      String
-  status        String    @default("Inventory") // "Inventory", "Picked Up", "Returned"
-  receivedAt    DateTime  @default(now())
-  pickedUpAt    DateTime?
-  returnedAt    DateTime?
+  status             String    @default("Inventory") // "Inventory", "Picked Up", "Returned", "Cancelled"
+  receivedAt         DateTime  @default(now())
+  pickedUpAt         DateTime?
+  returnedAt         DateTime?
 
   // New fields for detailed inventory reporting
-  outlet        String    @default("Banha 1")
-  size          String    @default("M")
-  paymentMethod String    @default("Cash")
-  orderCost     Float     @default(0)
+  outlet             String    @default("Banha 1")
+  size               String    @default("M")
+  paymentMethod      String    @default("Cash")
+  orderCost          Float     @default(0)
 
-  customer      Customer  @relation(fields: [customerPhone], references: [phone])
+  // Cancellation and Deletion tracking
+  cancellationReason String?
+  isDeleted          Boolean   @default(false)
+  deletionReason     String?
+
+  customer           Customer  @relation(fields: [customerPhone], references: [phone])
 }
 
 model Admin {

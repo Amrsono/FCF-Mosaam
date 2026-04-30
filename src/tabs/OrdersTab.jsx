@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useDashboard, getDaysDifference } from '../context/DashboardContext';
-import { Search, Filter, Plus, UserCheck, RefreshCw, FileUp, CreditCard, Gift, AlertCircle, Flag, PackageX, RotateCcw, Check, Pencil } from 'lucide-react';
+import { Search, Filter, Plus, UserCheck, RefreshCw, FileUp, CreditCard, Gift, AlertCircle, Flag, PackageX, RotateCcw, Check, Pencil, X, Trash2 } from 'lucide-react';
 import ExportActions from '../components/ExportActions';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -17,7 +17,9 @@ export default function OrdersTab() {
     customerReturns, 
     receiveCustomerReturn, 
     markReturnedToJumia,
-    updateOrder
+    updateOrder,
+    cancelOrder,
+    deleteOrder
   } = useDashboard();
   const { t, language } = useLanguage();
   
@@ -32,8 +34,14 @@ export default function OrdersTab() {
   const [showSimulateModal, setShowSimulateModal] = useState(false);
   const [editingOrder, setEditingOrder] = useState(null);
   const [showCrossSellModal, setShowCrossSellModal] = useState(false);
-  const [pendingOrderId, setPendingOrderId] = useState(null);
   const [customerUpdateData, setCustomerUpdateData] = useState({ name: '', email: '', address: '', phone: '' });
+
+  // Cancel/Delete state
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [deleteReason, setDeleteReason] = useState('');
+  const [targetOrder, setTargetOrder] = useState(null);
 
   // Customer Returns state
   const [showReturnModal, setShowReturnModal] = useState(false);
@@ -143,9 +151,10 @@ export default function OrdersTab() {
       const received = outletOrders.length;
       const delivered = outletOrders.filter(o => o.status === 'Picked Up').length;
       const returned = outletOrders.filter(o => o.status === 'Returned').length;
+      const cancelled = outletOrders.filter(o => o.status === 'Cancelled').length;
       const available = outletOrders.filter(o => o.status === 'Inventory').length;
       
-      const totalMoney = outletOrders.filter(o => o.status !== 'Returned').reduce((sum, o) => sum + o.totalValue, 0);
+      const totalMoney = outletOrders.filter(o => o.status !== 'Returned' && o.status !== 'Cancelled').reduce((sum, o) => sum + o.totalValue, 0);
       const paid = outletOrders.filter(o => o.status === 'Picked Up').reduce((sum, o) => sum + o.totalValue, 0);
       
       const jumiaPay = outletOrders.filter(o => o.status !== 'Returned' && o.paymentMethod?.toLowerCase().includes('jumia')).reduce((sum, o) => sum + o.totalValue, 0);
@@ -163,6 +172,7 @@ export default function OrdersTab() {
         received,
         delivered,
         returned,
+        cancelled,
         available,
         totalMoney,
         paid,
@@ -204,6 +214,7 @@ export default function OrdersTab() {
       case 'Inventory': return t('inventoryStatus');
       case 'Picked Up': return t('pickedUpStatus');
       case 'Returned': return t('returnedStatus');
+      case 'Cancelled': return language === 'ar' ? 'ملغي' : 'Cancelled';
       default: return status;
     }
   };
@@ -235,6 +246,7 @@ export default function OrdersTab() {
               <option value="All">{language === 'ar' ? 'جميع الحالات' : 'All Statuses'}</option>
               <option value="Inventory">{t('inventoryStatus')}</option>
               <option value="Picked Up">{t('pickedUpStatus')}</option>
+              <option value="Cancelled">{language === 'ar' ? 'طلبات ملغية' : 'Cancelled Orders'}</option>
               <option value="Returned">{t('returnedStatus')}</option>
             </select>
             
@@ -328,7 +340,8 @@ export default function OrdersTab() {
                   <th>{language === 'ar' ? 'المنفذ' : 'Outlet'}</th>
                   <th>{language === 'ar' ? 'استلام' : 'Received'}</th>
                   <th>{language === 'ar' ? 'تسليم' : 'Delivered'}</th>
-                  <th>{language === 'ar' ? 'الغاء' : 'Cancelled'}</th>
+                  <th>{language === 'ar' ? 'ملغي' : 'Cancelled'}</th>
+                  <th>{language === 'ar' ? 'مرتجع' : 'Returned'}</th>
                   <th>{language === 'ar' ? 'متاح' : 'Inventory'}</th>
                   <th>{language === 'ar' ? 'اجمالي' : 'Total'}</th>
                   <th>{language === 'ar' ? 'سداد' : 'Paid'}</th>
@@ -341,6 +354,7 @@ export default function OrdersTab() {
                     <td style={{ fontWeight: 700 }}>{getOutletLabel(row.outlet)}</td>
                     <td>{row.received}</td>
                     <td style={{ color: 'var(--color-success)' }}>{row.delivered}</td>
+                    <td style={{ color: 'var(--color-warning)' }}>{row.cancelled}</td>
                     <td style={{ color: 'var(--color-danger)' }}>{row.returned}</td>
                     <td style={{ fontWeight: 700 }}>{row.available}</td>
                     <td>{row.totalMoney.toLocaleString()}</td>
@@ -353,6 +367,7 @@ export default function OrdersTab() {
                   <td style={{ fontWeight: 800, color: 'var(--color-primary)' }}>{language === 'ar' ? 'الإجمالي' : 'GRAND TOTAL'}</td>
                   <td style={{ fontWeight: 700 }}>{summaryByOutlet.reduce((sum, r) => sum + r.received, 0)}</td>
                   <td style={{ fontWeight: 700, color: 'var(--color-success)' }}>{summaryByOutlet.reduce((sum, r) => sum + r.delivered, 0)}</td>
+                  <td style={{ fontWeight: 700, color: 'var(--color-warning)' }}>{summaryByOutlet.reduce((sum, r) => sum + r.cancelled, 0)}</td>
                   <td style={{ fontWeight: 700, color: 'var(--color-danger)' }}>{summaryByOutlet.reduce((sum, r) => sum + r.returned, 0)}</td>
                   <td style={{ fontWeight: 800 }}>{summaryByOutlet.reduce((sum, r) => sum + r.available, 0)}</td>
                   <td style={{ fontWeight: 700 }}>{summaryByOutlet.reduce((sum, r) => sum + r.totalMoney, 0).toLocaleString()}</td>
@@ -402,7 +417,7 @@ export default function OrdersTab() {
                     </div>
                   </td>
                   <td>
-                    <span className={`badge ${order.status === 'Inventory' ? 'badge-warning' : order.status === 'Picked Up' ? 'badge-success' : 'badge-danger'}`}>
+                    <span className={`badge ${order.status === 'Inventory' ? 'badge-warning' : order.status === 'Picked Up' ? 'badge-success' : order.status === 'Cancelled' ? 'badge-warning' : 'badge-danger'}`}>
                       {getStatusLabel(order.status)}
                     </span>
                   </td>
@@ -417,7 +432,7 @@ export default function OrdersTab() {
                           <span style={{ fontWeight: 600 }}>{order.daysParked} {t('days')}</span>
                           <span style={{ fontSize: '0.7rem', color: 'var(--color-primary)' }}>{order.penalty} EGP {t('penalty')}</span>
                         </div>
-                        {order.daysParked >= 4 && (
+                        {(order.daysParked >= 4 || order.status === 'Cancelled') && (
                           <div className="badge badge-danger" style={{ fontSize: '0.6rem', padding: '2px 6px' }}>
                             {language === 'ar' ? 'يجب الارجاع' : 'RETURN REQ'}
                           </div>
@@ -448,7 +463,18 @@ export default function OrdersTab() {
                         <button className="btn btn-outline" style={{ padding: '0.4rem', color: 'var(--color-danger)' }} title={t('markReturned')} onClick={() => returnOrder(order.id)}>
                           <RefreshCw size={16} />
                         </button>
+                        <button className="btn btn-outline" style={{ padding: '0.4rem', color: '#f59e0b' }} title={language === 'ar' ? 'إلغاء' : 'Cancel'} onClick={() => { setTargetOrder(order); setShowCancelModal(true); }}>
+                          <X size={16} />
+                        </button>
+                        <button className="btn btn-outline" style={{ padding: '0.4rem', color: 'var(--color-danger)' }} title={language === 'ar' ? 'حذف' : 'Delete'} onClick={() => { setTargetOrder(order); setShowDeleteModal(true); }}>
+                          <Trash2 size={16} />
+                        </button>
                       </div>
+                    )}
+                    {order.status === 'Cancelled' && (
+                       <button className="btn btn-outline" style={{ padding: '0.4rem', color: 'var(--color-danger)' }} title={t('markReturned')} onClick={() => returnOrder(order.id)}>
+                         <RefreshCw size={16} />
+                       </button>
                     )}
                   </td>
                 </tr>
@@ -734,6 +760,75 @@ export default function OrdersTab() {
           </div>
         </div>
       )}
+
+      {/* Cancel Order Modal */}
+      {showCancelModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 110, padding: '1rem' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '400px', background: 'var(--bg-main)' }}>
+            <h3 style={{ marginBottom: '1rem', color: 'var(--color-warning)' }}>{language === 'ar' ? 'إلغاء الطلب' : 'Cancel Order'}</h3>
+            <p style={{ marginBottom: '1.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+              {language === 'ar' ? `هل أنت متأكد من إلغاء الطلب رقم ${targetOrder?.id}؟ سيتم وضعه في قائمة المرتجعات المطلوبة.` : `Are you sure you want to cancel order ${targetOrder?.id}? It will be flagged for return.`}
+            </p>
+            <div className="input-group">
+              <label className="input-label">{language === 'ar' ? 'سبب الإلغاء' : 'Cancellation Reason'}</label>
+              <textarea className="input-field" value={cancelReason} onChange={e => setCancelReason(e.target.value)} rows={3} placeholder={language === 'ar' ? 'ادخل السبب هنا...' : 'Enter reason here...'} />
+            </div>
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+              <button 
+                className="btn btn-primary" 
+                style={{ flex: 1, background: 'var(--color-warning)', color: '#000' }}
+                onClick={async () => {
+                  if (!cancelReason.trim()) return alert(language === 'ar' ? 'يرجى إدخال السبب' : 'Please enter a reason');
+                  const res = await cancelOrder(targetOrder.id, cancelReason);
+                  if (res.success) {
+                    setShowCancelModal(false);
+                    setCancelReason('');
+                    setTargetOrder(null);
+                  }
+                }}
+              >
+                {t('confirm')}
+              </button>
+              <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowCancelModal(false)}>{t('cancel')}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Order Modal */}
+      {showDeleteModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 110, padding: '1rem' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '400px', background: 'var(--bg-main)' }}>
+            <h3 style={{ marginBottom: '1rem', color: 'var(--color-danger)' }}>{language === 'ar' ? 'حذف الطلب' : 'Delete Order'}</h3>
+            <p style={{ marginBottom: '1.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+              {language === 'ar' ? `هل أنت متأكد من حذف الطلب رقم ${targetOrder?.id}؟ سيتم إخفاء الطلب نهائياً من القائمة.` : `Are you sure you want to delete order ${targetOrder?.id}? This will remove it from the active inventory list.`}
+            </p>
+            <div className="input-group">
+              <label className="input-label">{language === 'ar' ? 'سبب الحذف' : 'Deletion Reason'}</label>
+              <textarea className="input-field" value={deleteReason} onChange={e => setDeleteReason(e.target.value)} rows={3} placeholder={language === 'ar' ? 'ادخل السبب هنا...' : 'Enter reason here...'} />
+            </div>
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+              <button 
+                className="btn btn-primary" 
+                style={{ flex: 1, background: 'var(--color-danger)' }}
+                onClick={async () => {
+                  if (!deleteReason.trim()) return alert(language === 'ar' ? 'يرجى إدخال السبب' : 'Please enter a reason');
+                  const res = await deleteOrder(targetOrder.id, deleteReason);
+                  if (res.success) {
+                    setShowDeleteModal(false);
+                    setDeleteReason('');
+                    setTargetOrder(null);
+                  }
+                }}
+              >
+                {t('confirm')}
+              </button>
+              <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowDeleteModal(false)}>{t('cancel')}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
 
     </div>
   );

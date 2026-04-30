@@ -5,6 +5,7 @@ export default async function handler(req, res) {
     // GET: Fetch all active and returned Bosta orders
     if (req.method === 'GET') {
       const bostaOrders = await prisma.bostaOrder.findMany({
+        where: { isDeleted: false },
         orderBy: { receivedAt: 'desc' }
       });
       return res.status(200).json(bostaOrders);
@@ -51,7 +52,7 @@ export default async function handler(req, res) {
 
     // PATCH: Update Bosta order status (Pick Up or Return)
     if (req.method === 'PATCH') {
-      const { id, action } = req.body; // action: 'PICK_UP', 'RETURN', or 'UPDATE_INFO'
+      const { id, action } = req.body; // action: 'PICK_UP', 'RETURN', 'CANCEL', 'DELETE', or 'UPDATE_INFO'
 
       if (action === 'PICK_UP') {
         const updated = await prisma.$transaction(async (tx) => {
@@ -75,6 +76,31 @@ export default async function handler(req, res) {
         const order = await prisma.bostaOrder.update({
            where: { id },
            data: { status: 'Returned', returnedAt: new Date() }
+        });
+        return res.status(200).json(order);
+      }
+
+      if (action === 'CANCEL') {
+        const { reason } = req.body;
+        const order = await prisma.bostaOrder.update({
+          where: { id },
+          data: { 
+            status: 'Cancelled', 
+            cancellationReason: reason,
+            returnedAt: new Date()
+          }
+        });
+        return res.status(200).json(order);
+      }
+
+      if (action === 'DELETE') {
+        const { reason } = req.body;
+        const order = await prisma.bostaOrder.update({
+          where: { id },
+          data: { 
+            isDeleted: true,
+            deletionReason: reason
+          }
         });
         return res.status(200).json(order);
       }

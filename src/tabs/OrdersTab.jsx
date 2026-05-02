@@ -359,7 +359,7 @@ export default function OrdersTab() {
                 <tr>
                   <th>{language === 'ar' ? 'المنفذ' : 'Outlet'}</th>
                   <th>{language === 'ar' ? 'استلام' : 'Received'}</th>
-                  <th>{language === 'ar' ? 'تسليم' : 'Delivered'}</th>
+                  <th>{language === 'ar' ? 'تم الاستلام' : 'Picked Up'}</th>
                   <th>{language === 'ar' ? 'ملغي' : 'Cancelled'}</th>
                   <th>{language === 'ar' ? 'مرتجع' : 'Returned'}</th>
                   <th>{language === 'ar' ? 'متاح' : 'Inventory'}</th>

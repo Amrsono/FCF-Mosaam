@@ -88,8 +88,8 @@ export default async function handler(req, res) {
         const { reason } = req.body;
         const order = await prisma.order.update({
           where: { id },
-          data: { 
-            status: 'Cancelled', 
+          data: {
+            status: 'Cancelled',
             cancellationReason: reason,
             returnedAt: new Date() // Treat as returned for inventory logic
           }
@@ -101,7 +101,7 @@ export default async function handler(req, res) {
         const { reason } = req.body;
         const order = await prisma.order.update({
           where: { id },
-          data: { 
+          data: {
             isDeleted: true,
             deletionReason: reason
           }
@@ -131,7 +131,7 @@ export default async function handler(req, res) {
             where: { orderId: id, orderSource: 'jumia' },
             data: { orderId: newId }
           });
-          
+
           await prisma.customerReturn.updateMany({
             where: { orderId: id },
             data: { orderId: newId }
@@ -144,10 +144,10 @@ export default async function handler(req, res) {
       if (action === 'REVERT_TO_INVENTORY') {
         const order = await prisma.order.update({
           where: { id },
-          data: { 
+          data: {
             status: 'Inventory',
             returnedAt: null,
-            cancellationReason: null 
+            cancellationReason: null
           }
         });
         return res.status(200).json(order);

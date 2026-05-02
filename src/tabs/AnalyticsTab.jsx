@@ -49,7 +49,7 @@ const CustomTooltip = ({ active, payload, label, language }) => {
 };
 
 export default function AnalyticsTab() {
-  const { orders, customers, basataTransactions, bostaOrders, callLogs, customerReturns } = useDashboard();
+  const { orders, customers, basataTransactions, bostaOrders, callLogs, customerReturns, calculatePenalty } = useDashboard();
   const { user } = useAuth();
   const { t, language } = useLanguage();
   
@@ -118,10 +118,8 @@ export default function AnalyticsTab() {
     if (size === 'L') return 40;
     return 40;
   };
-  const activePenalties = jumiaInventory.reduce((s, o) => {
-    const days = Math.floor(Math.abs(new Date() - new Date(o.receivedAt)) / 86400000);
-    if (days < 1) return s;
-    return s + getJumiaDailyRate(o) * days;
+  const activePenalties = [...jumiaInventory, ...bostaInventory].reduce((s, o) => {
+    return s + calculatePenalty(o);
   }, 0);
   const jumiaSlaCritical = jumiaInventory.filter(o => {
     const d = Math.floor(Math.abs(new Date() - new Date(o.receivedAt)) / 86400000);

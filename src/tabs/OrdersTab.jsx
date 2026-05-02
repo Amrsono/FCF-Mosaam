@@ -168,7 +168,7 @@ export default function OrdersTab() {
       const mCount = outletOrders.filter(o => o.size === 'M').length;
       const lCount = outletOrders.filter(o => o.size === 'L').length;
 
-      const storageFees = outletOrders.filter(o => o.status !== 'Returned').reduce((sum, o) => sum + calculateStorageFee(o), 0);
+      const storageFees = outletOrders.filter(o => o.status === 'Inventory').reduce((sum, o) => sum + calculateStorageFee(o), 0);
       const totalIncome = storageFees;
 
       return {

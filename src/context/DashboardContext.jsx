@@ -2,8 +2,11 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const DashboardContext = createContext();
 
-export const getDaysDifference = (fromDate) => {
-  const diffTime = Math.abs(new Date() - new Date(fromDate));
+export const getDaysDifference = (fromDate, toDate = new Date()) => {
+  if (!fromDate) return 0;
+  const start = new Date(fromDate);
+  const end = new Date(toDate);
+  const diffTime = Math.abs(end - start);
   return Math.floor(diffTime / (1000 * 60 * 60 * 24));
 };
 
@@ -255,7 +258,14 @@ export const DashboardProvider = ({ children }) => {
 
   // Accrued storage fee: charges from day 1, every day parked (20/40/40 EGP per day)
   const calculatePenalty = (order) => {
-    const days = getDaysDifference(order.receivedAt);
+    let toDate = new Date();
+    if (order.status === 'Picked Up' && order.pickedUpAt) {
+      toDate = order.pickedUpAt;
+    } else if ((order.status === 'Returned' || order.status === 'Cancelled') && order.returnedAt) {
+      toDate = order.returnedAt;
+    }
+    
+    const days = getDaysDifference(order.receivedAt, toDate);
     if (days < 1) return 0;
     return getJumiaDailyRate(order) * days;
   };

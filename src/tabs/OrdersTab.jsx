@@ -288,7 +288,12 @@ export default function OrdersTab() {
                <option value="Groceries">{language === 'ar' ? 'بقاليات' : 'Groceries'}</option>
             </select>
 
-                <option value="Gold">Gold</option>
+            <select className="input-field" style={{ flex: '1 1 120px' }} value={filterTier} onChange={e => setFilterTier(e.target.value)}>
+               <option value="All">{language === 'ar' ? 'جميع المستويات' : 'All Tiers'}</option>
+               <option value="New">{t('newCustomer')}</option>
+               <option value="Bronze">Bronze</option>
+               <option value="Silver">Silver</option>
+               <option value="Gold">Gold</option>
             </select>
 
             <select className="input-field" style={{ flex: '1 1 120px' }} value={filterPaymentMethod} onChange={e => setFilterPaymentMethod(e.target.value)}>

@@ -851,6 +851,19 @@ export default function OrdersTab() {
                 </select>
               </div>
 
+              <div className="form-group">
+                <label className="label" style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '0.4rem', display: 'block' }}>{language === 'ar' ? 'طريقة الدفع' : 'Payment Method'}</label>
+                <select 
+                  className="input-field" 
+                  value={editingOrder.paymentMethod} 
+                  onChange={e => setEditingOrder({...editingOrder, paymentMethod: e.target.value})}
+                >
+                  <option value="Cash">{language === 'ar' ? 'كاش' : 'Cash'}</option>
+                  <option value="JumiaPay">JumiaPay</option>
+                  <option value="VISA">VISA</option>
+                </select>
+              </div>
+
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
                 <button 
                   className="btn btn-primary" 

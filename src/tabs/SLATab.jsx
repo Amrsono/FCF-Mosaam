@@ -5,7 +5,7 @@ import ExportActions from '../components/ExportActions';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function SLATab() {
-  const { orders, returnOrder, bostaOrders, returnBostaOrder } = useDashboard();
+  const { orders, returnOrder, bostaOrders, returnBostaOrder, calculatePenalty } = useDashboard();
   const { t, language } = useLanguage();
   const [activeSource, setActiveSource] = useState('jumia'); // 'jumia' | 'bosta'
 
@@ -14,10 +14,11 @@ export default function SLATab() {
       .filter(o => o.status === 'Inventory')
       .map(o => {
         const days = getDaysDifference(o.receivedAt);
+        const penalty = calculatePenalty ? calculatePenalty(o) : 0;
         let slaStatus = 'green';
         if (days >= 5) slaStatus = 'red';
         else if (days >= 3) slaStatus = 'orange';
-        return { ...o, daysParked: days, slaStatus };
+        return { ...o, daysParked: days, slaStatus, penalty };
       })
       .sort((a, b) => b.daysParked - a.daysParked);
 
@@ -80,6 +81,15 @@ export default function SLATab() {
           <div style={{ color: 'var(--text-secondary)' }}>{t('critical5Days')}</div>
         </div>
       </div>
+      <div className="glass-panel" style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: 'linear-gradient(135deg, rgba(99,102,241,0.1), transparent)', borderBottom: '2px solid #6366f1' }}>
+        <div style={{ background: 'rgba(99,102,241,0.15)', padding: '1rem', borderRadius: '50%' }}>
+          <RefreshCcw size={24} color="#6366f1" />
+        </div>
+        <div>
+          <div style={{ fontSize: '2rem', fontWeight: 700, color: '#6366f1' }}>{list.reduce((sum, o) => sum + (o.penalty || 0), 0).toLocaleString()}</div>
+          <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{language === 'ar' ? 'إجمالي رسوم التخزين (EGP)' : 'Total Storage Fees (EGP)'}</div>
+        </div>
+      </div>
     </div>
   );
 
@@ -130,6 +140,11 @@ export default function SLATab() {
                 <span className={`badge badge-${order.slaStatus === 'red' ? 'danger' : order.slaStatus === 'orange' ? 'warning' : 'success'}`}>
                   {order.daysParked} {language === 'ar' ? 'أيام في المخزن' : 'Days Parked'}
                 </span>
+                {order.penalty > 0 && (
+                  <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-primary)', background: 'rgba(99,102,241,0.1)', padding: '0.2rem 0.6rem', borderRadius: '4px' }}>
+                    {order.penalty} EGP
+                  </span>
+                )}
               </div>
               <span style={{ color: 'var(--text-secondary)' }}>{t('receivedAt')}: {new Date(order.receivedAt).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
               {order.slaStatus === 'orange' && <span style={{ color: 'var(--color-warning)', fontSize: '0.85rem' }}>{language === 'ar' ? '⚠ تواصل مع العميل بشكل عاجل.' : '⚠ Contact customer urgently.'}</span>}

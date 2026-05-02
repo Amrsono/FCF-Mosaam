@@ -32,6 +32,7 @@ export default function OrdersTab() {
   const [filterOutlet, setFilterOutlet] = useState('All');
   const [filterDateStart, setFilterDateStart] = useState('');
   const [filterDateEnd, setFilterDateEnd] = useState('');
+  const [filterPaymentMethod, setFilterPaymentMethod] = useState('All');
 
   const [showSimulateModal, setShowSimulateModal] = useState(false);
   const [editingOrder, setEditingOrder] = useState(null);
@@ -139,9 +140,11 @@ export default function OrdersTab() {
         }
       }
       
-      return matchesSearch && matchesCategory && matchesTier && matchesOutlet && matchesDate;
+      const matchesPayment = filterPaymentMethod === 'All' || order.paymentMethod === filterPaymentMethod;
+      
+      return matchesSearch && matchesCategory && matchesTier && matchesOutlet && matchesDate && matchesPayment;
     });
-  }, [orders, customers, searchTerm, filterCategory, filterTier, filterOutlet, filterDateStart, filterDateEnd, calculatePenalty, language]);
+  }, [orders, customers, searchTerm, filterCategory, filterTier, filterOutlet, filterDateStart, filterDateEnd, filterPaymentMethod, calculatePenalty, language]);
 
   // Display filtering logic (including status)
   const orderList = useMemo(() => {
@@ -160,7 +163,7 @@ export default function OrdersTab() {
   // Reset to page 1 when filters change
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, filterCategory, filterTier, filterStatus, filterOutlet, filterDateStart, filterDateEnd, itemsPerPage]);
+  }, [searchTerm, filterCategory, filterTier, filterStatus, filterOutlet, filterDateStart, filterDateEnd, filterPaymentMethod, itemsPerPage]);
 
   // Summary by Outlet (calculated from base filtered data)
   const summaryByOutlet = useMemo(() => {
@@ -285,12 +288,13 @@ export default function OrdersTab() {
                <option value="Groceries">{language === 'ar' ? 'بقاليات' : 'Groceries'}</option>
             </select>
 
-            <select className="input-field" style={{ flex: '1 1 120px' }} value={filterTier} onChange={e => setFilterTier(e.target.value)}>
-               <option value="All">{language === 'ar' ? 'جميع المستويات' : 'All Tiers'}</option>
-               <option value="New">{t('newCustomer')}</option>
-               <option value="Bronze">Bronze</option>
-               <option value="Silver">Silver</option>
-               <option value="Gold">Gold</option>
+                <option value="Gold">Gold</option>
+            </select>
+
+            <select className="input-field" style={{ flex: '1 1 120px' }} value={filterPaymentMethod} onChange={e => setFilterPaymentMethod(e.target.value)}>
+               <option value="All">{language === 'ar' ? 'جميع طرق الدفع' : 'All Payments'}</option>
+               <option value="Cash">{language === 'ar' ? 'كاش' : 'Cash'}</option>
+               <option value="JumiaPay">JumiaPay</option>
             </select>
             
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flex: '1 1 300px' }}>
@@ -315,7 +319,7 @@ export default function OrdersTab() {
                   title={language === 'ar' ? 'إلى تاريخ' : 'To Date'}
                 />
               </div>
-              {(filterDateStart || filterDateEnd || filterOutlet !== 'All' || searchTerm || filterStatus !== 'Inventory' || filterCategory !== 'All' || filterTier !== 'All') && (
+              {(filterDateStart || filterDateEnd || filterOutlet !== 'All' || searchTerm || filterStatus !== 'Inventory' || filterCategory !== 'All' || filterTier !== 'All' || filterPaymentMethod !== 'All') && (
                 <button 
                   onClick={() => {
                     setSearchTerm('');
@@ -325,6 +329,7 @@ export default function OrdersTab() {
                     setFilterTier('All');
                     setFilterDateStart('');
                     setFilterDateEnd('');
+                    setFilterPaymentMethod('All');
                   }}
                   className="btn btn-outline" 
                   style={{ padding: '0.4rem', color: 'var(--color-danger)' }}
@@ -408,6 +413,7 @@ export default function OrdersTab() {
                 <th>{t('customer')}</th>
                 <th>{t('description')}</th>
                 <th>{t('category')}</th>
+                <th>{language === 'ar' ? 'طريقة الدفع' : 'Payment'}</th>
                 <th>{language === 'ar' ? 'المنفذ' : 'Outlet'}</th>
                 <th>{t('status')}</th>
                 <th>{t('daysInInv')}</th>
@@ -436,6 +442,11 @@ export default function OrdersTab() {
                        {order.category === 'Electronics' && <Gift size={14} color="#6366f1" />}
                        <span style={{ fontSize: '0.85rem' }}>{order.category}</span>
                     </div>
+                  </td>
+                  <td>
+                    <span className="badge badge-neutral" style={{ fontSize: '0.8rem', background: order.paymentMethod === 'JumiaPay' ? 'rgba(99,102,241,0.1)' : '', color: order.paymentMethod === 'JumiaPay' ? '#6366f1' : '' }}>
+                      {order.paymentMethod === 'JumiaPay' ? 'JumiaPay' : (language === 'ar' ? 'كاش' : 'Cash')}
+                    </span>
                   </td>
                   <td>
                     <span className="badge badge-neutral" style={{ fontSize: '0.8rem' }}>{getOutletLabel(order.outlet)}</span>

@@ -112,14 +112,11 @@ export default function AnalyticsTab() {
   
   const jumiaCash = jumiaPickedUp.reduce((s, o) => s + o.totalValue, 0);
   const jumiaReturnedAmt = stdReturned.reduce((s, o) => s + o.totalValue, 0); // Customer returns don't have a value in our system
-  const getJumiaDailyRate = (order) => {
-    const size = (order.size || 'M').toUpperCase();
-    if (size === 'S') return 20;
-    if (size === 'L') return 40;
-    return 40;
-  };
+  // --- BOSTA ---
+  const bostaInventory = bostaOrders.filter(o => o.status === 'Inventory');
+
   const activePenalties = [...jumiaInventory, ...bostaInventory].reduce((s, o) => {
-    return s + calculatePenalty(o);
+    return s + (calculatePenalty ? calculatePenalty(o) : 0);
   }, 0);
   const jumiaSlaCritical = jumiaInventory.filter(o => {
     const d = Math.floor(Math.abs(new Date() - new Date(o.receivedAt)) / 86400000);

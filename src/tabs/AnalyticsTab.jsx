@@ -141,7 +141,6 @@ export default function AnalyticsTab() {
   // --- BOSTA ---
   const bostaPickedUp = bostaOrders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt));
   const bostaReturned = bostaOrders.filter(o => o.status === 'Returned' && isInRange(o.returnedAt));
-  const bostaInventory = bostaOrders.filter(o => o.status === 'Inventory');
   const bostaCash = bostaPickedUp.reduce((s, o) => s + o.totalValue, 0);
   const bostaReturnedAmt = bostaReturned.reduce((s, o) => s + o.totalValue, 0);
 

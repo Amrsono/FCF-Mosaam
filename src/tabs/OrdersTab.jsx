@@ -300,6 +300,7 @@ export default function OrdersTab() {
                <option value="All">{language === 'ar' ? 'جميع طرق الدفع' : 'All Payments'}</option>
                <option value="Cash">{language === 'ar' ? 'كاش' : 'Cash'}</option>
                <option value="JumiaPay">JumiaPay</option>
+               <option value="VISA">VISA</option>
             </select>
             
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flex: '1 1 300px' }}>
@@ -449,8 +450,12 @@ export default function OrdersTab() {
                     </div>
                   </td>
                   <td>
-                    <span className="badge badge-neutral" style={{ fontSize: '0.8rem', background: order.paymentMethod === 'JumiaPay' ? 'rgba(99,102,241,0.1)' : '', color: order.paymentMethod === 'JumiaPay' ? '#6366f1' : '' }}>
-                      {order.paymentMethod === 'JumiaPay' ? 'JumiaPay' : (language === 'ar' ? 'كاش' : 'Cash')}
+                    <span className="badge badge-neutral" style={{ 
+                      fontSize: '0.8rem', 
+                      background: order.paymentMethod === 'JumiaPay' ? 'rgba(99,102,241,0.1)' : order.paymentMethod === 'VISA' ? 'rgba(34,197,94,0.1)' : '', 
+                      color: order.paymentMethod === 'JumiaPay' ? '#6366f1' : order.paymentMethod === 'VISA' ? '#22c55e' : '' 
+                    }}>
+                      {order.paymentMethod === 'Cash' || !order.paymentMethod ? (language === 'ar' ? 'كاش' : 'Cash') : order.paymentMethod}
                     </span>
                   </td>
                   <td>

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useDashboard, getDaysDifference } from '../context/DashboardContext';
-import { Search, Filter, Plus, UserCheck, RefreshCw, FileUp, CreditCard, Gift, AlertCircle, Flag, PackageX, RotateCcw, Check, Pencil, X, Trash2 } from 'lucide-react';
+import { Search, Filter, Plus, UserCheck, RefreshCw, FileUp, CreditCard, Gift, AlertCircle, Flag, PackageX, RotateCcw, Check, Pencil, X, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import ExportActions from '../components/ExportActions';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -58,6 +58,10 @@ export default function OrdersTab() {
     reason: '',
     outlet: 'Banha 1'
   });
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(15);
 
   // Form for new order simulation
   const [newOrder, setNewOrder] = useState({
@@ -145,6 +149,18 @@ export default function OrdersTab() {
       .filter(order => filterStatus === 'All' || order.status === filterStatus)
       .sort((a, b) => new Date(b.receivedAt) - new Date(a.receivedAt));
   }, [baseFilteredOrders, filterStatus]);
+  
+  // Calculate Pagination
+  const totalPages = Math.ceil(orderList.length / itemsPerPage);
+  const paginatedOrders = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return orderList.slice(startIndex, startIndex + itemsPerPage);
+  }, [orderList, currentPage, itemsPerPage]);
+
+  // Reset to page 1 when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterCategory, filterTier, filterStatus, filterOutlet, filterDateStart, filterDateEnd, itemsPerPage]);
 
   // Summary by Outlet (calculated from base filtered data)
   const summaryByOutlet = useMemo(() => {
@@ -399,7 +415,7 @@ export default function OrdersTab() {
               </tr>
             </thead>
             <tbody>
-              {orderList.length > 0 ? orderList.map(order => (
+              {paginatedOrders.length > 0 ? paginatedOrders.map(order => (
                 <tr key={order.id} style={{ opacity: order.status === 'Returned' ? 0.6 : 1 }}>
                   <td style={{ fontWeight: 600 }}>{order.id}</td>
                   <td>
@@ -506,6 +522,82 @@ export default function OrdersTab() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Controls */}
+        {orderList.length > 0 && (
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            padding: '1rem 0.5rem', 
+            borderTop: '1px solid rgba(255,255,255,0.05)',
+            flexWrap: 'wrap',
+            gap: '1rem'
+          }}>
+            <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+              {language === 'ar' ? 'عرض' : 'Showing'} <span style={{ fontWeight: 600, color: 'var(--color-primary)' }}>{Math.min(orderList.length, (currentPage - 1) * itemsPerPage + 1)}-{Math.min(orderList.length, currentPage * itemsPerPage)}</span> {language === 'ar' ? 'من أصل' : 'of'} <span style={{ fontWeight: 600 }}>{orderList.length}</span> {language === 'ar' ? 'طلب' : 'orders'}
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginRight: '1rem' }}>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{language === 'ar' ? 'لكل صفحة:' : 'Per page:'}</span>
+                <select 
+                  className="input-field" 
+                  style={{ padding: '0.2rem 0.5rem', fontSize: '0.8rem', minWidth: '60px' }}
+                  value={itemsPerPage}
+                  onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                >
+                  <option value={10}>10</option>
+                  <option value={15}>15</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.25rem' }}>
+                <button 
+                  className="btn btn-outline" 
+                  style={{ padding: '0.4rem', minWidth: '36px', opacity: currentPage === 1 ? 0.5 : 1, cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                
+                {/* Simple page numbers */}
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  // Show pages around current page
+                  let pageNum;
+                  if (totalPages <= 5) pageNum = i + 1;
+                  else if (currentPage <= 3) pageNum = i + 1;
+                  else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
+                  else pageNum = currentPage - 2 + i;
+
+                  return (
+                    <button
+                      key={pageNum}
+                      className={`btn ${currentPage === pageNum ? 'btn-primary' : 'btn-outline'}`}
+                      style={{ padding: '0.4rem', minWidth: '36px', fontSize: '0.85rem' }}
+                      onClick={() => setCurrentPage(pageNum)}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+
+                <button 
+                  className="btn btn-outline" 
+                  style={{ padding: '0.4rem', minWidth: '36px', opacity: currentPage === totalPages ? 0.5 : 1, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ═══════════════════ Customer Returns Section ═══════════════════ */}

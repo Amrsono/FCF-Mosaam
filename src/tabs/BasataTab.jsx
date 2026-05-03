@@ -88,7 +88,7 @@ export default function BasataTab() {
       transactionId: formData.transactionId,
       paymentMethod: formData.paymentMethod,
       percentage: parseFloat(formData.percentage),
-      performedAt: formData.performedAt
+      performedAt: formData.performedAt ? new Date(formData.performedAt).toISOString() : undefined
     });
 
     if (result.success) {

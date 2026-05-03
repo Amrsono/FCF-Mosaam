@@ -134,7 +134,7 @@ export default function CallsLogTab() {
   // Full export headers — 14 columns
   const exportHeaders = [
     { label: isRTL ? 'رقم الطلب'         : 'Order ID',          accessor: 'orderId' },
-    { label: isRTL ? 'المصدر'             : 'Source',            accessor: l => l.orderSource === 'bosta' ? 'Bosta' : 'J' },
+    { label: isRTL ? 'المصدر'             : 'Source',            accessor: l => l.orderSource === 'bosta' ? 'Bosta' : 'Jumia' },
     { label: isRTL ? 'اسم العميل'        : 'Customer Name',     accessor: '_customerName' },
     { label: isRTL ? 'هاتف العميل'       : 'Customer Phone',    accessor: 'customerPhone' },
     { label: isRTL ? 'المنفذ'            : 'Outlet',            accessor: '_outlet' },

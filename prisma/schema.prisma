@@ -13,7 +13,7 @@ model Customer {
   email           String?
   address         String?
   tier            String       @default("New")
-  deliveries      Int          @default(0) // J deliveries
+  deliveries      Int          @default(0) // Jumia deliveries
   bostaDeliveries Int          @default(0) // Bosta deliveries
   createdAt       DateTime     @default(now())
 
@@ -33,7 +33,7 @@ model Order {
   returnedAt         DateTime?
 
   // New fields for detailed inventory reporting
-  outlet             String    @default("Banha 1")
+  outlet             String    @default("eltalg")
   size               String    @default("M")
   paymentMethod      String    @default("Cash")
   orderCost          Float     @default(0)
@@ -70,7 +70,7 @@ model BostaOrder {
   returnedAt         DateTime?
 
   // New fields for detailed inventory reporting
-  outlet             String    @default("Banha 1")
+  outlet             String    @default("eltalg")
   size               String    @default("M")
   paymentMethod      String    @default("Cash")
   orderCost          Float     @default(0)
@@ -101,12 +101,12 @@ model UserLog {
 
 model CustomerReturn {
   id            String    @id @default(uuid())
-  orderId       String?   // Optional link to the original J order
+  orderId       String?   // Optional link to the original Jumia order
   customerPhone String
   customerName  String    @default("Unknown")
   description   String
   reason        String?
-  outlet        String    @default("Banha 1") // Which branch received the return
+  outlet        String    @default("eltalg") // Which branch received the return
   status        String    @default("At Station") // "At Station" | "Returned to Jumia"
   receivedAt    DateTime  @default(now())
   returnedAt    DateTime? // When marked as returned to Jumia
@@ -114,7 +114,7 @@ model CustomerReturn {
 
 model CallLog {
   id            String    @id @default(uuid())
-  orderId       String                          // The J or Bosta order ID
+  orderId       String                          // The Jumia or Bosta order ID
   orderSource   String    @default("jumia")     // "jumia" | "bosta"
   customerPhone String
   agentName     String?                         // Username who took ownership

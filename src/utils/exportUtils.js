@@ -1,19 +1,5 @@
 import * as XLSX from 'xlsx';
-import pdfMake from 'pdfmake/build/pdfmake';
-import pdfFonts from 'pdfmake/build/vfs_fonts';
 import pptxgen from "pptxgenjs";
-import { reshapeArabic } from './arabicReshaper';
-
-// Initialize pdfMake VFS with a safer approach
-const getPdfMake = () => {
-  const instance = pdfMake.default || pdfMake;
-  if (instance && pdfFonts && pdfFonts.pdfMake) {
-    instance.vfs = pdfFonts.pdfMake.vfs;
-  }
-  return instance;
-};
-
-const _pdfMake = getPdfMake();
 
 /**
  * Normalizes dataset to have matching columns for exporting
@@ -36,218 +22,6 @@ export const exportToExcel = (data, headers, filename) => {
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
   XLSX.writeFile(workbook, `${filename}.xlsx`);
-};
-
-// ── Arabic Font Support ──────────────────────────────────────────────
-// jsPDF's built-in fonts (Helvetica, Times, Courier) do NOT support
-// Arabic/Unicode glyphs. We dynamically fetch the Amiri TTF font from
-// Google Fonts CDN on first use and cache it for subsequent exports.
-let _fontCache = null;
-let _fontPromise = null;
-
-const toArabicNumerals = (str) => {
-  return str.replace(/[0-9]/g, (d) => '٠١٢٣٤٥٦٧٨٩'[d]);
-};
-
-const loadArabicFont = async () => {
-  if (_fontCache) return _fontCache;
-  if (_fontPromise) return _fontPromise;
-
-  _fontPromise = (async () => {
-    try {
-      console.log('Attempting to load Cairo font...');
-      
-      // Add a timeout to the fetch to prevent hanging indefinitely
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
-
-      const res = await fetch(
-        'https://fonts.gstatic.com/s/cairo/v28/SLXGc1j96_pY_m48_jw6AnS4_H8f.ttf',
-        { signal: controller.signal }
-      );
-      
-      clearTimeout(timeoutId);
-      
-      if (!res.ok) throw new Error(`Font fetch failed: ${res.status}`);
-      const buffer = await res.arrayBuffer();
-      
-      const bytes = new Uint8Array(buffer);
-      let binary = '';
-      const len = bytes.byteLength;
-      for (let i = 0; i < len; i++) {
-        binary += String.fromCharCode(bytes[i]);
-      }
-      _fontCache = btoa(binary);
-      console.log('Cairo font cached.');
-
-      // Register with _pdfMake
-      if (_pdfMake) {
-        _pdfMake.vfs = _pdfMake.vfs || {};
-        _pdfMake.vfs['Cairo-Regular.ttf'] = _fontCache;
-        
-        _pdfMake.fonts = {
-          Cairo: {
-            normal: 'Cairo-Regular.ttf',
-            bold: 'Cairo-Regular.ttf',
-            italics: 'Cairo-Regular.ttf',
-            bolditalics: 'Cairo-Regular.ttf'
-          },
-          Roboto: {
-            normal: 'Roboto-Regular.ttf',
-            bold: 'Roboto-Medium.ttf',
-            italics: 'Roboto-Italic.ttf',
-            bolditalics: 'Roboto-MediumItalic.ttf'
-          }
-        };
-        console.log('Fonts registered with _pdfMake.');
-      }
-
-      return _fontCache;
-    } catch (err) {
-      console.warn('Font loading failed, falling back to standard fonts:', err);
-      // Ensure Roboto is still configured as fallback
-      if (_pdfMake) {
-        _pdfMake.fonts = _pdfMake.fonts || {
-          Roboto: {
-            normal: 'Roboto-Regular.ttf',
-            bold: 'Roboto-Medium.ttf',
-            italics: 'Roboto-Italic.ttf',
-            bolditalics: 'Roboto-MediumItalic.ttf'
-          }
-        };
-      }
-      return null;
-    } finally {
-      _fontPromise = null;
-    }
-  })();
-
-  return _fontPromise;
-};
-
-/**
- * Safely convert any value to a printable string for PDF cells.
- * Also handles Arabic text by reshaping (joining) and then reversing it for jsPDF's LTR engine.
- */
-/**
- * Safely convert any value to a printable string for PDF cells.
- * Also handles Arabic text by reshaping (joining) and then reversing it for jsPDF's LTR engine.
- */
-const safeString = (val, isPdfMake = false) => {
-  if (val == null) return '';
-  let str = '';
-  if (typeof val === 'object') {
-    if (val instanceof Date) str = val.toLocaleString();
-    else str = JSON.stringify(val);
-  } else {
-    str = String(val);
-  }
-
-  // Detect Arabic characters
-  if (/[\u0600-\u06FF]/.test(str)) {
-    // 1. Reshape the Arabic text to join characters correctly
-    const reshaped = reshapeArabic(str);
-    // 2. If using pdfMake with RTL support, we do NOT reverse the string.
-    // jsPDF needs reversing because it draws LTR only.
-    return isPdfMake ? reshaped : reshaped.split('').reverse().join('');
-  }
-  return str;
-};
-
-export const exportToPDF = async (data, headers, filename, title) => {
-  try {
-    await loadArabicFont();
-
-    // Detect RTL Needs
-    const isRtl = /[\u0600-\u06FF]/.test(title || '') || headers.some(h => /[\u0600-\u06FF]/.test(h.label));
-
-    // Prepare table headers and rows
-    const tableHeaders = headers.map(h => ({
-      text: safeString(h.label, true),
-      style: 'tableHeader'
-    }));
-
-    const tableRows = data.map(item =>
-      headers.map(h => {
-        const raw = typeof h.accessor === 'function' ? h.accessor(item) : item[h.accessor];
-        return {
-          text: safeString(raw, true),
-          style: 'tableCell'
-        };
-      })
-    );
-
-    const docDefinition = {
-      content: [
-        title ? { 
-          text: safeString(title, true), 
-          style: 'header', 
-          alignment: isRtl ? 'right' : 'left',
-          rtl: isRtl 
-        } : null,
-        {
-          table: {
-            headerRows: 1,
-            widths: headers.map(() => '*'),
-            body: [tableHeaders, ...tableRows]
-          },
-          layout: {
-            fillColor: (rowIndex) => {
-              if (rowIndex === 0) return '#503CFF';
-              return (rowIndex % 2 === 0) ? '#F5F5FF' : null;
-            }
-          },
-          rtl: isRtl
-        }
-      ],
-      defaultStyle: {
-        font: _fontCache ? 'Cairo' : 'Roboto',
-        fontSize: 10
-      },
-      styles: {
-        header: {
-          fontSize: 18,
-          bold: true,
-          margin: [0, 0, 0, 10]
-        },
-        tableHeader: {
-          bold: true,
-          fontSize: 11,
-          color: 'white',
-          alignment: isRtl ? 'right' : 'left',
-          margin: [3, 5, 3, 5]
-        },
-        tableCell: {
-          fontSize: 9,
-          alignment: isRtl ? 'right' : 'left',
-          margin: [3, 3, 3, 3]
-        }
-      },
-      // Essential for Arabic/RTL support in pdfmake
-      pageOrientation: 'portrait',
-      pageMargins: [40, 40, 40, 40]
-    };
-
-    // If RTL, set the direction
-    if (isRtl) {
-      // pdfMake handles the direction of the whole document or specific blocks
-      docDefinition.content.forEach(item => {
-        if (item && item.table) {
-          // Reverse column order for RTL table layout
-          item.table.body = item.table.body.map(row => row.reverse());
-        }
-      });
-    }
-
-    if (!_pdfMake || typeof _pdfMake.createPdf !== 'function') {
-      throw new Error('pdfMake library not properly initialized');
-    }
-
-    _pdfMake.createPdf(docDefinition).download(`${filename}.pdf`);
-  } catch (error) {
-    console.error('PDF export failed:', error);
-    alert('PDF export failed: ' + (error.message || 'Unknown error'));
-  }
 };
 
 /**
@@ -279,15 +53,17 @@ export const exportToPPTX = async (analytics, filename, language = 'en') => {
 
     // 2. JUMIA PERFORMANCE
     let slide2 = pptx.addSlide();
-    slide2.addText(language === 'ar' ? "أداء J " : " J  Performance", { x: 0.5, y: 0.5, fontSize: 24, bold: true, color: "7864ff" });
+    slide2.addText(language === 'ar' ? "أداء جوميا" : "Jumia Performance", { x: 0.5, y: 0.5, fontSize: 24, bold: true, color: "7864ff" });
     
     const jStats = [
       [language === 'ar' ? 'المؤشر' : 'Metric', language === 'ar' ? 'القيمة' : 'Value'],
-      [language === 'ar' ? 'الطلبات المستلمة' : 'Orders Handled', String(analytics.jumia.pickedUpCount)],
-      [language === 'ar' ? 'إجمالي الإيرادات' : 'Total Revenue', `${analytics.jumia.cash.toLocaleString()} EGP`],
+      [language === 'ar' ? 'الطلبات المستلمة بنجاح' : 'Orders Handled Successfully', String(analytics.jumia.pickedUpCount)],
+      [`  - Small (S)`, String(analytics.jumia.sizes?.S || 0)],
+      [`  - Medium (M)`, String(analytics.jumia.sizes?.M || 0)],
+      [`  - Large (L)`, String(analytics.jumia.sizes?.L || 0)],
+      [language === 'ar' ? 'إجمالي النقد المحصل' : 'Total Cash Collected', `${analytics.jumia.cash.toLocaleString()} EGP`],
       [`  - ${language === 'ar' ? 'نقدي' : 'Cash'}`, `${(analytics.jumia.cashTotal || 0).toLocaleString()} EGP`],
-      [`  - ${language === 'ar' ? 'بطاقة / فيزا' : 'Card / Visa'}`, `${(analytics.jumia.cardTotal || 0).toLocaleString()} EGP`],
-      [`  - ${language === 'ar' ? 'جوميا باي' : 'Jumia Pay'}`, `${(analytics.jumia.jumiaPayTotal || 0).toLocaleString()} EGP`],
+      [`  - ${language === 'ar' ? 'جوميا باي (أونلاين)' : 'Jumia Pay (Online)'}`, `${(analytics.jumia.jumiaPayTotal || 0).toLocaleString()} EGP`],
       [language === 'ar' ? 'المرتجع' : 'Returns', String(analytics.jumia.returnedCount)],
       [language === 'ar' ? 'غرامات التخزين' : 'Storage Penalties', `${analytics.jumia.penalties.toLocaleString()} EGP`]
     ];
@@ -298,8 +74,11 @@ export const exportToPPTX = async (analytics, filename, language = 'en') => {
     slide3.addText(language === 'ar' ? "أداء بوسطة" : "Bosta Performance", { x: 0.5, y: 0.5, fontSize: 24, bold: true, color: "6366f1" });
     const bStats = [
       [language === 'ar' ? 'المؤشر' : 'Metric', language === 'ar' ? 'القيمة' : 'Value'],
-      [language === 'ar' ? 'الطلبات المستلمة' : 'Orders Handled', String(analytics.bosta.pickedUpCount)],
-      [language === 'ar' ? 'الإيرادات' : 'Revenue', `${analytics.bosta.cash.toLocaleString()} EGP`],
+      [language === 'ar' ? 'الطلبات المستلمة بنجاح' : 'Orders Handled Successfully', String(analytics.bosta.pickedUpCount)],
+      [`  - Small (S)`, String(analytics.bosta.sizes?.S || 0)],
+      [`  - Medium (M)`, String(analytics.bosta.sizes?.M || 0)],
+      [`  - Large (L)`, String(analytics.bosta.sizes?.L || 0)],
+      [language === 'ar' ? 'إجمالي النقد المحصل' : 'Total Cash Collected', `${analytics.bosta.cash.toLocaleString()} EGP`],
       [language === 'ar' ? 'المرتجع' : 'Returns', String(analytics.bosta.returnedCount)]
     ];
     slide3.addTable(bStats, { x: 0.5, y: 1.2, w: 9, border: { pt: 1, color: "CBD5E0" }, fill: "F7FAFC", fontSize: 14 });
@@ -332,7 +111,7 @@ export const exportToPPTX = async (analytics, filename, language = 'en') => {
     slide6.addText(language === 'ar' ? "الملخص المالي النهائي" : "Final Financial Summary", { x: 0.5, y: 0.5, fontSize: 24, bold: true, color: "10b981" });
     const fStats = [
       [language === 'ar' ? 'القناة' : 'Channel', language === 'ar' ? 'صافي المركز' : 'Net Position'],
-      [" J ", `${analytics.jumia.cash.toLocaleString()} EGP`],
+      ["Jumia", `${analytics.jumia.cash.toLocaleString()} EGP`],
       ["Bosta", `${analytics.bosta.cash.toLocaleString()} EGP`],
       ["Basata", `${analytics.basata.volume.toLocaleString()} EGP`],
       [language === 'ar' ? 'الإجمالي النهائي' : 'GRAND TOTAL', `${analytics.grandTotal.toLocaleString()} EGP`]

@@ -1,24 +1,10 @@
 import React, { useState } from 'react';
-import { Download, FileText, Loader2, Info } from 'lucide-react';
-import { exportToExcel, exportToPDF } from '../utils/exportUtils';
+import { Download } from 'lucide-react';
+import { exportToExcel } from '../utils/exportUtils';
 import { useLanguage } from '../context/LanguageContext';
 
-export default function ExportActions({ data, headers, filename, title }) {
-  const { t, language } = useLanguage();
-  const [pdfLoading, setPdfLoading] = useState(false);
-
-  const handlePdfExport = async () => {
-    setPdfLoading(true);
-    try {
-      await exportToPDF(data, headers, filename, title);
-    } finally {
-      setPdfLoading(false);
-    }
-  };
-
-  const adobeNote = language === 'ar' 
-    ? 'لأفضل عرض للنصوص العربية في Adobe Reader، يرجى التأكد من تثبيت حزمة اللغة العربية (Arabic Language Pack).'
-    : 'For best Arabic display in Adobe Reader, please ensure the Arabic Language Pack is installed.';
+export default function ExportActions({ data, headers, filename }) {
+  const { language } = useLanguage();
 
   return (
     <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
@@ -30,27 +16,6 @@ export default function ExportActions({ data, headers, filename, title }) {
       >
         <Download size={16} /> {language === 'ar' ? 'إكسل' : 'Excel'}
       </button>
-      <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '4px' }}>
-        <button 
-          className="btn btn-outline" 
-          onClick={handlePdfExport}
-          disabled={pdfLoading}
-          title={language === 'ar' ? 'تصدير إلى PDF' : 'Export to PDF'}
-          style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', color: 'var(--color-danger)', borderColor: 'rgba(255,50,50,0.3)', opacity: pdfLoading ? 0.6 : 1, cursor: pdfLoading ? 'wait' : 'pointer' }}
-        >
-          {pdfLoading 
-            ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> 
-            : <FileText size={16} />
-          } {language === 'ar' ? 'PDF' : 'PDF'}
-        </button>
-        <div 
-          className="tooltip-container"
-          style={{ cursor: 'help', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center' }}
-          title={adobeNote}
-        >
-          <Info size={14} />
-        </div>
-      </div>
     </div>
   );
 }

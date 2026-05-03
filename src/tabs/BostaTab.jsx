@@ -20,16 +20,16 @@ export default function BostaTab() {
   const { t, language } = useLanguage();
   
   const getOutletLabel = (val) => {
-    if (val === 'Banha 1' || val === 'وبور الثلج' || val === 'وبور التلج') return t('banha1');
-    if (val === 'Banha 2' || val === 'تجارة' || val === 'تجاره') return t('banha2');
-    if (val === 'Banha 3' || val === 'المستشفي' || val === 'المستشفى') return t('banha3');
+    if (val === 'eltalg' || val === 'Banha 1' || val === 'وبور الثلج' || val === 'وبور التلج') return t('banha1');
+    if (val === 'tegara' || val === 'Banha 2' || val === 'تجارة' || val === 'تجاره') return t('banha2');
+    if (val === 'mostashfa' || val === 'Banha 3' || val === 'المستشفي' || val === 'المستشفى') return t('banha3');
     return val;
   };
 
   const normalizeOutlet = (val) => {
-    if (!val || val === 'وبور الثلج' || val === 'وبور التلج') return 'Banha 1';
-    if (val === 'تجارة' || val === 'تجاره') return 'Banha 2';
-    if (val === 'المستشفي' || val === 'المستشفى') return 'Banha 3';
+    if (!val || val === 'وبور الثلج' || val === 'وبور التلج') return 'eltalg';
+    if (val === 'تجارة' || val === 'تجاره') return 'tegara';
+    if (val === 'المستشفي' || val === 'المستشفى') return 'mostashfa';
     return val;
   };
 
@@ -54,7 +54,7 @@ export default function BostaTab() {
   const [originalOrderId, setOriginalOrderId] = useState(null);
 
   const [newOrder, setNewOrder] = useState({
-    id: '', customerPhone: '', customerName: '', description: '', totalValue: '', category: 'Electronics', outlet: 'Banha 1'
+    id: '', customerPhone: '', customerName: '', description: '', totalValue: '', category: 'Electronics', outlet: 'eltalg'
   });
 
   const exportHeaders = [
@@ -70,6 +70,22 @@ export default function BostaTab() {
     { label: t('daysInInv'), accessor: 'daysParked' },
     { label: 'SLA Status', accessor: o => o.daysParked >= 4 ? t('critical4Days') : o.daysParked >= 2 ? t('warning2Days') : t('onTrack') }
   ];
+
+  const isInRange = (dateStr, startStr, endStr) => {
+    if (!dateStr) return false;
+    const d = new Date(dateStr);
+    if (startStr) {
+      const s = new Date(startStr);
+      s.setHours(0, 0, 0, 0);
+      if (d < s) return false;
+    }
+    if (endStr) {
+      const e = new Date(endStr);
+      e.setHours(23, 59, 59, 999);
+      if (d > e) return false;
+    }
+    return true;
+  };
 
   // Stage 1: Filter by everything EXCEPT status
   const baseFilteredOrders = useMemo(() => {
@@ -88,27 +104,26 @@ export default function BostaTab() {
       const matchesCategory = filterCategory === 'All' || o.category === filterCategory;
       const matchesOutlet = filterOutlet === 'All' || normalizeOutlet(o.outlet) === filterOutlet;
 
-      // Date Filter
+      // Date Filter logic improved to handle status-specific dates
       let matchesDate = true;
       if (filterDateStart || filterDateEnd) {
-        const orderDate = new Date(o.receivedAt);
-        orderDate.setHours(0, 0, 0, 0);
-        
-        if (filterDateStart) {
-          const start = new Date(filterDateStart);
-          start.setHours(0, 0, 0, 0);
-          if (orderDate < start) matchesDate = false;
-        }
-        if (filterDateEnd) {
-          const end = new Date(filterDateEnd);
-          end.setHours(23, 59, 59, 999);
-          if (orderDate > end) matchesDate = false;
+        if (filterStatus === 'Inventory') {
+          matchesDate = isInRange(o.receivedAt, filterDateStart, filterDateEnd);
+        } else if (filterStatus === 'Picked Up') {
+          matchesDate = isInRange(o.pickedUpAt, filterDateStart, filterDateEnd);
+        } else if (filterStatus === 'Returned' || filterStatus === 'Cancelled') {
+          matchesDate = isInRange(o.returnedAt, filterDateStart, filterDateEnd);
+        } else {
+          // Status === 'All'
+          matchesDate = isInRange(o.receivedAt, filterDateStart, filterDateEnd) || 
+                        isInRange(o.pickedUpAt, filterDateStart, filterDateEnd) || 
+                        isInRange(o.returnedAt, filterDateStart, filterDateEnd);
         }
       }
 
       return matchesSearch && matchesCategory && matchesOutlet && matchesDate;
     });
-  }, [bostaOrders, customers, searchTerm, filterCategory, filterOutlet, filterDateStart, filterDateEnd, language]);
+  }, [bostaOrders, customers, searchTerm, filterCategory, filterOutlet, filterDateStart, filterDateEnd, language, filterStatus]);
 
   // Stage 2: Final list for display (filtered by status)
   const orderList = useMemo(() => {
@@ -130,7 +145,7 @@ export default function BostaTab() {
       outlet: newOrder.outlet
     });
     setShowModal(false);
-    setNewOrder({ id: '', customerPhone: '', customerName: '', description: '', totalValue: '', category: 'Electronics', outlet: 'Banha 1' });
+    setNewOrder({ id: '', customerPhone: '', customerName: '', description: '', totalValue: '', category: 'Electronics', outlet: 'eltalg' });
   };
 
   const getSlaColor = (days) => {
@@ -174,11 +189,20 @@ export default function BostaTab() {
     }
   };
 
-  // Summary counts based on current filters (except status)
-  const inventoryCount = baseFilteredOrders.filter(o => o.status === 'Inventory').length;
-  const pickedUpCount = baseFilteredOrders.filter(o => o.status === 'Picked Up').length;
-  const cancelledCount = baseFilteredOrders.filter(o => o.status === 'Cancelled').length;
-  const returnedCount = baseFilteredOrders.filter(o => o.status === 'Returned').length;
+  // Summary counts based on current filters (with status-specific date handling)
+  const summaryOrders = useMemo(() => {
+    return bostaOrders.filter(o => {
+      const matchesSearch = o.id.toLowerCase().includes(searchTerm.toLowerCase()) || o.customerPhone.includes(searchTerm);
+      const matchesCategory = filterCategory === 'All' || o.category === filterCategory;
+      const matchesOutlet = filterOutlet === 'All' || normalizeOutlet(o.outlet) === filterOutlet;
+      return matchesSearch && matchesCategory && matchesOutlet;
+    });
+  }, [bostaOrders, searchTerm, filterCategory, filterOutlet]);
+
+  const inventoryCount = summaryOrders.filter(o => o.status === 'Inventory' && isInRange(o.receivedAt, filterDateStart, filterDateEnd)).length;
+  const pickedUpCount = summaryOrders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt, filterDateStart, filterDateEnd)).length;
+  const cancelledCount = summaryOrders.filter(o => o.status === 'Cancelled' && isInRange(o.returnedAt, filterDateStart, filterDateEnd)).length;
+  const returnedCount = summaryOrders.filter(o => o.status === 'Returned' && isInRange(o.returnedAt, filterDateStart, filterDateEnd)).length;
 
   return (
     <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: '100%' }}>
@@ -226,9 +250,9 @@ export default function BostaTab() {
           </select>
           <select className="input-field" style={{ flex: '1 1 120px' }} value={filterOutlet} onChange={e => setFilterOutlet(e.target.value)}>
              <option value="All">{language === 'ar' ? 'جميع المنافذ' : 'All Outlets'}</option>
-              <option value="Banha 1">{t('banha1')}</option>
-              <option value="Banha 2">{t('banha2')}</option>
-              <option value="Banha 3">{t('banha3')}</option>
+              <option value="eltalg">{t('banha1')}</option>
+              <option value="tegara">{t('banha2')}</option>
+              <option value="mostashfa">{t('banha3')}</option>
           </select>
 
           <select className="input-field" style={{ flex: '1 1 120px' }} value={filterCategory} onChange={e => setFilterCategory(e.target.value)}>
@@ -536,9 +560,9 @@ export default function BostaTab() {
               <div className="input-group">
                 <label className="input-label">{language === 'ar' ? 'المنفذ (فرع الاستلام)' : 'Outlet (Receiving Branch)'}</label>
                 <select className="input-field" value={newOrder.outlet} onChange={e => setNewOrder({ ...newOrder, outlet: e.target.value })}>
-                  <option value="Banha 1">{t('banha1')}</option>
-                  <option value="Banha 2">{t('banha2')}</option>
-                  <option value="Banha 3">{t('banha3')}</option>
+                  <option value="eltalg">{t('banha1')}</option>
+                  <option value="tegara">{t('banha2')}</option>
+                  <option value="mostashfa">{t('banha3')}</option>
                 </select>
               </div>
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
@@ -615,9 +639,9 @@ export default function BostaTab() {
                   value={editingOrder.outlet} 
                   onChange={e => setEditingOrder({...editingOrder, outlet: e.target.value})}
                 >
-                  <option value="Banha 1">{t('banha1')}</option>
-                  <option value="Banha 2">{t('banha2')}</option>
-                  <option value="Banha 3">{t('banha3')}</option>
+                  <option value="eltalg">{t('banha1')}</option>
+                  <option value="tegara">{t('banha2')}</option>
+                  <option value="mostashfa">{t('banha3')}</option>
                 </select>
               </div>
 

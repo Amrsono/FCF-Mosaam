@@ -9,9 +9,9 @@ export default function ParkedPenaltiesTab() {
   const { t, language } = useLanguage();
   
   const getOutletLabel = (val) => {
-    if (val === 'Banha 1' || val === 'وبور الثلج' || val === 'وبور التلج') return t('banha1');
-    if (val === 'Banha 2' || val === 'تجارة' || val === 'تجاره') return t('banha2');
-    if (val === 'Banha 3' || val === 'المستشفي' || val === 'المستشفى') return t('banha3');
+    if (val === 'eltalg' || val === 'Banha 1' || val === 'وبور الثلج' || val === 'وبور التلج') return t('banha1');
+    if (val === 'tegara' || val === 'Banha 2' || val === 'تجارة' || val === 'تجاره') return t('banha2');
+    if (val === 'mostashfa' || val === 'Banha 3' || val === 'المستشفي' || val === 'المستشفى') return t('banha3');
     return val;
   };
 
@@ -19,7 +19,7 @@ export default function ParkedPenaltiesTab() {
 
   const exportHeaders = [
     { label: t('orderId'), accessor: 'id' },
-    { label: language === 'ar' ? 'المصدر' : 'Source', accessor: o => o.orderSource === 'bosta' ? 'Bosta' : 'J' },
+    { label: language === 'ar' ? 'المصدر' : 'Source', accessor: o => o.orderSource === 'bosta' ? 'Bosta' : 'Jumia' },
     { label: t('customer'), accessor: 'customerName' },
     { label: t('phone'), accessor: 'customerPhone' },
     { label: language === 'ar' ? 'المنفذ' : 'Outlet', accessor: 'outlet' },
@@ -35,7 +35,7 @@ export default function ParkedPenaltiesTab() {
       .map(o => {
          const cust = customers.find(c => c.phone === o.customerPhone);
          const size = (o.size || 'M').toUpperCase();
-         const dailyRate = size === 'S' ? 20 : size === 'L' ? 40 : 40;
+         const dailyRate = size === 'S' ? 18 : size === 'L' ? 45 : 30;
          return {
            ...o,
            orderSource: source,
@@ -111,8 +111,8 @@ export default function ParkedPenaltiesTab() {
           </h2>
           <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem', fontSize: '0.9rem' }}>
             {language === 'ar'
-              ? 'مستحقة من الطلبات المخزنة — S: 20 | M: 40 | L: 40 جنيه / اليوم'
-              : 'Accrued from parked orders — S: 20 | M: 40 | L: 40 EGP / Day'}
+              ? 'أول 4 أيام مجانية — ثم S: 18 | M: 30 | L: 45 جنيه / اليوم'
+              : 'First 4 days free — then S: 18 | M: 30 | L: 45 EGP / Day'}
           </p>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem', flex: '1 1 auto' }}>
@@ -148,7 +148,7 @@ export default function ParkedPenaltiesTab() {
           style={{ border: 'none', flex: '1 1 auto', fontSize: '0.85rem' }}
           onClick={() => setFilterSource('jumia')}
         >
-          {language === 'ar' ? 'J ' : ' J '}
+          {language === 'ar' ? 'جوميا' : 'Jumia'}
         </button>
         <button
           className={`btn ${filterSource === 'bosta' ? 'btn-primary' : 'btn-outline'}`}

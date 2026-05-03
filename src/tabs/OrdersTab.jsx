@@ -57,7 +57,7 @@ export default function OrdersTab() {
     customerName: '',
     description: '',
     reason: '',
-    outlet: 'Banha 1'
+    outlet: 'eltalg'
   });
 
   // Pagination state
@@ -72,7 +72,7 @@ export default function OrdersTab() {
     totalValue: '',
     category: 'Electronics',
     customerName: '',
-    outlet: 'Banha 1',
+    outlet: 'eltalg',
     size: 'M',
     paymentMethod: 'Cash'
   });
@@ -93,20 +93,36 @@ export default function OrdersTab() {
   ];
 
   const getOutletLabel = (val) => {
-    if (val === 'Banha 1' || val === 'وبور الثلج' || val === 'وبور التلج') return t('banha1');
-    if (val === 'Banha 2' || val === 'تجارة' || val === 'تجاره') return t('banha2');
-    if (val === 'Banha 3' || val === 'المستشفي' || val === 'المستشفى') return t('banha3');
+    if (val === 'eltalg' || val === 'Banha 1' || val === 'وبور الثلج' || val === 'وبور التلج') return t('banha1');
+    if (val === 'tegara' || val === 'Banha 2' || val === 'تجارة' || val === 'تجاره') return t('banha2');
+    if (val === 'mostashfa' || val === 'Banha 3' || val === 'المستشفي' || val === 'المستشفى') return t('banha3');
     return val;
   };
 
   const normalizeOutlet = (val) => {
-    if (!val || val === 'وبور الثلج' || val === 'وبور التلج') return 'Banha 1';
-    if (val === 'تجارة' || val === 'تجاره') return 'Banha 2';
-    if (val === 'المستشفي' || val === 'المستشفى') return 'Banha 3';
+    if (!val || val === 'وبور الثلج' || val === 'وبور التلج') return 'eltalg';
+    if (val === 'تجارة' || val === 'تجاره') return 'tegara';
+    if (val === 'المستشفي' || val === 'المستشفى') return 'mostashfa';
     return val;
   };
 
   // Base filtering logic (excluding status for summary)
+  const isInRange = (dateStr, startStr, endStr) => {
+    if (!dateStr) return false;
+    const d = new Date(dateStr);
+    if (startStr) {
+      const s = new Date(startStr);
+      s.setHours(0, 0, 0, 0);
+      if (d < s) return false;
+    }
+    if (endStr) {
+      const e = new Date(endStr);
+      e.setHours(23, 59, 59, 999);
+      if (d > e) return false;
+    }
+    return true;
+  };
+
   const baseFilteredOrders = useMemo(() => {
     return orders.map(order => {
       const cust = customers.find(c => c.phone === order.customerPhone);
@@ -126,17 +142,17 @@ export default function OrdersTab() {
       
       let matchesDate = true;
       if (filterDateStart || filterDateEnd) {
-        const orderDate = new Date(order.receivedAt);
-        orderDate.setHours(0, 0, 0, 0);
-        if (filterDateStart) {
-          const start = new Date(filterDateStart);
-          start.setHours(0, 0, 0, 0);
-          if (orderDate < start) matchesDate = false;
-        }
-        if (filterDateEnd) {
-          const end = new Date(filterDateEnd);
-          end.setHours(23, 59, 59, 999);
-          if (orderDate > end) matchesDate = false;
+        if (filterStatus === 'Inventory') {
+          matchesDate = isInRange(order.receivedAt, filterDateStart, filterDateEnd);
+        } else if (filterStatus === 'Picked Up') {
+          matchesDate = isInRange(order.pickedUpAt, filterDateStart, filterDateEnd);
+        } else if (filterStatus === 'Returned' || filterStatus === 'Cancelled') {
+          matchesDate = isInRange(order.returnedAt, filterDateStart, filterDateEnd);
+        } else {
+          // Status === 'All' -> Match if ANY relevant date is in range
+          matchesDate = isInRange(order.receivedAt, filterDateStart, filterDateEnd) || 
+                        isInRange(order.pickedUpAt, filterDateStart, filterDateEnd) || 
+                        isInRange(order.returnedAt, filterDateStart, filterDateEnd);
         }
       }
       
@@ -144,7 +160,7 @@ export default function OrdersTab() {
       
       return matchesSearch && matchesCategory && matchesTier && matchesOutlet && matchesDate && matchesPayment;
     });
-  }, [orders, customers, searchTerm, filterCategory, filterTier, filterOutlet, filterDateStart, filterDateEnd, filterPaymentMethod, calculatePenalty, language]);
+  }, [orders, customers, searchTerm, filterCategory, filterTier, filterOutlet, filterDateStart, filterDateEnd, filterPaymentMethod, calculatePenalty, language, filterStatus]);
 
   // Display filtering logic (including status)
   const orderList = useMemo(() => {
@@ -167,25 +183,32 @@ export default function OrdersTab() {
 
   // Summary by Outlet (calculated from base filtered data)
   const summaryByOutlet = useMemo(() => {
-    const outlets = ['Banha 1', 'Banha 2', 'Banha 3'];
+    const outlets = ['eltalg', 'tegara', 'mostashfa'];
     return outlets.map(outletName => {
-      const outletOrders = baseFilteredOrders.filter(o => normalizeOutlet(o.outlet) === outletName);
+      // For summary, we start from the full orders list but respect other non-date filters
+      const outletOrders = orders.filter(o => {
+        const matchesOutlet = normalizeOutlet(o.outlet) === outletName;
+        const matchesCategory = filterCategory === 'All' || o.category === filterCategory;
+        const matchesSearch = o.id.toLowerCase().includes(searchTerm.toLowerCase()) || o.customerPhone.includes(searchTerm);
+        const matchesPayment = filterPaymentMethod === 'All' || o.paymentMethod === filterPaymentMethod;
+        return matchesOutlet && matchesCategory && matchesSearch && matchesPayment;
+      });
       
-      const received = outletOrders.length;
-      const delivered = outletOrders.filter(o => o.status === 'Picked Up').length;
-      const returned = outletOrders.filter(o => o.status === 'Returned').length;
-      const cancelled = outletOrders.filter(o => o.status === 'Cancelled').length;
-      const available = outletOrders.filter(o => o.status === 'Inventory').length;
+      const received = outletOrders.filter(o => isInRange(o.receivedAt, filterDateStart, filterDateEnd)).length;
+      const delivered = outletOrders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt, filterDateStart, filterDateEnd)).length;
+      const returned = outletOrders.filter(o => o.status === 'Returned' && isInRange(o.returnedAt, filterDateStart, filterDateEnd)).length;
+      const cancelled = outletOrders.filter(o => o.status === 'Cancelled' && isInRange(o.returnedAt, filterDateStart, filterDateEnd)).length;
+      const available = outletOrders.filter(o => o.status === 'Inventory').length; // Current stock is always current
       
-      const totalMoney = outletOrders.filter(o => o.status !== 'Returned' && o.status !== 'Cancelled').reduce((sum, o) => sum + o.totalValue, 0);
-      const paid = outletOrders.filter(o => o.status === 'Picked Up').reduce((sum, o) => sum + o.totalValue, 0);
+      const totalMoney = outletOrders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt, filterDateStart, filterDateEnd)).reduce((sum, o) => sum + o.totalValue, 0);
+      const paid = totalMoney; // Same as above for this simplified summary
       
-      const jumiaPay = outletOrders.filter(o => o.status !== 'Returned' && o.paymentMethod?.toLowerCase().includes('jumia')).reduce((sum, o) => sum + o.totalValue, 0);
-      const creditCard = outletOrders.filter(o => o.status !== 'Returned' && (o.paymentMethod?.toLowerCase().includes('card') || o.paymentMethod?.toLowerCase().includes('visa'))).reduce((sum, o) => sum + o.totalValue, 0);
+      const jumiaPay = outletOrders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt, filterDateStart, filterDateEnd) && o.paymentMethod?.toLowerCase().includes('jumia')).reduce((sum, o) => sum + o.totalValue, 0);
+      const creditCard = outletOrders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt, filterDateStart, filterDateEnd) && (o.paymentMethod?.toLowerCase().includes('card') || o.paymentMethod?.toLowerCase().includes('visa'))).reduce((sum, o) => sum + o.totalValue, 0);
 
-      const sCount = outletOrders.filter(o => o.size === 'S').length;
-      const mCount = outletOrders.filter(o => o.size === 'M').length;
-      const lCount = outletOrders.filter(o => o.size === 'L').length;
+      const sCount = outletOrders.filter(o => o.status === 'Inventory' && o.size === 'S').length;
+      const mCount = outletOrders.filter(o => o.status === 'Inventory' && o.size === 'M').length;
+      const lCount = outletOrders.filter(o => o.status === 'Inventory' && o.size === 'L').length;
 
       const storageFees = outletOrders.filter(o => o.status === 'Inventory').reduce((sum, o) => sum + calculateStorageFee(o), 0);
       const totalIncome = storageFees;
@@ -208,7 +231,7 @@ export default function OrdersTab() {
         lCount
       };
     });
-  }, [baseFilteredOrders, calculateStorageFee]);
+  }, [orders, searchTerm, filterCategory, filterOutlet, filterDateStart, filterDateEnd, filterPaymentMethod, calculateStorageFee]);
 
   const handleSimulateReceive = (e) => {
     e.preventDefault();
@@ -228,7 +251,7 @@ export default function OrdersTab() {
     setShowSimulateModal(false);
     setNewOrder({ 
       id: '', customerPhone: '', description: '', totalValue: '', category: 'Electronics', customerName: '',
-      outlet: 'Banha 1', size: 'M', paymentMethod: 'Cash'
+      outlet: 'eltalg', size: 'M', paymentMethod: 'Cash'
     });
   };
 
@@ -275,9 +298,9 @@ export default function OrdersTab() {
             
             <select className="input-field" style={{ flex: '1 1 120px' }} value={filterOutlet} onChange={e => setFilterOutlet(e.target.value)}>
                <option value="All">{language === 'ar' ? 'جميع المنافذ' : 'All Outlets'}</option>
-               <option value="Banha 1">{t('banha1')}</option>
-               <option value="Banha 2">{t('banha2')}</option>
-               <option value="Banha 3">{t('banha3')}</option>
+               <option value="eltalg">{t('banha1')}</option>
+               <option value="tegara">{t('banha2')}</option>
+               <option value="mostashfa">{t('banha3')}</option>
             </select>
 
             <select className="input-field" style={{ flex: '1 1 120px' }} value={filterCategory} onChange={e => setFilterCategory(e.target.value)}>
@@ -653,7 +676,7 @@ export default function OrdersTab() {
                 { label: t('returnReason'), accessor: 'reason' },
                 { label: t('receivedAt'), accessor: r => new Date(r.receivedAt).toLocaleString() },
                 { label: t('status'), accessor: r => r.status === 'At Station' ? t('atStation') : t('returnedToJumia') },
-                { label: language === 'ar' ? 'تاريخ الارجاع لـ J' : 'Returned to J Date', accessor: r => r.returnedAt ? new Date(r.returnedAt).toLocaleString() : '-' }
+                { label: language === 'ar' ? 'تاريخ الارجاع لـ جوميا' : 'Returned to Jumia Date', accessor: r => r.returnedAt ? new Date(r.returnedAt).toLocaleString() : '-' }
               ]}
               filename="Customer_Returns_Export"
               title={t('customerReturns')}
@@ -845,9 +868,9 @@ export default function OrdersTab() {
                   value={editingOrder.outlet} 
                   onChange={e => setEditingOrder({...editingOrder, outlet: e.target.value})}
                 >
-                  <option value="Banha 1">{t('banha1')}</option>
-                  <option value="Banha 2">{t('banha2')}</option>
-                  <option value="Banha 3">{t('banha3')}</option>
+                  <option value="eltalg">{t('banha1')}</option>
+                  <option value="tegara">{t('banha2')}</option>
+                  <option value="mostashfa">{t('banha3')}</option>
                 </select>
               </div>
 

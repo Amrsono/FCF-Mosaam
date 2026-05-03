@@ -119,7 +119,7 @@ export default function CustomersTab() {
                       <span style={{ fontWeight: 700, color: 'var(--color-primary)' }}>
                         {orders.filter(o => o.customerPhone === customer.phone).length}
                       </span>
-                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{language === 'ar' ? ' J ' : ' J '}</span>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{language === 'ar' ? 'جوميا' : 'Jumia'}</span>
                     </div>
                   </td>
                   <td>

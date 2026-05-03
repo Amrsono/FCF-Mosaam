@@ -6,12 +6,12 @@ export const translations = {
     sla: "Delivery SLA",
     penalties: "Parked Penalties",
     basata: "Basata POS",
-    jumia: " J ",
+    jumia: "Jumia",
     bosta: "Bosta Orders",
-    returned: "Returned to  J ",
+    returned: "Returned to Jumia",
     analytics: "Analytics Insights",
     signOut: "Sign Out",
-    jumiaStation: " J  Station",
+    jumiaStation: "Jumia Station",
     fcf: "FCF",
     mosaam: "Mosaam",
     admin: "Admin",
@@ -103,9 +103,9 @@ export const translations = {
     visa: "Visa",
     creditCard: "Credit Card",
     jumiaPay: "Jumia Pay",
-    banha1: "Banha 1",
-    banha2: "Banha 2",
-    banha3: "Banha 3",
+    banha1: "eltalg",
+    banha2: "tegara",
+    banha3: "mostashfa",
 
     // Bosta Tab
     bostaInventory: "Bosta Orders Inventory",
@@ -123,17 +123,17 @@ export const translations = {
     parkedDescription: "Overview of orders currently parked at the station and their accumulated late pickup penalties.",
 
     // Returned Tab
-    returnedOrders: "Returned to  J ",
+    returnedOrders: "Returned to Jumia",
     returnDate: "Return Date",
 
     // Customer Returns Section (in Orders Tab)
     customerReturns: "Customer Returns",
-    customerReturnsDesc: "Packages returned by customers to the station, pending return to  J .",
+    customerReturnsDesc: "Packages returned by customers to the station, pending return to Jumia.",
     receiveCustomerReturn: "Receive Customer Return",
     returnReason: "Reason",
     atStation: "At Station",
-    returnedToJumia: "Returned to  J ",
-    markReturnedToJumia: "Mark Returned to  J ",
+    returnedToJumia: "Returned to Jumia",
+    markReturnedToJumia: "Mark Returned to Jumia",
     pendingReturns: "Pending Returns",
 
     // Analytics Tab
@@ -143,9 +143,9 @@ export const translations = {
     monthly: "Monthly",
     totalStationRevenue: "Total Station Revenue",
     revenueStreams: "Revenue Streams Breakdown",
-    ordersComparison: " J  vs Bosta Orders Comparison",
+    ordersComparison: "Jumia vs Bosta Orders Comparison",
     ordersStatusDist: "Full Orders Status Distribution",
-    slaHealth: " J  SLA Health",
+    slaHealth: "Jumia SLA Health",
     basataRevenueCat: "Basata Revenue by Category",
     topBasataServices: "Top Basata Services by Volume",
     financialSummary: "Full Financial Summary",
@@ -166,7 +166,7 @@ export const translations = {
     showClosed: "Show Closed",
     hideClosed: "Hide Closed",
     urgentCallsCount: "Urgent Calls",
-    sourceJ: " J ",
+    sourceJ: "Jumia",
     sourceBosta: "Bosta",
 
     // Statuses
@@ -185,12 +185,12 @@ export const translations = {
     sla: "متابعة SLA",
     penalties: "غرامات التأخير",
     basata: "بساطة POS",
-    jumia: " J ",
+    jumia: "جوميا",
     bosta: "طلبات بوسطة",
-    returned: "المرتجع لـ J ",
+    returned: "المرتجع لـ جوميا",
     analytics: "التحليلات",
     signOut: "تسجيل الخروج",
-    jumiaStation: "محطة  J ",
+    jumiaStation: "محطة جوميا",
     fcf: "إف سي إف",
     mosaam: "مواسام",
     admin: "مدير",
@@ -253,7 +253,7 @@ export const translations = {
     email: "البريد الإلكتروني",
     address: "العنوان",
     tier: "الفئة",
-    deliveries: "تسليمات  J ",
+    deliveries: "تسليمات جوميا",
     bostaDeliveries: "تسليمات بوسطة",
     newCustomer: "عميل جديد",
     loyaltyTier: "فئة الولاء",
@@ -282,9 +282,9 @@ export const translations = {
     visa: "فيزا",
     creditCard: "بطاقة ائتمان",
     jumiaPay: "جوميا باي",
-    banha1: "Banha 1 (وبور التلج)",
-    banha2: "Banha 2 (تجارة)",
-    banha3: "Banha 3 (المستشفي)",
+    banha1: "وبور التلج (eltalg)",
+    banha2: "تجارة (tegara)",
+    banha3: "المستشفى (mostashfa)",
 
     // Bosta Tab
     bostaInventory: "مخزون طلبات بوسطة",
@@ -302,17 +302,17 @@ export const translations = {
     parkedDescription: "نظرة عامة على الطلبات المتوقفة حالياً في المحطة وغرامات تأخير الاستلام المتراكمة.",
 
     // Returned Tab
-    returnedOrders: "المرتجع لـ J ",
+    returnedOrders: "المرتجع لـ جوميا",
     returnDate: "تاريخ الارجاع",
 
     // Customer Returns Section (in Orders Tab)
     customerReturns: "مرتجعات العملاء",
-    customerReturnsDesc: "الطرود التي أرجعها العملاء للمحطة بانتظار إرجاعها لـ J .",
+    customerReturnsDesc: "الطرود التي أرجعها العملاء للمحطة بانتظار إرجاعها لـ جوميا.",
     receiveCustomerReturn: "استلام مرتجع عميل",
     returnReason: "السبب",
     atStation: "في المحطة",
-    returnedToJumia: "تم الارجاع لـ J ",
-    markReturnedToJumia: "تم الارجاع لـ J ",
+    returnedToJumia: "تم الارجاع لـ جوميا",
+    markReturnedToJumia: "تم الارجاع لـ جوميا",
     pendingReturns: "مرتجعات معلقة",
 
     // Analytics Tab
@@ -322,9 +322,9 @@ export const translations = {
     monthly: "شهري",
     totalStationRevenue: "إجمالي إيرادات المحطة",
     revenueStreams: "تحليل مصادر الإيرادات",
-    ordersComparison: "مقارنة طلبات  J  وبوسطة",
+    ordersComparison: "مقارنة طلبات جوميا وبوسطة",
     ordersStatusDist: "توزيع حالة الطلبات بالكامل",
-    slaHealth: "صحة SLA لـ J ",
+    slaHealth: "صحة SLA لـ جوميا",
     basataRevenueCat: "إيرادات بساطة حسب الفئة",
     topBasataServices: "أعلى خدمات بساطة حسب الحجم",
     financialSummary: "الملخص المالي الكامل",
@@ -345,7 +345,7 @@ export const translations = {
     showClosed: "عرض المغلقة",
     hideClosed: "إخفاء المغلقة",
     urgentCallsCount: "مكالمات عاجلة",
-    sourceJ: " J ",
+    sourceJ: "جوميا",
     sourceBosta: "بوسطة",
 
     // Statuses

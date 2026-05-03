@@ -40,7 +40,7 @@ export default async function handler(req, res) {
           description,
           totalValue: parseFloat(totalValue),
           category,
-          outlet: outlet || "Banha 1",
+          outlet: outlet || "eltalg",
           size: size || "M",
           paymentMethod: paymentMethod || "Cash",
           orderCost: parseFloat(orderCost || 0)

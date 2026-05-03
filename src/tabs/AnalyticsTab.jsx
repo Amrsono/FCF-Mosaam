@@ -144,6 +144,17 @@ export default function AnalyticsTab() {
   const bostaCash = bostaPickedUp.reduce((s, o) => s + o.totalValue, 0);
   const bostaReturnedAmt = bostaReturned.reduce((s, o) => s + o.totalValue, 0);
 
+  // Sizes breakdown for PowerPoint
+  const getSizes = (list) => {
+    return list.reduce((acc, o) => {
+      const s = (o.size || 'M').toUpperCase();
+      acc[s] = (acc[s] || 0) + 1;
+      return acc;
+    }, { S: 0, M: 0, L: 0 });
+  };
+  const jumiaSizes = getSizes(jumiaPickedUp);
+  const bostaSizes = getSizes(bostaPickedUp);
+
   // --- BASATA ---
   const activeBasata = basataTransactions.filter(t => isInRange(t.performedAt));
   const basataVolume = activeBasata.reduce((s, t) => s + t.amount, 0);
@@ -181,7 +192,7 @@ export default function AnalyticsTab() {
   // Calls vs Orders received bar data
   const callsVsOrdersData = [
     {
-      name: language === 'ar' ? 'J' : 'J',
+      name: language === 'ar' ? 'جوميا' : 'Jumia',
       [language === 'ar' ? 'طلبات مستلمة' : 'Orders Received']: orders.filter(o => isInRange(o.receivedAt)).length,
       [language === 'ar' ? 'مكالمات' : 'Calls Made']: callsInPeriod.filter(l => l.orderSource !== 'bosta').length,
     },
@@ -204,13 +215,15 @@ export default function AnalyticsTab() {
         jumiaPayTotal: jumiaPayTotal,
         returnedCount: stdReturned.length,
         returnedAmt: jumiaReturnedAmt,
-        penalties: activePenalties
+        penalties: activePenalties,
+        sizes: jumiaSizes
       },
       bosta: {
         pickedUpCount: bostaPickedUp.length,
         cash: bostaCash,
         returnedCount: bostaReturned.length,
-        returnedAmt: bostaReturnedAmt
+        returnedAmt: bostaReturnedAmt,
+        sizes: bostaSizes
       },
       basata: {
         volume: basataVolume,
@@ -431,10 +444,10 @@ export default function AnalyticsTab() {
             <ExportActions
               data={[
                 { group: 'Overview', metric: 'Grand Total Revenue', value: `${grandTotal} EGP` },
-                { group: ' J ', metric: 'Cash Collected', value: `${jumiaCash} EGP` },
-                { group: ' J ', metric: 'Picked Up', value: jumiaPickedUp.length },
-                { group: ' J ', metric: 'Returned', value: jumiaReturned.length },
-                { group: ' J ', metric: 'Penalties Pool', value: `${activePenalties} EGP` },
+                { group: 'Jumia', metric: 'Cash Collected', value: `${jumiaCash} EGP` },
+                { group: 'Jumia', metric: 'Picked Up', value: jumiaPickedUp.length },
+                { group: 'Jumia', metric: 'Returned', value: jumiaReturned.length },
+                { group: 'Jumia', metric: 'Penalties Pool', value: `${activePenalties} EGP` },
                 { group: 'Bosta', metric: 'Cash Collected', value: `${bostaCash} EGP` },
                 { group: 'Bosta', metric: 'Picked Up', value: bostaPickedUp.length },
                 { group: 'Bosta', metric: 'Returned', value: bostaReturned.length },
@@ -488,7 +501,7 @@ export default function AnalyticsTab() {
         <MetricCard title={`${t('bosta')} ${t('cash')}`} value={`${bostaCash.toLocaleString()} EGP`} icon={<DollarSign size={14} />} color={CHART_COLORS.bosta} sub={language === 'ar' ? `${bostaPickedUp.length} طلب مستلم` : `${bostaPickedUp.length} orders picked up`} />
         <MetricCard title={`${t('basata')} POS`} value={`${basataVolume.toLocaleString()} EGP`} icon={<Zap size={14} />} color={CHART_COLORS.basata} sub={language === 'ar' ? `${activeBasata.length} عملية` : `${activeBasata.length} transactions`} />
         <MetricCard title={t('parkedPenalties')} value={`${activePenalties} EGP`} icon={<AlertOctagon size={14} />} color={CHART_COLORS.warning} sub={language === 'ar' ? `${jumiaInventory.length} طلب مخزن` : `${jumiaInventory.length} parked orders`} />
-        <MetricCard title={language === 'ar' ? 'حالة SLA حرجة' : 'SLA Critical'} value={jumiaSlaCritical} icon={<ShieldAlert size={14} />} color={CHART_COLORS.danger} sub={language === 'ar' ? ' J  5+ أيام تأخير' : ' J  5+ days overdue'} />
+        <MetricCard title={language === 'ar' ? 'حالة SLA حرجة' : 'SLA Critical'} value={jumiaSlaCritical} icon={<ShieldAlert size={14} />} color={CHART_COLORS.danger} sub={language === 'ar' ? 'جوميا 5+ أيام تأخير' : 'Jumia 5+ days overdue'} />
         <MetricCard title={t('customers')} value={customers.length} icon={<Users size={14} />} color="var(--color-primary)" sub={language === 'ar' ? 'مسجلين في المحطة' : 'Registered at station'} />
       </div>
 
@@ -516,7 +529,7 @@ export default function AnalyticsTab() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title={language === 'ar' ? 'مقارنة طلبات  J  وبوسطة' : ' J  vs Bosta Orders Comparison'} icon={<BarChart2 size={16} color={CHART_COLORS.bosta} />}>
+        <ChartCard title={language === 'ar' ? 'مقارنة طلبات جوميا وبوسطة' : 'Jumia vs Bosta Orders Comparison'} icon={<BarChart2 size={16} color={CHART_COLORS.bosta} />}>
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={comparisonData} barGap={4}>
               <XAxis dataKey="name" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} axisLine={false} tickLine={false} />
@@ -529,7 +542,7 @@ export default function AnalyticsTab() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title={language === 'ar' ? 'طرق دفع  J ' : ' J  Payment Methods'} icon={<DollarSign size={16} color={CHART_COLORS.jumia} />}>
+        <ChartCard title={language === 'ar' ? 'طرق دفع جوميا' : 'Jumia Payment Methods'} icon={<DollarSign size={16} color={CHART_COLORS.jumia} />}>
           <ResponsiveContainer width="100%" height={260}>
             <PieChart>
               <Pie
@@ -567,7 +580,7 @@ export default function AnalyticsTab() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title={language === 'ar' ? 'صحة SLA لـ J ' : ' J  SLA Health'} icon={<Clock size={16} color={CHART_COLORS.warning} />}>
+        <ChartCard title={language === 'ar' ? 'صحة SLA لـ جوميا' : 'Jumia SLA Health'} icon={<Clock size={16} color={CHART_COLORS.warning} />}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', justifyContent: 'center', height: '100%' }}>
             {[
               { label: `${t('onTrack')} (0-2 ${language === 'ar' ? 'أيام' : 'days'})`, value: Math.max(0, jumiaInventory.length - jumiaSlaCritical - jumiaSlaNear), color: CHART_COLORS.success },
@@ -592,7 +605,7 @@ export default function AnalyticsTab() {
               </div>
             ))}
             <div style={{ marginTop: '0.5rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-              {language === 'ar' ? `إجمالي ${jumiaInventory.length} في مخزون  J ` : `${jumiaInventory.length} total in  J  inventory`}
+              {language === 'ar' ? `إجمالي ${jumiaInventory.length} في مخزون جوميا` : `${jumiaInventory.length} total in Jumia inventory`}
             </div>
           </div>
         </ChartCard>

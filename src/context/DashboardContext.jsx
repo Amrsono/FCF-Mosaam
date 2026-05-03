@@ -102,7 +102,7 @@ export const DashboardProvider = ({ children }) => {
                     description: row.description || 'Imported Items',
                     totalValue: Number(row.totalValue) || 0,
                     category: row.category || 'General',
-                    outlet: row.outlet || "Banha 1",
+                    outlet: row.outlet || "eltalg",
                     size: row.size || "M",
                     paymentMethod: row.paymentMethod || "Cash",
                     orderCost: Number(row.orderCost) || 0
@@ -251,12 +251,12 @@ export const DashboardProvider = ({ children }) => {
   // Returns daily storage rate based on package size (Jumia only)
   const getJumiaDailyRate = (order) => {
     const size = (order.size || 'M').toUpperCase();
-    if (size === 'S') return 20;
-    if (size === 'L') return 40;
-    return 40; // Medium (default)
+    if (size === 'S') return 18;
+    if (size === 'L') return 45;
+    return 30; // Medium (default)
   };
 
-  // Accrued storage fee: charges from day 1, every day parked (20/40/40 EGP per day)
+  // Accrued storage fee: first 4 days free, then charges by size (S:18, M:30, L:45 EGP per day)
   const calculatePenalty = (order) => {
     let toDate = new Date();
     if (order.status === 'Picked Up' && order.pickedUpAt) {
@@ -266,8 +266,8 @@ export const DashboardProvider = ({ children }) => {
     }
     
     const days = getDaysDifference(order.receivedAt, toDate);
-    if (days < 1) return 0;
-    return getJumiaDailyRate(order) * days;
+    if (days <= 4) return 0; // First 4 days free
+    return getJumiaDailyRate(order) * (days - 4);
   };
 
   // Alias kept for backwards compatibility (same logic)

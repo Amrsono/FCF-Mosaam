@@ -88,6 +88,7 @@ model Admin {
   username     String   @unique
   passwordHash String
   role         String   @default("staff") // "admin" | "staff"
+  outlet       String   @default("eltalg")
   createdAt    DateTime @default(now())
 }
 

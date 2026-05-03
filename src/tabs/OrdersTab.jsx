@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useDashboard, getDaysDifference } from '../context/DashboardContext';
+import { useAuth } from '../context/AuthContext';
 import { Search, Filter, Plus, UserCheck, RefreshCw, FileUp, CreditCard, Gift, AlertCircle, Flag, PackageX, RotateCcw, Check, Pencil, X, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import ExportActions from '../components/ExportActions';
 import { useLanguage } from '../context/LanguageContext';
@@ -23,13 +24,14 @@ export default function OrdersTab() {
     deleteOrder,
     revertOrderToInventory
   } = useDashboard();
+  const { user } = useAuth();
   const { t, language } = useLanguage();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('All');
   const [filterTier, setFilterTier] = useState('All');
   const [filterStatus, setFilterStatus] = useState('Inventory');
-  const [filterOutlet, setFilterOutlet] = useState('All');
+  const [filterOutlet, setFilterOutlet] = useState(user?.role === 'admin' ? 'All' : (user?.outlet || 'eltalg'));
   const [filterDateStart, setFilterDateStart] = useState('');
   const [filterDateEnd, setFilterDateEnd] = useState('');
   const [filterPaymentMethod, setFilterPaymentMethod] = useState('All');
@@ -57,7 +59,7 @@ export default function OrdersTab() {
     customerName: '',
     description: '',
     reason: '',
-    outlet: 'eltalg'
+    outlet: user?.outlet || 'eltalg'
   });
 
   // Pagination state
@@ -72,7 +74,7 @@ export default function OrdersTab() {
     totalValue: '',
     category: 'Electronics',
     customerName: '',
-    outlet: 'eltalg',
+    outlet: user?.outlet || 'eltalg',
     size: 'M',
     paymentMethod: 'Cash'
   });
@@ -251,7 +253,7 @@ export default function OrdersTab() {
     setShowSimulateModal(false);
     setNewOrder({ 
       id: '', customerPhone: '', description: '', totalValue: '', category: 'Electronics', customerName: '',
-      outlet: 'eltalg', size: 'M', paymentMethod: 'Cash'
+      outlet: user?.outlet || 'eltalg', size: 'M', paymentMethod: 'Cash'
     });
   };
 
@@ -296,7 +298,13 @@ export default function OrdersTab() {
               <option value="Returned">{t('returnedStatus')}</option>
             </select>
             
-            <select className="input-field" style={{ flex: '1 1 120px' }} value={filterOutlet} onChange={e => setFilterOutlet(e.target.value)}>
+            <select 
+              className="input-field" 
+              style={{ flex: '1 1 120px' }} 
+              value={filterOutlet} 
+              onChange={e => setFilterOutlet(e.target.value)}
+              disabled={user?.role !== 'admin'}
+            >
                <option value="All">{language === 'ar' ? 'جميع المنافذ' : 'All Outlets'}</option>
                <option value="eltalg">{t('banha1')}</option>
                <option value="tegara">{t('banha2')}</option>
@@ -867,6 +875,7 @@ export default function OrdersTab() {
                   className="input-field" 
                   value={editingOrder.outlet} 
                   onChange={e => setEditingOrder({...editingOrder, outlet: e.target.value})}
+                  disabled={user?.role !== 'admin'}
                 >
                   <option value="eltalg">{t('banha1')}</option>
                   <option value="tegara">{t('banha2')}</option>

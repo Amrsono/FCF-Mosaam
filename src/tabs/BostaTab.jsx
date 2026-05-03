@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useDashboard, getDaysDifference } from '../context/DashboardContext';
+import { useAuth } from '../context/AuthContext';
 import { Search, Plus, UserCheck, RefreshCw, Package, CreditCard, Gift, AlertCircle, CalendarClock, Clock, Pencil, X, Trash2, RotateCcw } from 'lucide-react';
 import ExportActions from '../components/ExportActions';
 import { useLanguage } from '../context/LanguageContext';
@@ -17,6 +18,7 @@ export default function BostaTab() {
     deleteBostaOrder,
     revertBostaOrderToInventory
   } = useDashboard();
+  const { user } = useAuth();
   const { t, language } = useLanguage();
   
   const getOutletLabel = (val) => {
@@ -36,7 +38,7 @@ export default function BostaTab() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('Inventory');
   const [filterCategory, setFilterCategory] = useState('All');
-  const [filterOutlet, setFilterOutlet] = useState('All');
+  const [filterOutlet, setFilterOutlet] = useState(user?.role === 'admin' ? 'All' : (user?.outlet || 'eltalg'));
   const [filterDateStart, setFilterDateStart] = useState('');
   const [filterDateEnd, setFilterDateEnd] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -54,7 +56,7 @@ export default function BostaTab() {
   const [originalOrderId, setOriginalOrderId] = useState(null);
 
   const [newOrder, setNewOrder] = useState({
-    id: '', customerPhone: '', customerName: '', description: '', totalValue: '', category: 'Electronics', outlet: 'eltalg'
+    id: '', customerPhone: '', customerName: '', description: '', totalValue: '', category: 'Electronics', outlet: user?.outlet || 'eltalg'
   });
 
   const exportHeaders = [
@@ -145,7 +147,7 @@ export default function BostaTab() {
       outlet: newOrder.outlet
     });
     setShowModal(false);
-    setNewOrder({ id: '', customerPhone: '', customerName: '', description: '', totalValue: '', category: 'Electronics', outlet: 'eltalg' });
+    setNewOrder({ id: '', customerPhone: '', customerName: '', description: '', totalValue: '', category: 'Electronics', outlet: user?.outlet || 'eltalg' });
   };
 
   const getSlaColor = (days) => {
@@ -248,7 +250,13 @@ export default function BostaTab() {
             <option value="Cancelled">{language === 'ar' ? 'طلبات ملغية' : 'Cancelled Orders'}</option>
             <option value="Returned">{t('returnedStatus')}</option>
           </select>
-          <select className="input-field" style={{ flex: '1 1 120px' }} value={filterOutlet} onChange={e => setFilterOutlet(e.target.value)}>
+          <select 
+            className="input-field" 
+            style={{ flex: '1 1 120px' }} 
+            value={filterOutlet} 
+            onChange={e => setFilterOutlet(e.target.value)}
+            disabled={user?.role !== 'admin'}
+          >
              <option value="All">{language === 'ar' ? 'جميع المنافذ' : 'All Outlets'}</option>
               <option value="eltalg">{t('banha1')}</option>
               <option value="tegara">{t('banha2')}</option>
@@ -559,7 +567,12 @@ export default function BostaTab() {
               </div>
               <div className="input-group">
                 <label className="input-label">{language === 'ar' ? 'المنفذ (فرع الاستلام)' : 'Outlet (Receiving Branch)'}</label>
-                <select className="input-field" value={newOrder.outlet} onChange={e => setNewOrder({ ...newOrder, outlet: e.target.value })}>
+                <select 
+                  className="input-field" 
+                  value={newOrder.outlet} 
+                  onChange={e => setNewOrder({ ...newOrder, outlet: e.target.value })}
+                  disabled={user?.role !== 'admin'}
+                >
                   <option value="eltalg">{t('banha1')}</option>
                   <option value="tegara">{t('banha2')}</option>
                   <option value="mostashfa">{t('banha3')}</option>
@@ -638,6 +651,7 @@ export default function BostaTab() {
                   className="input-field" 
                   value={editingOrder.outlet} 
                   onChange={e => setEditingOrder({...editingOrder, outlet: e.target.value})}
+                  disabled={user?.role !== 'admin'}
                 >
                   <option value="eltalg">{t('banha1')}</option>
                   <option value="tegara">{t('banha2')}</option>

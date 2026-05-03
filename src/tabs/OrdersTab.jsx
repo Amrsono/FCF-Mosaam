@@ -682,9 +682,9 @@ export default function OrdersTab() {
                 { label: t('phone'), accessor: 'customerPhone' },
                 { label: t('description'), accessor: 'description' },
                 { label: t('returnReason'), accessor: 'reason' },
-                { label: t('receivedAt'), accessor: r => new Date(r.receivedAt).toLocaleString() },
+                { label: t('receivedAt'), accessor: r => new Date(r.receivedAt).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-GB', { timeZone: 'Africa/Cairo' }) },
                 { label: t('status'), accessor: r => r.status === 'At Station' ? t('atStation') : t('returnedToJumia') },
-                { label: language === 'ar' ? 'تاريخ الارجاع لـ جوميا' : 'Returned to Jumia Date', accessor: r => r.returnedAt ? new Date(r.returnedAt).toLocaleString() : '-' }
+                { label: language === 'ar' ? 'تاريخ الارجاع لـ جوميا' : 'Returned to Jumia Date', accessor: r => r.returnedAt ? new Date(r.returnedAt).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-GB', { timeZone: 'Africa/Cairo' }) : '-' }
               ]}
               filename="Customer_Returns_Export"
               title={t('customerReturns')}
@@ -720,7 +720,7 @@ export default function OrdersTab() {
                   </td>
                   <td>{ret.description}</td>
                   <td><span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{ret.reason || '-'}</span></td>
-                  <td>{new Date(ret.receivedAt).toLocaleString()}</td>
+                  <td>{new Date(ret.receivedAt).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-GB', { timeZone: 'Africa/Cairo' })}</td>
                   <td>
                     <span className={`badge ${ret.status === 'At Station' ? 'badge-warning' : 'badge-success'}`}>
                       {ret.status === 'At Station' ? t('atStation') : t('returnedToJumia')}

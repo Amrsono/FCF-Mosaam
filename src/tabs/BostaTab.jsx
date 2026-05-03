@@ -66,7 +66,7 @@ export default function BostaTab() {
     { label: t('description'), accessor: 'description' },
     { label: t('category'), accessor: 'category' },
     { label: language === 'ar' ? 'المنفذ' : 'Outlet', accessor: 'outlet' },
-    { label: t('receivedAt'), accessor: o => new Date(o.receivedAt).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) },
+    { label: t('receivedAt'), accessor: o => new Date(o.receivedAt).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US', { timeZone: 'Africa/Cairo', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) },
     { label: t('value'), accessor: 'totalValue' },
     { label: t('status'), accessor: 'status' },
     { label: t('daysInInv'), accessor: 'daysParked' },
@@ -371,12 +371,12 @@ export default function BostaTab() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
                     {/* Date line */}
                     <span style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.82rem', letterSpacing: '0.01em' }}>
-                      {new Date(order.receivedAt).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-GB', { year: 'numeric', month: 'short', day: '2-digit' })}
+                      {new Date(order.receivedAt).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-GB', { timeZone: 'Africa/Cairo', year: 'numeric', month: 'short', day: '2-digit' })}
                     </span>
                     {/* Time line */}
                     <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                       <Clock size={11} />
-                      {new Date(order.receivedAt).toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
+                      {new Date(order.receivedAt).toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', { timeZone: 'Africa/Cairo', hour: '2-digit', minute: '2-digit' })}
                     </span>
                     {/* Elapsed badge — only for inventory orders */}
                     {order.status === 'Inventory' && (

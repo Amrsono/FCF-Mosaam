@@ -106,8 +106,8 @@ export default function LogsTab() {
                 return { ...log, _amount: parsedAmount !== null ? parsedAmount : '-' };
               }),
               [
-                { label: language === 'ar' ? 'تاريخ' : 'Date',    accessor: l => new Date(l.createdAt).toLocaleDateString() },
-                { label: language === 'ar' ? 'الوقت' : 'Time',    accessor: l => new Date(l.createdAt).toLocaleTimeString() },
+                { label: language === 'ar' ? 'تاريخ' : 'Date',    accessor: l => new Date(l.createdAt).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-GB', { timeZone: 'Africa/Cairo' }) },
+                { label: language === 'ar' ? 'الوقت' : 'Time',    accessor: l => new Date(l.createdAt).toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-GB', { timeZone: 'Africa/Cairo' }) },
                 { label: language === 'ar' ? 'المستخدم' : 'User',   accessor: 'username' },
                 { label: language === 'ar' ? 'الإجراء' : 'Action', accessor: 'action' },
                 { label: language === 'ar' ? 'رقم الطلب' : 'Order ID', accessor: l => {
@@ -166,8 +166,8 @@ export default function LogsTab() {
                     return (
                       <tr key={log.id}>
                         <td style={{ whiteSpace: 'nowrap' }}>
-                          <div style={{ fontWeight: 500 }}>{new Date(log.createdAt).toLocaleDateString()}</div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(log.createdAt).toLocaleTimeString()}</div>
+                          <div style={{ fontWeight: 500 }}>{new Date(log.createdAt).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-GB', { timeZone: 'Africa/Cairo' })}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(log.createdAt).toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-GB', { timeZone: 'Africa/Cairo' })}</div>
                         </td>
                         <td>
                           <span className="badge" style={{ background: 'rgba(var(--color-primary-rgb), 0.1)', color: 'var(--color-primary)' }}>

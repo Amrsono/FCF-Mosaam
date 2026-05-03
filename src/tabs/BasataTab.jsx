@@ -26,7 +26,7 @@ export default function BasataTab() {
     { label: t('amount'), accessor: 'amount' },
     { label: t('percentage'), accessor: 'percentage' },
     { label: t('paymentMethod'), accessor: 'paymentMethod' },
-    { label: t('date'), accessor: o => new Date(o.performedAt).toLocaleString() }
+    { label: t('date'), accessor: o => new Date(o.performedAt).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-GB', { timeZone: 'Africa/Cairo' }) }
   ];
 
   const QUICK_ACTIONS = [
@@ -66,9 +66,18 @@ export default function BasataTab() {
 
   const handleOpenModal = (category, provider) => {
     setActiveService({ category, provider });
-    const now = new Date();
-    const offset = now.getTimezoneOffset() * 60000;
-    const localISOTime = (new Date(now - offset)).toISOString().slice(0, 16);
+    
+    // Force Egypt Time for the pre-filled input
+    const options = { timeZone: 'Africa/Cairo', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false };
+    const formatter = new Intl.DateTimeFormat('en-CA', options);
+    const parts = formatter.formatToParts(new Date());
+    const y = parts.find(p => p.type === 'year').value;
+    const m = parts.find(p => p.type === 'month').value;
+    const d = parts.find(p => p.type === 'day').value;
+    let h = parts.find(p => p.type === 'hour').value;
+    if (h === '24') h = '00';
+    const min = parts.find(p => p.type === 'minute').value;
+    const localISOTime = `${y}-${m}-${d}T${h}:${min}`;
     
     setFormData({ 
       amount: '', 
@@ -84,11 +93,24 @@ export default function BasataTab() {
     e.preventDefault();
     if (!formData.amount) return;
     
+    const getSafeISO = (localStr) => {
+      if (!localStr) return undefined;
+      try {
+        // datetime-local gives "YYYY-MM-DDTHH:mm"
+        const [d, t] = localStr.split('T');
+        const [y, mo, day] = d.split('-').map(Number);
+        const [h, mi] = t.split(':').map(Number);
+        return new Date(y, mo - 1, day, h, mi).toISOString();
+      } catch (e) {
+        return new Date(localStr).toISOString(); // fallback
+      }
+    };
+
     const result = await logBasataService(activeService.category, activeService.provider, parseFloat(formData.amount), {
       transactionId: formData.transactionId,
       paymentMethod: formData.paymentMethod,
       percentage: parseFloat(formData.percentage),
-      performedAt: formData.performedAt ? new Date(formData.performedAt).toISOString() : undefined
+      performedAt: getSafeISO(formData.performedAt)
     });
 
     if (result.success) {
@@ -194,7 +216,7 @@ export default function BasataTab() {
              <tbody>
                {basataTransactions.length > 0 ? basataTransactions.map(t => (
                  <tr key={t.id}>
-                   <td style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{new Date(t.performedAt).toLocaleString()}</td>
+                   <td style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{new Date(t.performedAt).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-GB', { timeZone: 'Africa/Cairo', hour: '2-digit', minute: '2-digit', second: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
                    <td style={{ fontFamily: 'monospace' }}>{t.transactionId || '-'}</td>
                    <td>
                       <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{t.serviceProvider}</div>

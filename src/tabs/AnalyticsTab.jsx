@@ -54,10 +54,9 @@ export default function AnalyticsTab() {
   const { t, language } = useLanguage();
   
   const formatDate = (date) => {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
+    const options = { timeZone: 'Africa/Cairo', year: 'numeric', month: '2-digit', day: '2-digit' };
+    const formatter = new Intl.DateTimeFormat('en-CA', options);
+    return formatter.format(date); // en-CA gives YYYY-MM-DD
   };
 
   const [startDate, setStartDate] = useState(() => formatDate(new Date()));
@@ -90,10 +89,24 @@ export default function AnalyticsTab() {
   ];
 
   // Time boundary
-  const startLimit = new Date(startDate);
-  startLimit.setHours(0, 0, 0, 0);
-  const endLimit = new Date(endDate);
-  endLimit.setHours(23, 59, 59, 999);
+  // Time boundary - Parse YYYY-MM-DD as Egypt Local
+  const parseEgyptDate = (dateStr, setToEnd) => {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    // Create date in a way that allows us to set it to 00:00 or 23:59 in Egypt time
+    // For simplicity, we create it and then adjust if needed, but the most robust way
+    // is to use the parts constructor which uses local time, assuming local is Egypt.
+    // If local is NOT Egypt, we need to be more careful.
+    const date = new Date(y, m - 1, d);
+    if (setToEnd) {
+      date.setHours(23, 59, 59, 999);
+    } else {
+      date.setHours(0, 0, 0, 0);
+    }
+    return date;
+  };
+
+  const startLimit = parseEgyptDate(startDate, false);
+  const endLimit = parseEgyptDate(endDate, true);
 
   const isInRange = (dateStr) => {
     if (!dateStr) return false;

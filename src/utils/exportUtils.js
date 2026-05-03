@@ -62,6 +62,9 @@ export const exportToPPTX = async (analytics, filename, language = 'en') => {
       [`  - Medium (M)`, String(analytics.jumia.sizes?.M || 0)],
       [`  - Large (L)`, String(analytics.jumia.sizes?.L || 0)],
       [language === 'ar' ? 'إجمالي النقد المحصل' : 'Total Cash Collected', `${analytics.jumia.cash.toLocaleString()} EGP`],
+      [`  - ${language === 'ar' ? 'بنها 1' : 'Banha 1'}`, `${(analytics.jumia.cashByOutlet?.eltalg || 0).toLocaleString()} EGP`],
+      [`  - ${language === 'ar' ? 'بنها 2' : 'Banha 2'}`, `${(analytics.jumia.cashByOutlet?.tegara || 0).toLocaleString()} EGP`],
+      [`  - ${language === 'ar' ? 'بنها 3' : 'Banha 3'}`, `${(analytics.jumia.cashByOutlet?.mostashfa || 0).toLocaleString()} EGP`],
       [`  - ${language === 'ar' ? 'نقدي' : 'Cash'}`, `${(analytics.jumia.cashTotal || 0).toLocaleString()} EGP`],
       [`  - ${language === 'ar' ? 'جوميا باي (أونلاين)' : 'Jumia Pay (Online)'}`, `${(analytics.jumia.jumiaPayTotal || 0).toLocaleString()} EGP`],
       [language === 'ar' ? 'المرتجع' : 'Returns', String(analytics.jumia.returnedCount)],
@@ -79,6 +82,9 @@ export const exportToPPTX = async (analytics, filename, language = 'en') => {
       [`  - Medium (M)`, String(analytics.bosta.sizes?.M || 0)],
       [`  - Large (L)`, String(analytics.bosta.sizes?.L || 0)],
       [language === 'ar' ? 'إجمالي النقد المحصل' : 'Total Cash Collected', `${analytics.bosta.cash.toLocaleString()} EGP`],
+      [`  - ${language === 'ar' ? 'بنها 1' : 'Banha 1'}`, `${(analytics.bosta.cashByOutlet?.eltalg || 0).toLocaleString()} EGP`],
+      [`  - ${language === 'ar' ? 'بنها 2' : 'Banha 2'}`, `${(analytics.bosta.cashByOutlet?.tegara || 0).toLocaleString()} EGP`],
+      [`  - ${language === 'ar' ? 'بنها 3' : 'Banha 3'}`, `${(analytics.bosta.cashByOutlet?.mostashfa || 0).toLocaleString()} EGP`],
       [language === 'ar' ? 'المرتجع' : 'Returns', String(analytics.bosta.returnedCount)]
     ];
     slide3.addTable(bStats, { x: 0.5, y: 1.2, w: 9, border: { pt: 1, color: "CBD5E0" }, fill: "F7FAFC", fontSize: 14 });

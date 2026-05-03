@@ -16,6 +16,13 @@ import { useLanguage } from '../context/LanguageContext';
 import { exportToPPTX } from '../utils/exportUtils';
 import { Presentation } from 'lucide-react';
 
+const normalizeOutlet = (val) => {
+  if (!val || val === 'Banha 1' || val === 'وبور الثلج' || val === 'وبور التلج') return 'eltalg';
+  if (val === 'Banha 2' || val === 'تجارة' || val === 'تجاره') return 'tegara';
+  if (val === 'Banha 3' || val === 'المستشفي' || val === 'المستشفى') return 'mostashfa';
+  return val;
+};
+
 const CHART_COLORS = {
   jumia: '#f97316',
   bosta: '#6366f1',
@@ -215,6 +222,14 @@ export default function AnalyticsTab() {
       [language === 'ar' ? 'مكالمات' : 'Calls Made']: callsInPeriod.filter(l => l.orderSource === 'bosta').length,
     },
   ];
+
+  const getCashByOutlet = (list) => {
+    return list.reduce((acc, o) => {
+      const outlet = normalizeOutlet(o.outlet);
+      acc[outlet] = (acc[outlet] || 0) + o.totalValue;
+      return acc;
+    }, { eltalg: 0, tegara: 0, mostashfa: 0 });
+  };
   const ordersReceivedKey = language === 'ar' ? 'طلبات مستلمة' : 'Orders Received';
   const callsMadeKey      = language === 'ar' ? 'مكالمات'       : 'Calls Made';
 
@@ -229,14 +244,16 @@ export default function AnalyticsTab() {
         returnedCount: stdReturned.length,
         returnedAmt: jumiaReturnedAmt,
         penalties: activePenalties,
-        sizes: jumiaSizes
+        sizes: jumiaSizes,
+        cashByOutlet: getCashByOutlet(jumiaPickedUp)
       },
       bosta: {
         pickedUpCount: bostaPickedUp.length,
         cash: bostaCash,
         returnedCount: bostaReturned.length,
         returnedAmt: bostaReturnedAmt,
-        sizes: bostaSizes
+        sizes: bostaSizes,
+        cashByOutlet: getCashByOutlet(bostaPickedUp)
       },
       basata: {
         volume: basataVolume,

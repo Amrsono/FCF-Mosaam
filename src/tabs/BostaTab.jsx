@@ -27,9 +27,9 @@ export default function BostaTab() {
   };
 
   const normalizeOutlet = (val) => {
-    if (!val || val === 'وبور الثلج' || val === 'وبور التلج') return 'eltalg';
-    if (val === 'تجارة' || val === 'تجاره') return 'tegara';
-    if (val === 'المستشفي' || val === 'المستشفى') return 'mostashfa';
+    if (!val || val === 'Banha 1' || val === 'وبور الثلج' || val === 'وبور التلج') return 'eltalg';
+    if (val === 'Banha 2' || val === 'تجارة' || val === 'تجاره') return 'tegara';
+    if (val === 'Banha 3' || val === 'المستشفي' || val === 'المستشفى') return 'mostashfa';
     return val;
   };
 

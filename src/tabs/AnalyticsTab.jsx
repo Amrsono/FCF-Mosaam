@@ -404,6 +404,7 @@ export default function AnalyticsTab() {
                 {t('custom')}
               </button>
             )}
+          </div>
           <div style={{ 
             display: 'flex', 
             alignItems: 'center',

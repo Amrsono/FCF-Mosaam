@@ -21,6 +21,9 @@ export default function BasataTab() {
     performedAt: '' 
   });
 
+  const todayDate = new Date().toLocaleDateString('en-CA');
+  const [dateFrom, setDateFrom] = useState(todayDate);
+  const [dateTo, setDateTo] = useState(todayDate);
   const [filterOutlet, setFilterOutlet] = useState(user?.role === 'admin' ? 'All' : (user?.outlet || 'eltalg'));
 
   const getOutletLabel = (val) => {
@@ -40,7 +43,16 @@ export default function BasataTab() {
 
   const filteredTransactions = (basataTransactions || []).filter(t => {
     const matchesOutlet = filterOutlet === 'All' || normalizeOutlet(t.outlet) === filterOutlet;
-    return matchesOutlet;
+    
+    // Date Range logic
+    const tDate = new Date(t.performedAt);
+    const start = new Date(dateFrom);
+    start.setHours(0,0,0,0);
+    const end = new Date(dateTo);
+    end.setHours(23,59,59,999);
+    const matchesDate = tDate >= start && tDate <= end;
+
+    return matchesOutlet && matchesDate;
   });
 
   const exportHeaders = [
@@ -241,18 +253,31 @@ export default function BasataTab() {
                  <div style={{ fontSize: 'clamp(1.1rem, 4vw, 1.5rem)', fontWeight: 600, color: 'var(--color-primary)', textAlign: 'right' }}>
                    {t('totalVolume')}: {(totalRevenue || 0).toLocaleString()} EGP
                  </div>
-                 <select 
-                   className="input-field" 
-                   style={{ minWidth: '150px', padding: '0.3rem 0.6rem', fontSize: '0.85rem' }} 
-                   value={filterOutlet || 'All'} 
-                   onChange={e => setFilterOutlet(e.target.value)}
-                   disabled={user?.role !== 'admin'}
-                 >
-                   <option value="All">{language === 'ar' ? 'جميع المنافذ' : 'All Outlets'}</option>
-                   <option value="eltalg">{t('banha1')}</option>
-                   <option value="tegara">{t('banha2')}</option>
-                   <option value="mostashfa">{t('banha3')}</option>
-                 </select>
+                 <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                   <div className="input-group" style={{ marginBottom: 0 }}>
+                     <label className="input-label" style={{ fontSize: '0.7rem', marginBottom: 0 }}>{t('from')}</label>
+                     <input type="date" className="input-field" style={{ padding: '0.2rem 0.4rem', fontSize: '0.8rem' }} value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
+                   </div>
+                   <div className="input-group" style={{ marginBottom: 0 }}>
+                     <label className="input-label" style={{ fontSize: '0.7rem', marginBottom: 0 }}>{t('to')}</label>
+                     <input type="date" className="input-field" style={{ padding: '0.2rem 0.4rem', fontSize: '0.8rem' }} value={dateTo} onChange={e => setDateTo(e.target.value)} />
+                   </div>
+                   <div className="input-group" style={{ marginBottom: 0 }}>
+                     <label className="input-label" style={{ fontSize: '0.7rem', marginBottom: 0 }}>{language === 'ar' ? 'المنفذ' : 'Outlet'}</label>
+                     <select 
+                       className="input-field" 
+                       style={{ minWidth: '120px', padding: '0.2rem 0.4rem', fontSize: '0.8rem' }} 
+                       value={filterOutlet || 'All'} 
+                       onChange={e => setFilterOutlet(e.target.value)}
+                       disabled={user?.role !== 'admin'}
+                     >
+                       <option value="All">{language === 'ar' ? 'جميع المنافذ' : 'All Outlets'}</option>
+                       <option value="eltalg">{t('banha1')}</option>
+                       <option value="tegara">{t('banha2')}</option>
+                       <option value="mostashfa">{t('banha3')}</option>
+                     </select>
+                   </div>
+                 </div>
                </div>
                <ExportActions data={filteredTransactions} headers={exportHeaders} filename="Basata_POS_Transactions" title={t('basata')} />
             </div>

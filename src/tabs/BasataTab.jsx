@@ -3,10 +3,12 @@ import { useDashboard } from '../context/DashboardContext';
 import { Smartphone, Wifi, Zap, Building2, CreditCard, BookOpen, Banknote } from 'lucide-react';
 import ExportActions from '../components/ExportActions';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function BasataTab() {
   const { basataTransactions, logBasataService } = useDashboard();
   const { t, language } = useLanguage();
+  const { user } = useAuth();
   
   const [showModal, setShowModal] = useState(false);
   const [activeService, setActiveService] = useState(null); // { category, provider }
@@ -110,7 +112,8 @@ export default function BasataTab() {
       transactionId: formData.transactionId,
       paymentMethod: formData.paymentMethod,
       percentage: parseFloat(formData.percentage),
-      performedAt: getSafeISO(formData.performedAt)
+      performedAt: getSafeISO(formData.performedAt),
+      outlet: user?.outlet || 'eltalg'
     });
 
     if (result.success) {

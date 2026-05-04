@@ -73,7 +73,7 @@ export default function CallsLogTab() {
     // Create log if not yet created, then take ownership
     let log = callLogs.find(l => l.orderId === order.id && !l.isClosed);
     if (!log) {
-      await createOrGetCallLog(order.id, order.orderSource, order.customerPhone);
+      await createOrGetCallLog(order.id, order.orderSource, order.customerPhone, order.outlet);
       // After create, refetch will update callLogs — ownership must be a second step
       // Use a small approach: POST creates + returns the log, TAKE is separate
     }
@@ -86,7 +86,7 @@ export default function CallsLogTab() {
       const res = await fetch('/api/call-logs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId: order.id, orderSource: order.orderSource, customerPhone: order.customerPhone })
+        body: JSON.stringify({ orderId: order.id, orderSource: order.orderSource, customerPhone: order.customerPhone, outlet: order.outlet })
       });
       if (res.ok) {
         const newLog = await res.json();

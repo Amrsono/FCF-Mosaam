@@ -14,7 +14,7 @@ export default async function handler(req, res) {
 
     // POST: create a new call log entry (first time an order is flagged)
     if (req.method === 'POST') {
-      const { orderId, orderSource, customerPhone } = req.body;
+      const { orderId, orderSource, customerPhone, outlet } = req.body;
       if (!orderId || !customerPhone) {
         return res.status(400).json({ error: 'orderId and customerPhone are required' });
       }
@@ -26,7 +26,7 @@ export default async function handler(req, res) {
       if (existing) return res.status(200).json(existing);
 
       const log = await prisma.callLog.create({
-        data: { orderId, orderSource: orderSource || 'jumia', customerPhone }
+        data: { orderId, orderSource: orderSource || 'jumia', customerPhone, outlet: outlet || "eltalg" }
       });
       return res.status(201).json(log);
     }

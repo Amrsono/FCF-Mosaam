@@ -426,7 +426,7 @@ export const DashboardProvider = ({ children }) => {
 
   const logBasataService = async (category, serviceProvider, amount, extras = {}) => {
     try {
-      const { transactionId, paymentMethod, percentage, performedAt } = extras;
+      const { transactionId, paymentMethod, percentage, performedAt, outlet } = extras;
       const res = await fetch('/api/basata', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -437,7 +437,8 @@ export const DashboardProvider = ({ children }) => {
           transactionId,
           paymentMethod,
           percentage,
-          performedAt
+          performedAt,
+          outlet
         })
       });
       if (res.ok) {
@@ -510,12 +511,12 @@ export const DashboardProvider = ({ children }) => {
   };
 
   // ── Calls Log ────────────────────────────────────────────────────────
-  const createOrGetCallLog = async (orderId, orderSource, customerPhone) => {
+  const createOrGetCallLog = async (orderId, orderSource, customerPhone, outlet) => {
     try {
       const res = await fetch('/api/call-logs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId, orderSource, customerPhone })
+        body: JSON.stringify({ orderId, orderSource, customerPhone, outlet })
       });
       if (res.ok) await fetchData();
     } catch (err) {

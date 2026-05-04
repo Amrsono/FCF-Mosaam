@@ -55,6 +55,7 @@ model BasataTransaction {
   paymentMethod   String   @default("Cash") // Cash, Card, etc.
   percentage      Float    @default(0) // Commission or Fee percentage
   referenceNumber String?  // Keep for backward compatibility or legacy
+  outlet          String   @default("eltalg")
   performedAt     DateTime @default(now())
 }
 
@@ -119,6 +120,7 @@ model CallLog {
   orderSource   String    @default("jumia")     // "jumia" | "bosta"
   customerPhone String
   agentName     String?                         // Username who took ownership
+  outlet        String    @default("eltalg")    // Outlet associated with the order/agent
   takenAt       DateTime?                       // When agent clicked "Take Call"
   resolution    String?                         // "coming_pickup" | "will_cancel" | "no_answer" | "declined" | "no_longer_wants"
   notes         String?

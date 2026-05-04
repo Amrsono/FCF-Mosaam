@@ -182,7 +182,7 @@ export default function AnalyticsTab() {
   const bostaSizes = getSizes(bostaPickedUp);
 
   // --- BASATA ---
-  const activeBasata = basataTransactions.filter(t => isInRange(t.performedAt));
+  const activeBasata = basataTransactions.filter(t => isInRange(t.performedAt) && matchesOutlet(t));
   const basataVolume = activeBasata.reduce((s, t) => s + t.amount, 0);
   const basataCategories = activeBasata.reduce((acc, t) => {
     acc[t.category] = (acc[t.category] || 0) + t.amount;
@@ -197,15 +197,15 @@ export default function AnalyticsTab() {
   const grandTotal = jumiaCash + bostaCash + basataVolume + activePenalties;
 
   // --- CALLS LOG ANALYTICS ---
-  const callsInPeriod = (callLogs || []).filter(l => isInRange(l.createdAt));
+  const callsInPeriod = (callLogs || []).filter(l => isInRange(l.createdAt) && (selectedOutlet === 'All' || normalizeOutlet(l.outlet) === selectedOutlet));
   const callsMade   = callsInPeriod.filter(l => l.agentName);
   const callsResolved= callsInPeriod.filter(l => l.resolution);
   const callsClosed  = callsInPeriod.filter(l => l.isClosed);
 
   // Urgent orders in period (2–3 days) — total received within period from both sources
   const allOrdersInPeriod = [
-    ...orders.filter(o => isInRange(o.receivedAt)),
-    ...bostaOrders.filter(o => isInRange(o.receivedAt))
+    ...orders.filter(o => isInRange(o.receivedAt) && matchesOutlet(o)),
+    ...bostaOrders.filter(o => isInRange(o.receivedAt) && matchesOutlet(o))
   ];
   const urgentInPeriod = allOrdersInPeriod.filter(o => {
     const d = Math.floor(Math.abs(new Date() - new Date(o.receivedAt)) / 86400000);
@@ -219,12 +219,12 @@ export default function AnalyticsTab() {
   const callsVsOrdersData = [
     {
       name: language === 'ar' ? 'جوميا' : 'Jumia',
-      [language === 'ar' ? 'طلبات مستلمة' : 'Orders Received']: orders.filter(o => isInRange(o.receivedAt)).length,
+      [language === 'ar' ? 'طلبات مستلمة' : 'Orders Received']: orders.filter(o => isInRange(o.receivedAt) && matchesOutlet(o)).length,
       [language === 'ar' ? 'مكالمات' : 'Calls Made']: callsInPeriod.filter(l => l.orderSource !== 'bosta').length,
     },
     {
       name: language === 'ar' ? 'بوسطة' : 'Bosta',
-      [language === 'ar' ? 'طلبات مستلمة' : 'Orders Received']: bostaOrders.filter(o => isInRange(o.receivedAt)).length,
+      [language === 'ar' ? 'طلبات مستلمة' : 'Orders Received']: bostaOrders.filter(o => isInRange(o.receivedAt) && matchesOutlet(o)).length,
       [language === 'ar' ? 'مكالمات' : 'Calls Made']: callsInPeriod.filter(l => l.orderSource === 'bosta').length,
     },
   ];

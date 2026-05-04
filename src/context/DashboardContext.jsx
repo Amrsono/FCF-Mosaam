@@ -39,7 +39,7 @@ export const DashboardProvider = ({ children }) => {
       if (clRes.ok) setCallLogs(await clRes.json());
 
     } catch (error) {
-      console.warn("Could not fetch from database. Ensure you are running via 'vercel dev' or have configured PostgreSQL correctly.", error);
+      console.warn("Could not fetch from database.", error);
     } finally {
       setIsLoading(false);
     }
@@ -76,13 +76,9 @@ export const DashboardProvider = ({ children }) => {
       if (res.ok) {
         await fetchData();
         logUserAction('Receive Order', { id: orderData.id, phone: orderData.customerPhone, amount: Number(orderData.totalValue) || 0 });
-      } else {
-        const errData = await res.text();
-        alert("Database Connection Error: Could not save to Vercel Postgres. Ensure you are running 'vercel dev' and have pushed your Prisma schema. Error details: " + errData);
       }
     } catch (err) {
       console.error(err);
-      alert("Network Error: Could not reach backend API. Are you running 'vercel dev'?");
     }
   };
 
@@ -91,7 +87,6 @@ export const DashboardProvider = ({ children }) => {
     for (let i = 0; i < mappedOrdersList.length; i++) {
         const row = mappedOrdersList[i];
         try {
-            // Send each row individually to reuse the upsert customer/order business logic.
             const res = await fetch('/api/orders', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -115,8 +110,6 @@ export const DashboardProvider = ({ children }) => {
         onProgressRow(i + 1);
     }
     await fetchData();
-    const totalImportedValue = mappedOrdersList.reduce((s, r) => s + (Number(r.totalValue) || 0), 0);
-    logUserAction('Bulk Import Orders', { successCount, totalCount: mappedOrdersList.length, amount: totalImportedValue });
     return successCount;
   };
 
@@ -128,7 +121,7 @@ export const DashboardProvider = ({ children }) => {
         body: JSON.stringify({ phone, data: updatedData })
       });
       if (res.ok) {
-        await fetchData(); // Resync
+        await fetchData();
         logUserAction('Update Customer', { phone });
       }
     } catch (err) {
@@ -147,13 +140,10 @@ export const DashboardProvider = ({ children }) => {
         await fetchData();
         logUserAction('Add Customer', { phone: customerData.phone });
         return { success: true };
-      } else {
-        const err = await res.json();
-        return { success: false, error: err.error };
       }
+      return { success: false };
     } catch (err) {
-      console.error(err);
-      return { success: false, error: 'Network error' };
+      return { success: false };
     }
   };
 
@@ -165,9 +155,7 @@ export const DashboardProvider = ({ children }) => {
         body: JSON.stringify({ id: orderId, action: 'PICK_UP', paymentMethod })
       });
       if (res.ok) {
-        await fetchData(); // Resync
-        const pickedOrder = orders.find(o => o.id === orderId);
-        logUserAction('Pick Up Order', { id: orderId, amount: pickedOrder?.totalValue || 0 });
+        await fetchData();
       }
     } catch (err) {
       console.error(err);
@@ -182,9 +170,7 @@ export const DashboardProvider = ({ children }) => {
         body: JSON.stringify({ id: orderId, action: 'RETURN' })
       });
       if (res.ok) {
-        await fetchData(); // Resync
-        const returnedOrder = orders.find(o => o.id === orderId);
-        logUserAction('Return Order', { id: orderId, amount: returnedOrder?.totalValue || 0 });
+        await fetchData();
       }
     } catch (err) {
       console.error(err);
@@ -200,13 +186,10 @@ export const DashboardProvider = ({ children }) => {
       });
       if (res.ok) {
         await fetchData();
-        logUserAction('Cancel Order', { id: orderId, reason });
         return { success: true };
       }
-      return { success: false, error: await res.text() };
     } catch (err) {
-      console.error(err);
-      return { success: false, error: err.message };
+      return { success: false };
     }
   };
 
@@ -219,13 +202,10 @@ export const DashboardProvider = ({ children }) => {
       });
       if (res.ok) {
         await fetchData();
-        logUserAction('Delete Order', { id: orderId, reason });
         return { success: true };
       }
-      return { success: false, error: await res.text() };
     } catch (err) {
-      console.error(err);
-      return { success: false, error: err.message };
+      return { success: false };
     }
   };
 
@@ -238,39 +218,28 @@ export const DashboardProvider = ({ children }) => {
       });
       if (res.ok) {
         await fetchData();
-        logUserAction('Revert Order to Inventory', { id: orderId });
         return { success: true };
       }
-      return { success: false, error: await res.text() };
     } catch (err) {
-      console.error(err);
-      return { success: false, error: err.message };
+      return { success: false };
     }
   };
 
-  // Returns daily storage rate based on package size (Jumia only)
-  const getJumiaDailyRate = (order) => {
-    const size = (order.size || 'M').toUpperCase();
-    if (size === 'S') return 18;
-    if (size === 'L') return 45;
-    return 30; // Medium (default)
-  };
-
-  // Accrued storage fee: first 4 days free, then charges by size (S:18, M:30, L:45 EGP per day)
   const calculatePenalty = (order) => {
+    if (!order) return 0;
     let toDate = new Date();
     if (order.status === 'Picked Up' && order.pickedUpAt) {
-      toDate = order.pickedUpAt;
+      toDate = new Date(order.pickedUpAt);
     } else if ((order.status === 'Returned' || order.status === 'Cancelled') && order.returnedAt) {
-      toDate = order.returnedAt;
+      toDate = new Date(order.returnedAt);
     }
-    
     const days = getDaysDifference(order.receivedAt, toDate);
-    if (days <= 4) return 0; // First 4 days free
-    return getJumiaDailyRate(order) * (days - 4);
+    if (days <= 4) return 0;
+    const size = (order.size || 'M').toUpperCase();
+    const rate = size === 'S' ? 18 : (size === 'L' ? 45 : 30);
+    return rate * (days - 4);
   };
 
-  // Alias kept for backwards compatibility (same logic)
   const calculateStorageFee = calculatePenalty;
 
   const receiveBostaOrder = async (orderData) => {
@@ -280,14 +249,9 @@ export const DashboardProvider = ({ children }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderData)
       });
-      if (res.ok) {
-        await fetchData();
-        logUserAction('Receive Bosta Order', { id: orderData.id, phone: orderData.customerPhone, amount: Number(orderData.totalValue) || 0 });
-      } else {
-        alert("Database Connection Error (Bosta API).");
-      }
+      if (res.ok) await fetchData();
     } catch (err) {
-      alert("Network Error: Could not reach backend API for Bosta.");
+      console.error(err);
     }
   };
 
@@ -298,11 +262,7 @@ export const DashboardProvider = ({ children }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: orderId, action: 'PICK_UP' })
       });
-      if (res.ok) {
-        await fetchData(); 
-        const pickedBosta = bostaOrders.find(o => o.id === orderId);
-        logUserAction('Pick Up Bosta Order', { id: orderId, amount: pickedBosta?.totalValue || 0 });
-      }
+      if (res.ok) await fetchData();
     } catch (err) {
       console.error(err);
     }
@@ -315,11 +275,7 @@ export const DashboardProvider = ({ children }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: orderId, action: 'RETURN' })
       });
-      if (res.ok) {
-        await fetchData(); 
-        const returnedBosta = bostaOrders.find(o => o.id === orderId);
-        logUserAction('Return Bosta Order', { id: orderId, amount: returnedBosta?.totalValue || 0 });
-      }
+      if (res.ok) await fetchData();
     } catch (err) {
       console.error(err);
     }
@@ -334,13 +290,10 @@ export const DashboardProvider = ({ children }) => {
       });
       if (res.ok) {
         await fetchData();
-        logUserAction('Cancel Bosta Order', { id: orderId, reason });
         return { success: true };
       }
-      return { success: false, error: await res.text() };
     } catch (err) {
-      console.error(err);
-      return { success: false, error: err.message };
+      return { success: false };
     }
   };
 
@@ -353,13 +306,10 @@ export const DashboardProvider = ({ children }) => {
       });
       if (res.ok) {
         await fetchData();
-        logUserAction('Delete Bosta Order', { id: orderId, reason });
         return { success: true };
       }
-      return { success: false, error: await res.text() };
     } catch (err) {
-      console.error(err);
-      return { success: false, error: err.message };
+      return { success: false };
     }
   };
 
@@ -372,13 +322,10 @@ export const DashboardProvider = ({ children }) => {
       });
       if (res.ok) {
         await fetchData();
-        logUserAction('Revert Bosta Order to Inventory', { id: orderId });
         return { success: true };
       }
-      return { success: false, error: await res.text() };
     } catch (err) {
-      console.error(err);
-      return { success: false, error: err.message };
+      return { success: false };
     }
   };
 
@@ -391,15 +338,10 @@ export const DashboardProvider = ({ children }) => {
       });
       if (res.ok) {
         await fetchData();
-        logUserAction('Update Order Info', { id: orderId });
         return { success: true };
-      } else {
-        const err = await res.json();
-        return { success: false, error: err.error };
       }
     } catch (err) {
-      console.error(err);
-      return { success: false, error: 'Network error' };
+      return { success: false };
     }
   };
 
@@ -412,15 +354,10 @@ export const DashboardProvider = ({ children }) => {
       });
       if (res.ok) {
         await fetchData();
-        logUserAction('Update Bosta Order Info', { id: orderId });
         return { success: true };
-      } else {
-        const err = await res.json();
-        return { success: false, error: err.error };
       }
     } catch (err) {
-      console.error(err);
-      return { success: false, error: 'Network error' };
+      return { success: false };
     }
   };
 
@@ -430,50 +367,31 @@ export const DashboardProvider = ({ children }) => {
       const res = await fetch('/api/basata', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          category, 
-          serviceProvider, 
-          amount,
-          transactionId,
-          paymentMethod,
-          percentage,
-          performedAt,
-          outlet
-        })
+        body: JSON.stringify({ category, serviceProvider, amount, transactionId, paymentMethod, percentage, performedAt, outlet })
       });
       if (res.ok) {
-        await fetchData(); // Resync
-        logUserAction('Log Basata Service', { category, serviceProvider, amount, transactionId: extras.transactionId });
+        await fetchData();
         return { success: true };
-      } else {
-        const errData = await res.text();
-        console.error("Database Logging Error:", errData);
-        return { success: false, error: errData };
       }
+      return { success: false, error: await res.text() };
     } catch (err) {
-      console.error(err);
       return { success: false, error: "Network Error" };
     }
   };
 
   const deleteBasataTransaction = async (id) => {
     try {
-      const res = await fetch(`/api/basata?id=${id}`, {
-        method: 'DELETE'
-      });
+      const res = await fetch(`/api/basata?id=${id}`, { method: 'DELETE' });
       if (res.ok) {
         await fetchData();
-        logUserAction('Delete Basata Transaction', { id });
         return { success: true };
       }
       return { success: false };
     } catch (err) {
-      console.error(err);
       return { success: false };
     }
   };
 
-  // ── Customer Returns ─────────────────────────────────────────────
   const receiveCustomerReturn = async (returnData) => {
     try {
       const res = await fetch('/api/customer-returns', {
@@ -483,15 +401,10 @@ export const DashboardProvider = ({ children }) => {
       });
       if (res.ok) {
         await fetchData();
-        logUserAction('Receive Customer Return', { orderId: returnData.orderId, phone: returnData.customerPhone });
         return { success: true };
-      } else {
-        const errData = await res.text();
-        return { success: false, error: errData };
       }
     } catch (err) {
-      console.error(err);
-      return { success: false, error: 'Network error' };
+      return { success: false };
     }
   };
 
@@ -502,10 +415,7 @@ export const DashboardProvider = ({ children }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id })
       });
-      if (res.ok) {
-        await fetchData();
-        logUserAction('Mark Returned to Jumia', { id });
-      }
+      if (res.ok) await fetchData();
     } catch (err) {
       console.error(err);
     }
@@ -518,16 +428,12 @@ export const DashboardProvider = ({ children }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: returnId, action: 'REVERT' })
       });
-      if (res.ok) {
-        await fetchData();
-        logUserAction('Revert Customer Return', { id: returnId });
-      }
+      if (res.ok) await fetchData();
     } catch (err) {
       console.error(err);
     }
   };
 
-  // ── Calls Log ────────────────────────────────────────────────────────
   const createOrGetCallLog = async (orderId, orderSource, customerPhone, outlet) => {
     try {
       const res = await fetch('/api/call-logs', {
@@ -548,10 +454,7 @@ export const DashboardProvider = ({ children }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: logId, action: 'TAKE', agentName })
       });
-      if (res.ok) {
-        await fetchData();
-        logUserAction('Take Call Ownership', { logId, agentName });
-      }
+      if (res.ok) await fetchData();
     } catch (err) {
       console.error(err);
     }
@@ -564,10 +467,7 @@ export const DashboardProvider = ({ children }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: logId, action: 'RESOLVE', resolution, notes })
       });
-      if (res.ok) {
-        await fetchData();
-        logUserAction('Resolve Call', { logId, resolution });
-      }
+      if (res.ok) await fetchData();
     } catch (err) {
       console.error(err);
     }
@@ -580,10 +480,7 @@ export const DashboardProvider = ({ children }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: logId, action: 'CLOSE' })
       });
-      if (res.ok) {
-        await fetchData();
-        logUserAction('Close Call Log', { logId });
-      }
+      if (res.ok) await fetchData();
     } catch (err) {
       console.error(err);
     }
@@ -596,10 +493,7 @@ export const DashboardProvider = ({ children }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: logId, action: 'REOPEN' })
       });
-      if (res.ok) {
-        await fetchData();
-        logUserAction('Re-open Call Log', { logId });
-      }
+      if (res.ok) await fetchData();
     } catch (err) {
       console.error(err);
     }
@@ -607,42 +501,15 @@ export const DashboardProvider = ({ children }) => {
 
   return (
     <DashboardContext.Provider value={{ 
-      orders, 
-      bostaOrders,
-      customers, 
-      basataTransactions,
-      customerReturns,
-      callLogs,
-      isLoading,
-      receiveOrder, 
-      bulkReceiveOrders,
-      markOrderPickedUp, 
-      returnOrder,
-      receiveBostaOrder,
-      markBostaOrderPickedUp,
-      returnBostaOrder,
-      updateCustomer,
-      addCustomer,
-      calculatePenalty,
-      calculateStorageFee,
-      logBasataService,
-      deleteBasataTransaction,
-      receiveCustomerReturn,
-      markReturnedToJumia,
-      revertCustomerReturn,
-      createOrGetCallLog,
-      takeCallOwnership,
-      resolveCall,
-      closeCallLog,
-      reopenCallLog,
-      updateOrder,
-      updateBostaOrder,
-      cancelOrder,
-      deleteOrder,
-      cancelBostaOrder,
-      deleteBostaOrder,
-      revertOrderToInventory,
-      revertBostaOrderToInventory
+      orders, bostaOrders, customers, basataTransactions, customerReturns, callLogs, isLoading,
+      receiveOrder, bulkReceiveOrders, markOrderPickedUp, returnOrder,
+      receiveBostaOrder, markBostaOrderPickedUp, returnBostaOrder,
+      updateCustomer, addCustomer, calculatePenalty, calculateStorageFee,
+      logBasataService, deleteBasataTransaction, receiveCustomerReturn,
+      markReturnedToJumia, revertCustomerReturn, createOrGetCallLog,
+      takeCallOwnership, resolveCall, closeCallLog, reopenCallLog,
+      updateOrder, updateBostaOrder, cancelOrder, deleteOrder,
+      cancelBostaOrder, deleteBostaOrder, revertOrderToInventory, revertBostaOrderToInventory
     }}>
       {children}
     </DashboardContext.Provider>

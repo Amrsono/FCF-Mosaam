@@ -6,9 +6,9 @@ import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 
 export default function BasataTab() {
-  const { basataTransactions, logBasataService, deleteBasataTransaction } = useDashboard();
-  const { t, language } = useLanguage();
-  const { user } = useAuth();
+  const { basataTransactions = [], logBasataService, deleteBasataTransaction } = useDashboard() || {};
+  const { t, language } = useLanguage() || { t: (k) => k, language: 'en' };
+  const { user } = useAuth() || {};
   
   const [showModal, setShowModal] = useState(false);
   const [activeService, setActiveService] = useState(null); // { category, provider }
@@ -24,6 +24,7 @@ export default function BasataTab() {
   const [filterOutlet, setFilterOutlet] = useState(user?.role === 'admin' ? 'All' : (user?.outlet || 'eltalg'));
 
   const getOutletLabel = (val) => {
+    if (!val) return '-';
     if (val === 'eltalg' || val === 'Banha 1' || val === 'وبور الثلج' || val === 'وبور التلج') return t('banha1');
     if (val === 'tegara' || val === 'Banha 2' || val === 'تجارة' || val === 'تجاره') return t('banha2');
     if (val === 'mostashfa' || val === 'Banha 3' || val === 'المستشفي' || val === 'المستشفى') return t('banha3');
@@ -37,7 +38,7 @@ export default function BasataTab() {
     return val;
   };
 
-  const filteredTransactions = basataTransactions.filter(t => {
+  const filteredTransactions = (basataTransactions || []).filter(t => {
     const matchesOutlet = filterOutlet === 'All' || normalizeOutlet(t.outlet) === filterOutlet;
     return matchesOutlet;
   });
@@ -50,7 +51,7 @@ export default function BasataTab() {
     { label: t('percentage'), accessor: 'percentage' },
     { label: t('paymentMethod'), accessor: 'paymentMethod' },
     { label: language === 'ar' ? 'المنفذ' : 'Outlet', accessor: o => getOutletLabel(o.outlet) },
-    { label: t('date'), accessor: o => new Date(o.performedAt).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-GB', { timeZone: 'Africa/Cairo' }) }
+    { label: t('date'), accessor: o => o.performedAt ? new Date(o.performedAt).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-GB', { timeZone: 'Africa/Cairo' }) : '-' }
   ];
 
   const QUICK_ACTIONS = [
@@ -82,9 +83,9 @@ export default function BasataTab() {
       services: language === 'ar' ? ['مخالفات مرور', 'تأمينات اجتماعية', 'ضرائب عقارية'] : ['Traffic Fines (Niyaba)', 'Social Insurance', 'Real Estate Tax']
     },
     {
-      title: t('bankingAndCash'),
+      title: t('bankingAndCash') || 'Banking',
       icon: <Banknote size={20} color="var(--color-primary)" />,
-      services: [t('cashDeposit'), t('cashWithdrawal')]
+      services: [t('cashDeposit') || 'Deposit', t('cashWithdrawal') || 'Withdrawal']
     }
   ];
 
@@ -92,24 +93,34 @@ export default function BasataTab() {
     setActiveService({ category, provider });
     
     // Force Egypt Time for the pre-filled input
-    const options = { timeZone: 'Africa/Cairo', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false };
-    const formatter = new Intl.DateTimeFormat('en-CA', options);
-    const parts = formatter.formatToParts(new Date());
-    const y = parts.find(p => p.type === 'year').value;
-    const m = parts.find(p => p.type === 'month').value;
-    const d = parts.find(p => p.type === 'day').value;
-    let h = parts.find(p => p.type === 'hour').value;
-    if (h === '24') h = '00';
-    const min = parts.find(p => p.type === 'minute').value;
-    const localISOTime = `${y}-${m}-${d}T${h}:${min}`;
-    
-    setFormData({ 
-      amount: '', 
-      transactionId: '', 
-      paymentMethod: 'Cash',
-      percentage: '0',
-      performedAt: localISOTime
-    });
+    try {
+      const options = { timeZone: 'Africa/Cairo', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false };
+      const formatter = new Intl.DateTimeFormat('en-CA', options);
+      const parts = formatter.formatToParts(new Date());
+      const y = parts.find(p => p.type === 'year').value;
+      const m = parts.find(p => p.type === 'month').value;
+      const d = parts.find(p => p.type === 'day').value;
+      let h = parts.find(p => p.type === 'hour').value;
+      if (h === '24') h = '00';
+      const min = parts.find(p => p.type === 'minute').value;
+      const localISOTime = `${y}-${m}-${d}T${h}:${min}`;
+      
+      setFormData({ 
+        amount: '', 
+        transactionId: '', 
+        paymentMethod: 'Cash',
+        percentage: '0',
+        performedAt: localISOTime
+      });
+    } catch (e) {
+      setFormData({ 
+        amount: '', 
+        transactionId: '', 
+        paymentMethod: 'Cash',
+        percentage: '0',
+        performedAt: new Date().toISOString().slice(0, 16)
+      });
+    }
     setShowModal(true);
   };
 
@@ -120,13 +131,12 @@ export default function BasataTab() {
     const getSafeISO = (localStr) => {
       if (!localStr) return undefined;
       try {
-        // datetime-local gives "YYYY-MM-DDTHH:mm"
         const [d, t] = localStr.split('T');
         const [y, mo, day] = d.split('-').map(Number);
         const [h, mi] = t.split(':').map(Number);
         return new Date(y, mo - 1, day, h, mi).toISOString();
       } catch (e) {
-        return new Date(localStr).toISOString(); // fallback
+        return new Date(localStr).toISOString();
       }
     };
 
@@ -138,16 +148,18 @@ export default function BasataTab() {
       outlet: user?.outlet || 'eltalg'
     });
 
-    if (result.success) {
+    if (result && result.success) {
       setShowModal(false);
     } else {
-      alert(t('errorLogging') + ": " + (result.error || "Unknown error"));
+      alert((t('errorLogging') || "Error") + ": " + (result?.error || "Unknown error"));
     }
   };
 
   const handleDelete = async (id) => {
     if (window.confirm(language === 'ar' ? 'هل أنت متأكد من حذف هذه المعاملة؟' : 'Are you sure you want to delete this transaction?')) {
-      await deleteBasataTransaction(id);
+      if (deleteBasataTransaction) {
+        await deleteBasataTransaction(id);
+      }
     }
   };
 
@@ -161,7 +173,7 @@ export default function BasataTab() {
     }
   };
 
-  const totalRevenue = filteredTransactions.reduce((acc, t) => acc + t.amount, 0);
+  const totalRevenue = filteredTransactions.reduce((acc, t) => acc + (t.amount || 0), 0);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', height: '100%', overflowY: 'auto', [language === 'ar' ? 'paddingLeft' : 'paddingRight']: '1rem' }}>
@@ -199,7 +211,7 @@ export default function BasataTab() {
                   <h4 style={{ color: 'var(--text-primary)', margin: 0 }}>{cat.title}</h4>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  {cat.services.map(svc => (
+                  {(cat.services || []).map(svc => (
                     <button 
                       key={svc} 
                       className="btn btn-outline" 
@@ -227,12 +239,12 @@ export default function BasataTab() {
            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap', flex: '1 1 auto', justifyContent: 'flex-end' }}>
                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.2rem' }}>
                  <div style={{ fontSize: 'clamp(1.1rem, 4vw, 1.5rem)', fontWeight: 600, color: 'var(--color-primary)', textAlign: 'right' }}>
-                   {t('totalVolume')}: {totalRevenue.toLocaleString()} EGP
+                   {t('totalVolume')}: {(totalRevenue || 0).toLocaleString()} EGP
                  </div>
                  <select 
                    className="input-field" 
                    style={{ minWidth: '150px', padding: '0.3rem 0.6rem', fontSize: '0.85rem' }} 
-                   value={filterOutlet} 
+                   value={filterOutlet || 'All'} 
                    onChange={e => setFilterOutlet(e.target.value)}
                    disabled={user?.role !== 'admin'}
                  >
@@ -261,28 +273,37 @@ export default function BasataTab() {
                </tr>
              </thead>
              <tbody>
-               {filteredTransactions.length > 0 ? filteredTransactions.map(t => (
-                 <tr key={t.id}>
-                   <td style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{new Date(t.performedAt).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-GB', { timeZone: 'Africa/Cairo', hour: '2-digit', minute: '2-digit', second: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
-                   <td style={{ fontFamily: 'monospace' }}>{t.transactionId || '-'}</td>
-                   <td>
-                      <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{t.serviceProvider}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t.category}</div>
+               {filteredTransactions.length > 0 ? filteredTransactions.map(tData => (
+                 <tr key={tData.id}>
+                   <td style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                     {tData.performedAt ? new Date(tData.performedAt).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-GB', { 
+                       timeZone: 'Africa/Cairo', 
+                       hour: '2-digit', 
+                       minute: '2-digit', 
+                       day: '2-digit', 
+                       month: '2-digit', 
+                       year: 'numeric' 
+                     }) : '-'}
                    </td>
-                   <td><span className="badge badge-neutral">{getPaymentMethodLabel(t.paymentMethod)}</span></td>
+                   <td style={{ fontFamily: 'monospace' }}>{tData.transactionId || '-'}</td>
+                   <td>
+                      <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{tData.serviceProvider}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{tData.category}</div>
+                   </td>
+                   <td><span className="badge badge-neutral">{getPaymentMethodLabel(tData.paymentMethod)}</span></td>
                    <td>
                       <span className="badge badge-neutral" style={{ fontSize: '0.75rem' }}>
-                        {getOutletLabel(t.outlet)}
+                        {getOutletLabel(tData.outlet)}
                       </span>
                    </td>
-                   <td style={{ fontWeight: 700, color: 'var(--color-success)' }}>{t.amount} EGP</td>
-                   <td style={{ color: 'var(--text-secondary)' }}>{t.percentage}%</td>
+                   <td style={{ fontWeight: 700, color: 'var(--color-success)' }}>{tData.amount} EGP</td>
+                   <td style={{ color: 'var(--text-secondary)' }}>{tData.percentage}%</td>
                    {user?.role === 'admin' && (
                      <td>
                        <button 
                          className="btn btn-outline" 
                          style={{ padding: '0.4rem', borderColor: 'var(--color-danger)', color: 'var(--color-danger)' }}
-                         onClick={() => handleDelete(t.id)}
+                         onClick={() => handleDelete(tData.id)}
                          title={t('delete')}
                        >
                          <Trash2 size={16} />
@@ -301,7 +322,7 @@ export default function BasataTab() {
       </div>
 
       {/* Transaction Modal */}
-      {showModal && (
+      {showModal && activeService && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '1rem' }}>
           <div className="glass-panel" style={{ width: '100%', maxWidth: '450px', background: 'var(--bg-main)', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>

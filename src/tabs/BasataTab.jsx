@@ -115,7 +115,7 @@ export default function BasataTab() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.amount) return;
+    if (!formData.amount || !activeService) return;
     
     const getSafeISO = (localStr) => {
       if (!localStr) return undefined;
@@ -292,7 +292,7 @@ export default function BasataTab() {
                  </tr>
                )) : (
                  <tr>
-                   <td colSpan={user?.role === 'admin' ? "8" : "7"} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>{t('noData')}</td>
+                   <td colSpan={user?.role === 'admin' ? 8 : 7} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>{t('noData')}</td>
                  </tr>
                )}
              </tbody>
@@ -311,8 +311,8 @@ export default function BasataTab() {
             
             <div style={{ background: 'var(--bg-panel)', padding: '1rem', borderRadius: 'var(--radius-md)', marginBottom: '1.5rem', [language === 'ar' ? 'borderRight' : 'borderLeft']: '4px solid var(--color-primary)' }}>
               <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{t('serviceProvider')}</div>
-              <div style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: '1.1rem' }}>{activeService.provider}</div>
-              <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>{activeService.category}</div>
+              <div style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: '1.1rem' }}>{activeService?.provider}</div>
+              <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>{activeService?.category}</div>
             </div>
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>

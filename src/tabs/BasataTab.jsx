@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useDashboard } from '../context/DashboardContext';
-import { Smartphone, Wifi, Zap, Building2, CreditCard, BookOpen, Banknote } from 'lucide-react';
+import { Smartphone, Wifi, Zap, Building2, CreditCard, BookOpen, Banknote, Trash2 } from 'lucide-react';
 import ExportActions from '../components/ExportActions';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 
 export default function BasataTab() {
-  const { basataTransactions, logBasataService } = useDashboard();
+  const { basataTransactions, logBasataService, deleteBasataTransaction } = useDashboard();
   const { t, language } = useLanguage();
   const { user } = useAuth();
   
@@ -145,6 +145,12 @@ export default function BasataTab() {
     }
   };
 
+  const handleDelete = async (id) => {
+    if (window.confirm(language === 'ar' ? 'هل أنت متأكد من حذف هذه المعاملة؟' : 'Are you sure you want to delete this transaction?')) {
+      await deleteBasataTransaction(id);
+    }
+  };
+
   const getPaymentMethodLabel = (method) => {
     switch (method) {
       case 'Cash': return t('cash');
@@ -251,6 +257,7 @@ export default function BasataTab() {
                  <th>{language === 'ar' ? 'المنفذ' : 'Outlet'}</th>
                  <th>{t('amount')}</th>
                  <th>%</th>
+                 {user?.role === 'admin' && <th>{t('actions')}</th>}
                </tr>
              </thead>
              <tbody>
@@ -270,10 +277,22 @@ export default function BasataTab() {
                    </td>
                    <td style={{ fontWeight: 700, color: 'var(--color-success)' }}>{t.amount} EGP</td>
                    <td style={{ color: 'var(--text-secondary)' }}>{t.percentage}%</td>
+                   {user?.role === 'admin' && (
+                     <td>
+                       <button 
+                         className="btn btn-outline" 
+                         style={{ padding: '0.4rem', borderColor: 'var(--color-danger)', color: 'var(--color-danger)' }}
+                         onClick={() => handleDelete(t.id)}
+                         title={t('delete')}
+                       >
+                         <Trash2 size={16} />
+                       </button>
+                     </td>
+                   )}
                  </tr>
                )) : (
                  <tr>
-                   <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>{t('noData')}</td>
+                   <td colSpan={user?.role === 'admin' ? "8" : "7"} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>{t('noData')}</td>
                  </tr>
                )}
              </tbody>

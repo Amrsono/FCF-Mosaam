@@ -456,6 +456,23 @@ export const DashboardProvider = ({ children }) => {
     }
   };
 
+  const deleteBasataTransaction = async (id) => {
+    try {
+      const res = await fetch(`/api/basata?id=${id}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        await fetchData();
+        logUserAction('Delete Basata Transaction', { id });
+        return { success: true };
+      }
+      return { success: false };
+    } catch (err) {
+      console.error(err);
+      return { success: false };
+    }
+  };
+
   // ── Customer Returns ─────────────────────────────────────────────
   const receiveCustomerReturn = async (returnData) => {
     try {
@@ -609,6 +626,7 @@ export const DashboardProvider = ({ children }) => {
       calculatePenalty,
       calculateStorageFee,
       logBasataService,
+      deleteBasataTransaction,
       receiveCustomerReturn,
       markReturnedToJumia,
       revertCustomerReturn,

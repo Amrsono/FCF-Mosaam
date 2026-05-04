@@ -34,6 +34,17 @@ export default async function handler(req, res) {
       return res.status(201).json(transaction);
     }
 
+    // DELETE: Remove a transaction (Admin only check should be done on FE/Auth layer but here we accept ID)
+    if (req.method === 'DELETE') {
+      const { id } = req.query;
+      if (!id) return res.status(400).json({ error: 'Missing transaction ID' });
+
+      await prisma.basataTransaction.delete({
+        where: { id: id }
+      });
+      return res.status(200).json({ success: true });
+    }
+
     return res.status(405).json({ error: 'Method Not Allowed' });
 
   } catch (error) {

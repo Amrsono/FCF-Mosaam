@@ -179,7 +179,9 @@ export default function AnalyticsTab() {
     }, { S: 0, M: 0, L: 0 });
   };
   const jumiaSizes = getSizes(jumiaPickedUp);
+  const jumiaInventorySizes = getSizes(jumiaInventory);
   const bostaSizes = getSizes(bostaPickedUp);
+  const bostaInventorySizes = getSizes(bostaInventory);
 
   // --- BASATA ---
   const activeBasata = basataTransactions.filter(t => isInRange(t.performedAt) && matchesOutlet(t));
@@ -251,6 +253,8 @@ export default function AnalyticsTab() {
         returnedAmt: jumiaReturnedAmt,
         penalties: activePenalties,
         sizes: jumiaSizes,
+        inventorySizes: jumiaInventorySizes,
+        inventoryCount: jumiaInventory.length,
         cashByOutlet: getCashByOutlet(jumiaPickedUp)
       },
       bosta: {
@@ -259,6 +263,8 @@ export default function AnalyticsTab() {
         returnedCount: bostaReturned.length,
         returnedAmt: bostaReturnedAmt,
         sizes: bostaSizes,
+        inventorySizes: bostaInventorySizes,
+        inventoryCount: bostaInventory.length,
         cashByOutlet: getCashByOutlet(bostaPickedUp)
       },
       basata: {

@@ -21,6 +21,27 @@ export default function BasataTab() {
     performedAt: '' 
   });
 
+  const [filterOutlet, setFilterOutlet] = useState(user?.role === 'admin' ? 'All' : (user?.outlet || 'eltalg'));
+
+  const getOutletLabel = (val) => {
+    if (val === 'eltalg' || val === 'Banha 1' || val === 'وبور الثلج' || val === 'وبور التلج') return t('banha1');
+    if (val === 'tegara' || val === 'Banha 2' || val === 'تجارة' || val === 'تجاره') return t('banha2');
+    if (val === 'mostashfa' || val === 'Banha 3' || val === 'المستشفي' || val === 'المستشفى') return t('banha3');
+    return val;
+  };
+
+  const normalizeOutlet = (val) => {
+    if (!val || val === 'Banha 1' || val === 'وبور الثلج' || val === 'وبور التلج') return 'eltalg';
+    if (val === 'Banha 2' || val === 'تجارة' || val === 'تجاره') return 'tegara';
+    if (val === 'Banha 3' || val === 'المستشفي' || val === 'المستشفى') return 'mostashfa';
+    return val;
+  };
+
+  const filteredTransactions = basataTransactions.filter(t => {
+    const matchesOutlet = filterOutlet === 'All' || normalizeOutlet(t.outlet) === filterOutlet;
+    return matchesOutlet;
+  });
+
   const exportHeaders = [
     { label: t('transactionId'), accessor: 'transactionId' },
     { label: t('category'), accessor: 'category' },
@@ -28,6 +49,7 @@ export default function BasataTab() {
     { label: t('amount'), accessor: 'amount' },
     { label: t('percentage'), accessor: 'percentage' },
     { label: t('paymentMethod'), accessor: 'paymentMethod' },
+    { label: language === 'ar' ? 'المنفذ' : 'Outlet', accessor: o => getOutletLabel(o.outlet) },
     { label: t('date'), accessor: o => new Date(o.performedAt).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-GB', { timeZone: 'Africa/Cairo' }) }
   ];
 
@@ -133,7 +155,7 @@ export default function BasataTab() {
     }
   };
 
-  const totalRevenue = basataTransactions.reduce((acc, t) => acc + t.amount, 0);
+  const totalRevenue = filteredTransactions.reduce((acc, t) => acc + t.amount, 0);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', height: '100%', overflowY: 'auto', [language === 'ar' ? 'paddingLeft' : 'paddingRight']: '1rem' }}>
@@ -196,12 +218,26 @@ export default function BasataTab() {
                 {language === 'ar' ? 'سجل كامل لخدمات POS التي تم معالجتها.' : 'Full history of processed POS services.'}
              </p>
            </div>
-           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem', flex: '1 1 auto' }}>
-              <div style={{ fontSize: 'clamp(1.1rem, 4vw, 1.5rem)', fontWeight: 600, color: 'var(--color-primary)', textAlign: 'right' }}>
-                {t('totalVolume')}: {totalRevenue.toLocaleString()} EGP
-              </div>
-              <ExportActions data={basataTransactions} headers={exportHeaders} filename="Basata_POS_Transactions" title={t('basata')} />
-           </div>
+           <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap', flex: '1 1 auto', justifyContent: 'flex-end' }}>
+               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.2rem' }}>
+                 <div style={{ fontSize: 'clamp(1.1rem, 4vw, 1.5rem)', fontWeight: 600, color: 'var(--color-primary)', textAlign: 'right' }}>
+                   {t('totalVolume')}: {totalRevenue.toLocaleString()} EGP
+                 </div>
+                 <select 
+                   className="input-field" 
+                   style={{ minWidth: '150px', padding: '0.3rem 0.6rem', fontSize: '0.85rem' }} 
+                   value={filterOutlet} 
+                   onChange={e => setFilterOutlet(e.target.value)}
+                   disabled={user?.role !== 'admin'}
+                 >
+                   <option value="All">{language === 'ar' ? 'جميع المنافذ' : 'All Outlets'}</option>
+                   <option value="eltalg">{t('banha1')}</option>
+                   <option value="tegara">{t('banha2')}</option>
+                   <option value="mostashfa">{t('banha3')}</option>
+                 </select>
+               </div>
+               <ExportActions data={filteredTransactions} headers={exportHeaders} filename="Basata_POS_Transactions" title={t('basata')} />
+            </div>
          </div>
 
          <div className="table-container">
@@ -212,12 +248,13 @@ export default function BasataTab() {
                  <th>{t('transactionId')}</th>
                  <th>{t('service')}</th>
                  <th>{t('method')}</th>
+                 <th>{language === 'ar' ? 'المنفذ' : 'Outlet'}</th>
                  <th>{t('amount')}</th>
                  <th>%</th>
                </tr>
              </thead>
              <tbody>
-               {basataTransactions.length > 0 ? basataTransactions.map(t => (
+               {filteredTransactions.length > 0 ? filteredTransactions.map(t => (
                  <tr key={t.id}>
                    <td style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{new Date(t.performedAt).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-GB', { timeZone: 'Africa/Cairo', hour: '2-digit', minute: '2-digit', second: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' })}</td>
                    <td style={{ fontFamily: 'monospace' }}>{t.transactionId || '-'}</td>
@@ -226,12 +263,17 @@ export default function BasataTab() {
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t.category}</div>
                    </td>
                    <td><span className="badge badge-neutral">{getPaymentMethodLabel(t.paymentMethod)}</span></td>
+                   <td>
+                      <span className="badge badge-neutral" style={{ fontSize: '0.75rem' }}>
+                        {getOutletLabel(t.outlet)}
+                      </span>
+                   </td>
                    <td style={{ fontWeight: 700, color: 'var(--color-success)' }}>{t.amount} EGP</td>
                    <td style={{ color: 'var(--text-secondary)' }}>{t.percentage}%</td>
                  </tr>
                )) : (
                  <tr>
-                   <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>{t('noData')}</td>
+                   <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>{t('noData')}</td>
                  </tr>
                )}
              </tbody>

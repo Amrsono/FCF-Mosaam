@@ -91,6 +91,8 @@ export default function OrdersTab() {
     { label: language === 'ar' ? 'المقاس' : 'Size', accessor: 'size' },
     { label: t('paymentMethod'), accessor: 'paymentMethod' },
     { label: t('status'), accessor: 'status' },
+    { label: t('pickedFromJumia'), accessor: o => new Date(o.receivedAt).toLocaleString() },
+    { label: t('pickedUpByCustomer'), accessor: o => o.pickedUpAt ? new Date(o.pickedUpAt).toLocaleString() : '-' },
     { label: t('daysInInv'), accessor: 'daysParked' }
   ];
 
@@ -400,8 +402,8 @@ export default function OrdersTab() {
               <thead>
                 <tr>
                   <th>{language === 'ar' ? 'المنفذ' : 'Outlet'}</th>
-                  <th>{language === 'ar' ? 'استلام' : 'Received'}</th>
-                  <th>{language === 'ar' ? 'تم الاستلام' : 'Picked Up'}</th>
+                  <th>{t('pickedFromJumia')}</th>
+                  <th>{t('pickedUpByCustomer')}</th>
                   <th>{language === 'ar' ? 'ملغي' : 'Cancelled'}</th>
                   <th>{language === 'ar' ? 'مرتجع' : 'Returned'}</th>
                   <th>{language === 'ar' ? 'متاح' : 'Inventory'}</th>
@@ -450,9 +452,9 @@ export default function OrdersTab() {
                 <th>{t('customer')}</th>
                 <th>{t('description')}</th>
                 <th>{t('category')}</th>
-                <th>{language === 'ar' ? 'طريقة الدفع' : 'Payment'}</th>
-                <th>{language === 'ar' ? 'المنفذ' : 'Outlet'}</th>
+                <th>{t('pickedFromJumia')}</th>
                 <th>{t('status')}</th>
+                <th>{t('pickedUpByCustomer')}</th>
                 <th>{t('daysInInv')}</th>
                 <th>{t('actions')}</th>
               </tr>
@@ -481,21 +483,37 @@ export default function OrdersTab() {
                     </div>
                   </td>
                   <td>
-                    <span className="badge badge-neutral" style={{ 
-                      fontSize: '0.8rem', 
-                      background: order.paymentMethod === 'JumiaPay' ? 'rgba(99,102,241,0.1)' : order.paymentMethod === 'VISA' ? 'rgba(34,197,94,0.1)' : '', 
-                      color: order.paymentMethod === 'JumiaPay' ? '#6366f1' : order.paymentMethod === 'VISA' ? '#22c55e' : '' 
-                    }}>
-                      {order.paymentMethod === 'Cash' || !order.paymentMethod ? (language === 'ar' ? 'كاش' : 'Cash') : order.paymentMethod}
-                    </span>
-                  </td>
-                  <td>
-                    <span className="badge badge-neutral" style={{ fontSize: '0.8rem' }}>{getOutletLabel(order.outlet)}</span>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontWeight: 600 }}>
+                        {new Date(order.receivedAt).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-GB', { timeZone: 'Africa/Cairo', month: 'short', day: '2-digit' })}
+                      </span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        {new Date(order.receivedAt).toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', { timeZone: 'Africa/Cairo', hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                      <span className="badge badge-neutral" style={{ fontSize: '0.65rem', marginTop: '2px', padding: '1px 4px' }}>
+                        {getOutletLabel(order.outlet)}
+                      </span>
+                    </div>
                   </td>
                   <td>
                     <span className={`badge ${order.status === 'Inventory' ? 'badge-warning' : order.status === 'Picked Up' ? 'badge-success' : order.status === 'Cancelled' ? 'badge-warning' : 'badge-danger'}`}>
                       {getStatusLabel(order.status)}
                     </span>
+                  </td>
+                  <td>
+                    {order.status === 'Picked Up' ? (
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span style={{ fontWeight: 600, color: 'var(--color-success)' }}>
+                          {new Date(order.pickedUpAt).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-GB', { timeZone: 'Africa/Cairo', month: 'short', day: '2-digit' })}
+                        </span>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                          {new Date(order.pickedUpAt).toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-US', { timeZone: 'Africa/Cairo', hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                        <span className="badge badge-neutral" style={{ fontSize: '0.65rem', marginTop: '2px', padding: '1px 4px' }}>
+                          {order.paymentMethod === 'Cash' || !order.paymentMethod ? (language === 'ar' ? 'كاش' : 'Cash') : order.paymentMethod}
+                        </span>
+                      </div>
+                    ) : <span style={{ color: 'var(--text-muted)' }}>—</span>}
                   </td>
                   <td>
                     {order.status === 'Inventory' ? (
@@ -508,11 +526,6 @@ export default function OrdersTab() {
                           <span style={{ fontWeight: 600 }}>{order.daysParked} {t('days')}</span>
                           <span style={{ fontSize: '0.7rem', color: 'var(--color-primary)' }}>{order.penalty} EGP {t('penalty')}</span>
                         </div>
-                        {(order.daysParked >= 4 || order.status === 'Cancelled') && (
-                          <div className="badge badge-danger" style={{ fontSize: '0.6rem', padding: '2px 6px' }}>
-                            {language === 'ar' ? 'يجب الارجاع' : 'RETURN REQ'}
-                          </div>
-                        )}
                       </div>
                     ) : <span style={{ color: 'var(--text-muted)' }}>-</span>}
                   </td>

@@ -177,6 +177,8 @@ export const translations = {
     dailyTransactions: "Daily Transactions",
     weeklyTransactions: "Weekly Transactions",
     monthlyTransactions: "Monthly Transactions",
+    pickedFromJumia: "Picked up from Jumia",
+    pickedUpByCustomer: "Picked Up by customer",
   },
   ar: {
     // Sidebar
@@ -356,5 +358,7 @@ export const translations = {
     dailyTransactions: "المعاملات اليومية",
     weeklyTransactions: "المعاملات الأسبوعية",
     monthlyTransactions: "المعاملات الشهرية",
+    pickedFromJumia: "استلام من جوميا",
+    pickedUpByCustomer: "استلام من قبل العميل",
   }
 };

@@ -69,6 +69,7 @@ export default function AnalyticsTab() {
   const [startDate, setStartDate] = useState(() => formatDate(new Date()));
   const [endDate, setEndDate] = useState(() => formatDate(new Date()));
   const [timeframe, setTimeframe] = useState('daily');
+  const [selectedOutlet, setSelectedOutlet] = useState('All');
 
   const handleTimeframeChange = (tf) => {
     setTimeframe(tf);
@@ -121,13 +122,18 @@ export default function AnalyticsTab() {
     return d >= startLimit && d <= endLimit;
   };
 
+  const matchesOutlet = (o) => {
+    if (selectedOutlet === 'All') return true;
+    return normalizeOutlet(o.outlet) === selectedOutlet;
+  };
+
   // --- JUMIA ---
-  const jumiaPickedUp = orders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt));
-  const jumiaInventory = orders.filter(o => o.status === 'Inventory');
+  const jumiaPickedUp = orders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt) && matchesOutlet(o));
+  const jumiaInventory = orders.filter(o => o.status === 'Inventory' && isInRange(o.receivedAt) && matchesOutlet(o));
   
   // Include Customer Returns that were sent back to Jumia
-  const stdReturned = orders.filter(o => o.status === 'Returned' && isInRange(o.returnedAt));
-  const custReturned = (customerReturns || []).filter(r => r.status === 'Returned to Jumia' && isInRange(r.returnedAt));
+  const stdReturned = orders.filter(o => o.status === 'Returned' && isInRange(o.returnedAt) && matchesOutlet(o));
+  const custReturned = (customerReturns || []).filter(r => r.status === 'Returned to Jumia' && isInRange(r.returnedAt) && (selectedOutlet === 'All' || normalizeOutlet(r.outlet) === selectedOutlet));
   const jumiaReturned = [...stdReturned, ...custReturned];
   
   const jumiaCash = jumiaPickedUp.reduce((s, o) => s + o.totalValue, 0);
@@ -159,8 +165,9 @@ export default function AnalyticsTab() {
   ].filter(d => d.value > 0);
 
   // --- BOSTA ---
-  const bostaPickedUp = bostaOrders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt));
-  const bostaReturned = bostaOrders.filter(o => o.status === 'Returned' && isInRange(o.returnedAt));
+  const bostaPickedUp = bostaOrders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt) && matchesOutlet(o));
+  const bostaReturned = bostaOrders.filter(o => o.status === 'Returned' && isInRange(o.returnedAt) && matchesOutlet(o));
+  const bostaInventory = bostaOrders.filter(o => o.status === 'Inventory' && isInRange(o.receivedAt) && matchesOutlet(o));
   const bostaCash = bostaPickedUp.reduce((s, o) => s + o.totalValue, 0);
   const bostaReturnedAmt = bostaReturned.reduce((s, o) => s + o.totalValue, 0);
 
@@ -300,8 +307,8 @@ export default function AnalyticsTab() {
   ];
 
   const ordersStatusData = [
-    { name: `${t('jumia')} ${t('pickedUpStatus')}`, value: jumiaPickedUp.length, color: CHART_COLORS.success },
-    { name: `${t('jumia')} ${t('inventoryStatus')}`, value: jumiaInventory.length, color: CHART_COLORS.warning },
+    { name: t('pickedFromJumia'), value: jumiaInventory.length, color: CHART_COLORS.warning },
+    { name: t('pickedUpByCustomer'), value: jumiaPickedUp.length, color: CHART_COLORS.success },
     { name: `${t('jumia')} ${t('returnedStatus')}`, value: jumiaReturned.length, color: CHART_COLORS.danger },
     { name: `${t('bosta')} ${t('pickedUpStatus')}`, value: bostaPickedUp.length, color: CHART_COLORS.bosta },
     { name: `${t('bosta')} ${t('inventoryStatus')}`, value: bostaInventory.length, color: '#a5b4fc' },
@@ -320,7 +327,7 @@ export default function AnalyticsTab() {
 
   const comparisonData = [
     { name: language === 'ar' ? 'المدخلات' : 'Inventory', jumia: jumiaInventory.length, bosta: bostaInventory.length },
-    { name: t('pickedUpStatus'), jumia: jumiaPickedUp.length, bosta: bostaPickedUp.length },
+    { name: t('pickedUpByCustomer'), jumia: jumiaPickedUp.length, bosta: bostaPickedUp.length },
     { name: t('returnedStatus'), jumia: jumiaReturned.length, bosta: bostaReturned.length },
   ];
 
@@ -397,7 +404,6 @@ export default function AnalyticsTab() {
                 {t('custom')}
               </button>
             )}
-          </div>
           <div style={{ 
             display: 'flex', 
             alignItems: 'center',
@@ -405,6 +411,29 @@ export default function AnalyticsTab() {
             [language === 'ar' ? 'paddingRight' : 'paddingLeft']: '0.75rem', 
             [language === 'ar' ? 'borderRight' : 'borderLeft']: '1px solid var(--border-color)' 
           }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{language === 'ar' ? 'المنفذ' : 'Outlet'}</span>
+              <select 
+                value={selectedOutlet} 
+                onChange={(e) => setSelectedOutlet(e.target.value)}
+                className="date-input-premium"
+                style={{ 
+                  background: 'rgba(255,255,255,0.05)', 
+                  border: '1px solid var(--border-color)', 
+                  borderRadius: '6px', 
+                  color: 'var(--text-primary)', 
+                  fontSize: '0.8rem', 
+                  padding: '0.3rem 0.5rem',
+                  outline: 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="All">{language === 'ar' ? 'جميع المنافذ' : 'All Outlets'}</option>
+                <option value="eltalg">{t('banha1')}</option>
+                <option value="tegara">{t('banha2')}</option>
+                <option value="mostashfa">{t('banha3')}</option>
+              </select>
+            </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('from')}</span>
               <input 
@@ -475,8 +504,8 @@ export default function AnalyticsTab() {
               data={[
                 { group: 'Overview', metric: 'Grand Total Revenue', value: `${grandTotal} EGP` },
                 { group: 'Jumia', metric: 'Cash Collected', value: `${jumiaCash} EGP` },
-                { group: 'Jumia', metric: 'Picked Up', value: jumiaPickedUp.length },
-                { group: 'Jumia', metric: 'Returned', value: jumiaReturned.length },
+                { group: 'Jumia', metric: t('pickedUpByCustomer'), value: jumiaPickedUp.length },
+                { group: 'Jumia', metric: t('returnedStatus'), value: jumiaReturned.length },
                 { group: 'Jumia', metric: 'Penalties Pool', value: `${activePenalties} EGP` },
                 { group: 'Bosta', metric: 'Cash Collected', value: `${bostaCash} EGP` },
                 { group: 'Bosta', metric: 'Picked Up', value: bostaPickedUp.length },
@@ -527,7 +556,7 @@ export default function AnalyticsTab() {
 
       {/* Row 1: Key Metrics */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
-        <MetricCard title={`${t('jumia')} ${t('cash')}`} value={`${jumiaCash.toLocaleString()} EGP`} icon={<DollarSign size={14} />} color={CHART_COLORS.jumia} sub={language === 'ar' ? `${jumiaPickedUp.length} طلب مستلم` : `${jumiaPickedUp.length} orders picked up`} />
+        <MetricCard title={`${t('jumia')} ${t('cash')}`} value={`${jumiaCash.toLocaleString()} EGP`} icon={<DollarSign size={14} />} color={CHART_COLORS.jumia} sub={language === 'ar' ? `${jumiaPickedUp.length} طلب استلام عميل` : `${jumiaPickedUp.length} customer pick ups`} />
         <MetricCard title={`${t('bosta')} ${t('cash')}`} value={`${bostaCash.toLocaleString()} EGP`} icon={<DollarSign size={14} />} color={CHART_COLORS.bosta} sub={language === 'ar' ? `${bostaPickedUp.length} طلب مستلم` : `${bostaPickedUp.length} orders picked up`} />
         <MetricCard title={`${t('basata')} POS`} value={`${basataVolume.toLocaleString()} EGP`} icon={<Zap size={14} />} color={CHART_COLORS.basata} sub={language === 'ar' ? `${activeBasata.length} عملية` : `${activeBasata.length} transactions`} />
         <MetricCard title={t('parkedPenalties')} value={`${activePenalties} EGP`} icon={<AlertOctagon size={14} />} color={CHART_COLORS.warning} sub={language === 'ar' ? `${jumiaInventory.length} طلب مخزن` : `${jumiaInventory.length} parked orders`} />
@@ -696,7 +725,7 @@ export default function AnalyticsTab() {
               <tr>
                 <th>{t('stream')}</th>
                 <th>{language === 'ar' ? 'الإيرادات' : 'Revenue'}</th>
-                <th>{language === 'ar' ? 'الطلبات المعالجة' : 'Orders Handled'}</th>
+                <th>{t('pickedUpByCustomer')}</th>
                 <th>{t('returnedStatus')}</th>
                 <th>{language === 'ar' ? 'مبلغ المرتجع' : 'Return Amount'}</th>
                 <th>{language === 'ar' ? 'صافي المركز' : 'Net Position'}</th>

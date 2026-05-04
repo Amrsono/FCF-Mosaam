@@ -57,7 +57,7 @@ export const exportToPPTX = async (analytics, filename, language = 'en') => {
     
     const jStats = [
       [language === 'ar' ? 'المؤشر' : 'Metric', language === 'ar' ? 'القيمة' : 'Value'],
-      [language === 'ar' ? 'الطلبات المستلمة بنجاح' : 'Orders Handled Successfully', String(analytics.jumia.pickedUpCount)],
+      [language === 'ar' ? 'تم الاستلام من قبل العميل' : 'Picked Up by customer', String(analytics.jumia.pickedUpCount)],
       [`  - Small (S)`, String(analytics.jumia.sizes?.S || 0)],
       [`  - Medium (M)`, String(analytics.jumia.sizes?.M || 0)],
       [`  - Large (L)`, String(analytics.jumia.sizes?.L || 0)],

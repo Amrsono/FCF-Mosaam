@@ -103,8 +103,21 @@ export const exportToPPTX = async (analytics, filename, language = 'en') => {
     slide4.addText(language === 'ar' ? `إجمالي الحجم: ${analytics.basata.volume.toLocaleString()} EGP` : `Total Volume: ${analytics.basata.volume.toLocaleString()} EGP`, { x: 0.5, y: 1.0, fontSize: 16 });
     
     if (analytics.basata.categoryData.length > 0) {
-      const basataRows = [[language === 'ar' ? 'الفئة' : 'Category', language === 'ar' ? 'المبلغ' : 'Amount']];
-      analytics.basata.categoryData.forEach(c => basataRows.push([c.name, `${c.amount.toLocaleString()} EGP`]));
+      const basataRows = [[language === 'ar' ? 'الفئة / المنفذ' : 'Category / Outlet', language === 'ar' ? 'المبلغ' : 'Amount']];
+      
+      // Add outlet breakdown first
+      basataRows.push([{ text: language === 'ar' ? 'المنفذ' : 'By Outlet', options: { bold: true, fill: "EDF2F7" } }, { text: '', options: { fill: "EDF2F7" } }]);
+      basataRows.push([`  - ${language === 'ar' ? 'بنها 1 "eltalg"' : 'Banha 1 "eltalg"'}`, `${(analytics.basata.volumeByOutlet?.eltalg || 0).toLocaleString()} EGP`]);
+      basataRows.push([`  - ${language === 'ar' ? 'بنها 2 "tegara"' : 'Banha 2 "tegara"'}`, `${(analytics.basata.volumeByOutlet?.tegara || 0).toLocaleString()} EGP`]);
+      basataRows.push([`  - ${language === 'ar' ? 'بنها 3 "mostashfa"' : 'Banha 3 "mostashfa"'}`, `${(analytics.basata.volumeByOutlet?.mostashfa || 0).toLocaleString()} EGP`]);
+      
+      // Add space
+      basataRows.push([{ text: '', options: { fill: "FFFFFF" } }, { text: '', options: { fill: "FFFFFF" } }]);
+      
+      // Add category breakdown
+      basataRows.push([{ text: language === 'ar' ? 'حسب الفئة' : 'By Category', options: { bold: true, fill: "EDF2F7" } }, { text: '', options: { fill: "EDF2F7" } }]);
+      analytics.basata.categoryData.forEach(c => basataRows.push([`  - ${c.name}`, `${c.amount.toLocaleString()} EGP`]));
+      
       slide4.addTable(basataRows, { x: 0.5, y: 1.5, w: 9, border: { pt: 1, color: "CBD5E0" }, fill: "F7FAFC", fontSize: 12 });
     }
 

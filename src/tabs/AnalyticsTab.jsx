@@ -195,6 +195,15 @@ export default function AnalyticsTab() {
     return acc;
   }, {});
 
+  const getBasataByOutlet = (list) => {
+    return list.reduce((acc, t) => {
+      const outlet = normalizeOutlet(t.outlet);
+      acc[outlet] = (acc[outlet] || 0) + t.amount;
+      return acc;
+    }, { eltalg: 0, tegara: 0, mostashfa: 0 });
+  };
+  const basataByOutlet = getBasataByOutlet(activeBasata);
+
   // --- GRAND TOTAL ---
   const grandTotal = jumiaCash + bostaCash + basataVolume + activePenalties;
 
@@ -269,7 +278,8 @@ export default function AnalyticsTab() {
       },
       basata: {
         volume: basataVolume,
-        categoryData: basataCatData
+        categoryData: basataCatData,
+        volumeByOutlet: basataByOutlet
       },
       calls: {
         total: callsInPeriod.length,

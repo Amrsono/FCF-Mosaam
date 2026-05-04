@@ -139,7 +139,7 @@ export default function AnalyticsTab() {
   const jumiaCash = jumiaPickedUp.reduce((s, o) => s + o.totalValue, 0);
   const jumiaReturnedAmt = stdReturned.reduce((s, o) => s + o.totalValue, 0); // Customer returns don't have a value in our system
   // --- BOSTA ---
-  const bostaInventory = bostaOrders.filter(o => o.status === 'Inventory');
+  const bostaInventory = bostaOrders.filter(o => o.status === 'Inventory' && isInRange(o.receivedAt) && matchesOutlet(o));
 
   const activePenalties = [...jumiaInventory, ...bostaInventory].reduce((s, o) => {
     return s + (calculatePenalty ? calculatePenalty(o) : 0);
@@ -167,7 +167,6 @@ export default function AnalyticsTab() {
   // --- BOSTA ---
   const bostaPickedUp = bostaOrders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt) && matchesOutlet(o));
   const bostaReturned = bostaOrders.filter(o => o.status === 'Returned' && isInRange(o.returnedAt) && matchesOutlet(o));
-  const bostaInventory = bostaOrders.filter(o => o.status === 'Inventory' && isInRange(o.receivedAt) && matchesOutlet(o));
   const bostaCash = bostaPickedUp.reduce((s, o) => s + o.totalValue, 0);
   const bostaReturnedAmt = bostaReturned.reduce((s, o) => s + o.totalValue, 0);
 

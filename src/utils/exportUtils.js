@@ -10,7 +10,14 @@ const prepareData = (data, headers) => {
     headers.forEach(h => {
       // Allow accessor to be a string key or a functional accessor
       const val = typeof h.accessor === 'function' ? h.accessor(item) : item[h.accessor];
-      row[h.label] = val != null ? String(val) : '';
+      
+      if (val === null || val === undefined) {
+        row[h.label] = '';
+      } else if (typeof val === 'number' || typeof val === 'boolean') {
+        row[h.label] = val;
+      } else {
+        row[h.label] = String(val);
+      }
     });
     return row;
   });

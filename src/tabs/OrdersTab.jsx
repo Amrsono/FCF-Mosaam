@@ -429,7 +429,6 @@ export default function OrdersTab() {
                   <th>{language === 'ar' ? 'ملغي' : 'Cancelled'}</th>
                   <th>{language === 'ar' ? 'مرتجع' : 'Returned'}</th>
                   <th>{t('inventory')}</th>
-                  
                   <th>{language === 'ar' ? 'اجمالي' : 'Total'}</th>
                   <th>{language === 'ar' ? 'سداد' : 'Paid'}</th>
                   <th style={{ color: 'var(--color-primary)' }}>{language === 'ar' ? 'رسوم التخزين' : 'Storage Fees'}</th>
@@ -447,7 +446,6 @@ export default function OrdersTab() {
                     <td style={{ color: 'var(--color-warning)' }}>{row.cancelled}</td>
                     <td style={{ color: 'var(--color-danger)' }}>{row.returned}</td>
                     <td style={{ fontWeight: 600 }}>{row.available}</td>
-                    
                     <td>{row.totalMoney.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td>{row.paid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td style={{ fontWeight: 600 }}>{row.storageFees.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
@@ -464,7 +462,6 @@ export default function OrdersTab() {
                   <td style={{ fontWeight: 700, color: 'var(--color-warning)' }}>{summaryByOutlet.reduce((sum, r) => sum + r.cancelled, 0)}</td>
                   <td style={{ fontWeight: 700, color: 'var(--color-danger)' }}>{summaryByOutlet.reduce((sum, r) => sum + r.returned, 0)}</td>
                   <td style={{ fontWeight: 700 }}>{summaryByOutlet.reduce((sum, r) => sum + r.available, 0)}</td>
-                  <td style={{ fontWeight: 800, color: 'var(--color-success)', background: 'rgba(34, 197, 94, 0.1)', borderLeft: '1px solid var(--border-color)' }}>{summaryByOutlet.reduce((sum, r) => sum + r.totalStock, 0)}</td>
                   <td style={{ fontWeight: 700 }}>{summaryByOutlet.reduce((sum, r) => sum + r.totalMoney, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   <td style={{ fontWeight: 700 }}>{summaryByOutlet.reduce((sum, r) => sum + r.paid, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   <td style={{ fontWeight: 800, color: 'var(--color-primary)' }}>{summaryByOutlet.reduce((sum, r) => sum + r.storageFees, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>

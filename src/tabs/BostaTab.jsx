@@ -136,7 +136,10 @@ export default function BostaTab() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!newOrder.id || !newOrder.customerPhone) return;
+    if (!newOrder.id || !newOrder.customerPhone || !newOrder.customerName || !newOrder.description || !newOrder.totalValue) {
+      alert(language === 'ar' ? 'يرجى ملء جميع الحقول المطلوبة' : 'Please fill all required fields');
+      return;
+    }
     receiveBostaOrder({
       id: newOrder.id,
       customerPhone: newOrder.customerPhone,
@@ -548,7 +551,7 @@ export default function BostaTab() {
               </div>
               <div className="input-group">
                 <label className="input-label">{t('customer')}</label>
-                <input className="input-field" value={newOrder.customerName} onChange={e => setNewOrder({ ...newOrder, customerName: e.target.value })} placeholder={t('name')} />
+                <input required className="input-field" value={newOrder.customerName} onChange={e => setNewOrder({ ...newOrder, customerName: e.target.value })} placeholder={t('name')} />
               </div>
               <div className="input-group">
                 <label className="input-label">{t('description')}</label>

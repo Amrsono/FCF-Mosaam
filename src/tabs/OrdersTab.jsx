@@ -182,9 +182,21 @@ export default function OrdersTab() {
 
   // Summary by Outlet (calculated from already filtered data)
   const summaryByOutlet = useMemo(() => {
-    const outlets = filterOutlet === 'All' ? ['eltalg', 'tegara', 'mostashfa'] : [filterOutlet];
+    // Dynamically identify all unique normalized outlets present in the current filtered set
+    const outletsInList = [...new Set(allFilteredOrders.map(o => normalizeOutlet(o.outlet)))].filter(Boolean);
     
-    return outlets.map(outletName => {
+    // Define display buckets: always include the main 3, then any others found
+    const mainOutlets = ['eltalg', 'tegara', 'mostashfa'];
+    let displayOutlets = [...mainOutlets];
+    
+    if (filterOutlet !== 'All') {
+      displayOutlets = [filterOutlet];
+    } else {
+      const otherOutlets = outletsInList.filter(o => !mainOutlets.includes(o));
+      displayOutlets = [...mainOutlets, ...otherOutlets];
+    }
+    
+    return displayOutlets.map(outletName => {
       const outletOrders = allFilteredOrders.filter(o => normalizeOutlet(o.outlet) === outletName);
       
       const received = outletOrders.filter(o => isInRange(o.receivedAt, filterDateStart, filterDateEnd)).length;
@@ -226,7 +238,10 @@ export default function OrdersTab() {
 
   const handleSimulateReceive = (e) => {
     e.preventDefault();
-    if (!newOrder.id || !newOrder.customerPhone) return;
+    if (!newOrder.id || !newOrder.customerPhone || !newOrder.customerName || !newOrder.description || !newOrder.totalValue) {
+      alert(language === 'ar' ? 'يرجى ملء جميع الحقول المطلوبة' : 'Please fill all required fields');
+      return;
+    }
     
     receiveOrder({
       id: newOrder.id,
@@ -810,7 +825,7 @@ export default function OrdersTab() {
               </div>
               <div className="input-group">
                  <label className="input-label">{t('customer')}</label>
-                 <input className="input-field" value={newOrder.customerName} onChange={e => setNewOrder({...newOrder, customerName: e.target.value})} placeholder={t('name')} />
+                 <input required className="input-field" value={newOrder.customerName} onChange={e => setNewOrder({...newOrder, customerName: e.target.value})} placeholder={t('name')} />
               </div>
               <div className="input-group">
                 <label className="input-label">{t('description')}</label>

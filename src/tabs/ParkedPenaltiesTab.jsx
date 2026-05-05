@@ -5,8 +5,12 @@ import ExportActions from '../components/ExportActions';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function ParkedPenaltiesTab() {
-  const { orders, bostaOrders, customers, calculatePenalty } = useDashboard();
+  const { orders, bostaOrders, customers, calculatePenalty, globalFilters, updateFilters } = useDashboard();
   const { t, language } = useLanguage();
+
+  const f = globalFilters.penalties || { source: 'all' };
+  const filterSource = f.source;
+  const setFilterSource = (val) => updateFilters('penalties', { source: val });
   
   const getOutletLabel = (val) => {
     if (val === 'eltalg') return t('eltalg');
@@ -15,14 +19,21 @@ export default function ParkedPenaltiesTab() {
     return val;
   };
 
-  const [filterSource, setFilterSource] = React.useState('all'); // 'all' | 'jumia' | 'bosta'
+  const normalizeOutlet = (val) => {
+    if (!val) return 'eltalg';
+    const v = String(val).toLowerCase().trim();
+    if (v === 'eltalg' || v.includes('banha 1') || v.includes('banha1') || v.includes('ثلج') || v.includes('تلج')) return 'eltalg';
+    if (v === 'tegara' || v.includes('banha 2') || v.includes('banha2') || v.includes('تجارة') || v.includes('تجاره')) return 'tegara';
+    if (v === 'mostashfa' || v.includes('banha 3') || v.includes('banha3') || v.includes('مستشفى') || v.includes('مستشفي')) return 'mostashfa';
+    return val;
+  };
 
   const exportHeaders = [
     { label: t('orderId'), accessor: 'id' },
     { label: language === 'ar' ? 'المصدر' : 'Source', accessor: o => o.orderSource === 'bosta' ? 'Bosta' : 'Jumia' },
     { label: t('customer'), accessor: 'customerName' },
     { label: t('phone'), accessor: 'customerPhone' },
-    { label: language === 'ar' ? 'المنفذ' : 'Outlet', accessor: 'outlet' },
+    { label: language === 'ar' ? 'المنفذ' : 'Outlet', accessor: o => getOutletLabel(normalizeOutlet(o.outlet)) },
     { label: t('receivedAt'), accessor: o => new Date(o.receivedAt).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) },
     { label: t('daysInInv'), accessor: 'daysParked' },
     { label: language === 'ar' ? 'سعر اليوم' : 'Daily Rate', accessor: o => `${o.dailyRate} EGP` },
@@ -39,6 +50,7 @@ export default function ParkedPenaltiesTab() {
          return {
            ...o,
            orderSource: source,
+           outlet: normalizeOutlet(o.outlet),
            customerName: cust?.name || (language === 'ar' ? 'غير معروف' : 'Unknown'),
            penalty: calculatePenalty(o),
            dailyRate,

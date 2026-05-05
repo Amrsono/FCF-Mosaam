@@ -75,13 +75,29 @@ export default function BostaTab() {
     { label: t('phone'), accessor: 'customerPhone' },
     { label: t('description'), accessor: 'description' },
     { label: t('category'), accessor: 'category' },
-    { label: language === 'ar' ? 'المنفذ' : 'Outlet', accessor: 'outlet' },
+    { label: language === 'ar' ? 'المنفذ' : 'Outlet', accessor: o => getOutletLabel(normalizeOutlet(o.outlet)) },
     { label: t('receivedAt'), accessor: o => new Date(o.receivedAt).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US', { timeZone: 'Africa/Cairo', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) },
     { label: t('value'), accessor: 'totalValue' },
     { label: t('status'), accessor: 'status' },
     { label: t('daysInInv'), accessor: 'daysParked' },
     { label: 'SLA Status', accessor: o => o.daysParked >= 4 ? t('critical4Days') : o.daysParked >= 2 ? t('warning2Days') : t('onTrack') }
   ];
+
+  const getOutletLabel = (val) => {
+    if (val === 'eltalg') return t('eltalg');
+    if (val === 'tegara') return t('tegara');
+    if (val === 'mostashfa') return t('mostashfa');
+    return val;
+  };
+
+  const normalizeOutlet = (val) => {
+    if (!val) return 'eltalg';
+    const v = String(val).toLowerCase().trim();
+    if (v === 'eltalg' || v.includes('banha 1') || v.includes('banha1') || v.includes('ثلج') || v.includes('تلج')) return 'eltalg';
+    if (v === 'tegara' || v.includes('banha 2') || v.includes('banha2') || v.includes('تجارة') || v.includes('تجاره')) return 'tegara';
+    if (v === 'mostashfa' || v.includes('banha 3') || v.includes('banha3') || v.includes('مستشفى') || v.includes('مستشفي')) return 'mostashfa';
+    return val;
+  };
 
   const isInRange = (dateStr, startStr, endStr) => {
     if (!dateStr) return false;

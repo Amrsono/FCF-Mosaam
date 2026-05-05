@@ -428,60 +428,63 @@ export default function BostaTab() {
                   ) : <span style={{ color: 'var(--text-muted)' }}>-</span>}
                 </td>
                 <td>
-                  {order.status === 'Inventory' && (
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <button
-                        className="btn btn-outline"
-                        style={{ padding: '0.4rem', color: 'var(--color-primary)' }}
-                        title={language === 'ar' ? 'تعديل' : 'Edit'}
-                        onClick={() => { setEditingOrder(order); setOriginalOrderId(order.id); }}
-                      >
-                        <Pencil size={16} />
-                      </button>
-                      <button
-                        className="btn btn-outline"
-                        style={{ padding: '0.4rem', color: 'var(--color-success)' }}
-                        title={t('markPickedUp')}
-                        onClick={() => { 
-                          const cust = customers.find(c => c.phone === order.customerPhone);
-                          setCustomerUpdateData({
-                            phone: cust?.phone || order.customerPhone,
-                            name: cust?.name || '',
-                            email: cust?.email || '',
-                            address: cust?.address || ''
-                          });
-                          setPendingOrderId(order.id); 
-                          setShowCrossSellModal(true); 
-                        }}
-                      >
-                        <UserCheck size={16} />
-                      </button>
-                      <button
-                        className="btn btn-outline"
-                        style={{ padding: '0.4rem', color: 'var(--color-danger)' }}
-                        title={language === 'ar' ? 'إرجاع لبوسطة' : 'Return to Bosta'}
-                        onClick={() => returnBostaOrder(order.id)}
-                      >
-                        <RefreshCw size={16} />
-                      </button>
-                      <button
-                        className="btn btn-outline"
-                        style={{ padding: '0.4rem', color: '#f59e0b' }}
-                        title={language === 'ar' ? 'إلغاء' : 'Cancel'}
-                        onClick={() => { setTargetOrder(order); setShowCancelModal(true); }}
-                      >
-                        <X size={16} />
-                      </button>
-                      <button
-                        className="btn btn-outline"
-                        style={{ padding: '0.4rem', color: 'var(--color-danger)' }}
-                        title={language === 'ar' ? 'حذف' : 'Delete'}
-                        onClick={() => { setTargetOrder(order); setShowDeleteModal(true); }}
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  )}
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button
+                      className="btn btn-outline"
+                      style={{ padding: '0.4rem', color: 'var(--color-primary)' }}
+                      title={language === 'ar' ? 'تعديل' : 'Edit'}
+                      onClick={() => { setEditingOrder(order); setOriginalOrderId(order.id); }}
+                    >
+                      <Pencil size={16} />
+                    </button>
+
+                    {order.status === 'Inventory' && (
+                      <>
+                        <button
+                          className="btn btn-outline"
+                          style={{ padding: '0.4rem', color: 'var(--color-success)' }}
+                          title={t('markPickedUp')}
+                          onClick={() => { 
+                            const cust = customers.find(c => c.phone === order.customerPhone);
+                            setCustomerUpdateData({
+                              phone: cust?.phone || order.customerPhone,
+                              name: cust?.name || '',
+                              email: cust?.email || '',
+                              address: cust?.address || ''
+                            });
+                            setPendingOrderId(order.id); 
+                            setShowCrossSellModal(true); 
+                          }}
+                        >
+                          <UserCheck size={16} />
+                        </button>
+                        <button
+                          className="btn btn-outline"
+                          style={{ padding: '0.4rem', color: 'var(--color-danger)' }}
+                          title={language === 'ar' ? 'إرجاع لبوسطة' : 'Return to Bosta'}
+                          onClick={() => returnBostaOrder(order.id)}
+                        >
+                          <RefreshCw size={16} />
+                        </button>
+                        <button
+                          className="btn btn-outline"
+                          style={{ padding: '0.4rem', color: '#f59e0b' }}
+                          title={language === 'ar' ? 'إلغاء' : 'Cancel'}
+                          onClick={() => { setTargetOrder(order); setShowCancelModal(true); }}
+                        >
+                          <X size={16} />
+                        </button>
+                        <button
+                          className="btn btn-outline"
+                          style={{ padding: '0.4rem', color: 'var(--color-danger)' }}
+                          title={language === 'ar' ? 'حذف' : 'Delete'}
+                          onClick={() => { setTargetOrder(order); setShowDeleteModal(true); }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </>
+                    )}
+                  </div>
                   {order.status === 'Cancelled' && (
                      <div style={{ display: 'flex', gap: '0.5rem' }}>
                        <button
@@ -651,11 +654,24 @@ export default function BostaTab() {
                   className="input-field" 
                   value={editingOrder.outlet} 
                   onChange={e => setEditingOrder({...editingOrder, outlet: e.target.value})}
-                  disabled={user?.role !== 'admin'}
+                  disabled={false}
                 >
                   <option value="eltalg">{t('banha1')}</option>
                   <option value="tegara">{t('banha2')}</option>
                   <option value="mostashfa">{t('banha3')}</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="label">{language === 'ar' ? 'طريقة الدفع' : 'Payment Method'}</label>
+                <select 
+                  className="input-field" 
+                  value={editingOrder.paymentMethod} 
+                  onChange={e => setEditingOrder({...editingOrder, paymentMethod: e.target.value})}
+                >
+                  <option value="Cash">{language === 'ar' ? 'كاش' : 'Cash'}</option>
+                  <option value="VISA">VISA</option>
+                  <option value="Wallet">{language === 'ar' ? 'محفظة إلكترونية' : 'Wallet'}</option>
                 </select>
               </div>
 

@@ -90,10 +90,11 @@ export const exportToPPTX = async (analytics, filename, language = 'en') => {
       [`  - Small (S)`, String(analytics.bosta.sizes?.S || 0)],
       [`  - Medium (M)`, String(analytics.bosta.sizes?.M || 0)],
       [`  - Large (L)`, String(analytics.bosta.sizes?.L || 0)],
-      [language === 'ar' ? 'إجمالي النقد المحصل' : 'Total Cash Collected', `${analytics.bosta.cash.toLocaleString()} EGP`],
-      [`  - ${language === 'ar' ? 'بنها 1 "eltalg"' : 'Banha 1 "eltalg"'}`, `${(analytics.bosta.cashByOutlet?.eltalg || 0).toLocaleString()} EGP`],
-      [`  - ${language === 'ar' ? 'بنها 2 "tegara"' : 'Banha 2 "tegara"'}`, `${(analytics.bosta.cashByOutlet?.tegara || 0).toLocaleString()} EGP`],
-      [`  - ${language === 'ar' ? 'بنها 3 "mostashfa"' : 'Banha 3 "mostashfa"'}`, `${(analytics.bosta.cashByOutlet?.mostashfa || 0).toLocaleString()} EGP`],
+      [language === 'ar' ? 'إجمالي الأرباح (10 ج.م / طلب)' : 'Total Station Profit (10 EGP/pkg)', `${analytics.bosta.profit.toLocaleString()} EGP`],
+      [`  - ${language === 'ar' ? 'بنها 1 "eltalg"' : 'Banha 1 "eltalg"'}`, `${(analytics.bosta.profitByOutlet?.eltalg || 0).toLocaleString()} EGP`],
+      [`  - ${language === 'ar' ? 'بنها 2 "tegara"' : 'Banha 2 "tegara"'}`, `${(analytics.bosta.profitByOutlet?.tegara || 0).toLocaleString()} EGP`],
+      [`  - ${language === 'ar' ? 'بنها 3 "mostashfa"' : 'Banha 3 "mostashfa"'}`, `${(analytics.bosta.profitByOutlet?.mostashfa || 0).toLocaleString()} EGP`],
+      [language === 'ar' ? 'إجمالي النقد المحصل (COD)' : 'Total COD Collected', `${analytics.bosta.cash.toLocaleString()} EGP`],
       [language === 'ar' ? 'المرتجع' : 'Returns', String(analytics.bosta.returnedCount)]
     ];
     slide3.addTable(bStats, { x: 0.5, y: 1.2, w: 9, border: { pt: 1, color: "CBD5E0" }, fill: "F7FAFC", fontSize: 14 });
@@ -140,7 +141,7 @@ export const exportToPPTX = async (analytics, filename, language = 'en') => {
     const fStats = [
       [language === 'ar' ? 'القناة' : 'Channel', language === 'ar' ? 'صافي المركز' : 'Net Position'],
       ["Jumia (Profit)", `${analytics.jumia.profit.toLocaleString()} EGP`],
-      ["Bosta", `${analytics.bosta.cash.toLocaleString()} EGP`],
+      ["Bosta (Profit)", `${analytics.bosta.profit.toLocaleString()} EGP`],
       ["Basata", `${analytics.basata.volume.toLocaleString()} EGP`],
       [language === 'ar' ? 'الإجمالي النهائي' : 'GRAND TOTAL', `${analytics.grandTotal.toLocaleString()} EGP`]
     ];

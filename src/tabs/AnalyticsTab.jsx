@@ -177,6 +177,7 @@ export default function AnalyticsTab() {
   const bostaReturned = bostaOrders.filter(o => o.status === 'Returned' && isInRange(o.returnedAt) && matchesOutlet(o));
   const bostaCash = bostaPickedUp.reduce((s, o) => s + o.totalValue, 0);
   const bostaReturnedAmt = bostaReturned.reduce((s, o) => s + o.totalValue, 0);
+  const bostaProfit = bostaPickedUp.length * 10;
 
   // Sizes breakdown for PowerPoint
   const getSizes = (list) => {
@@ -221,8 +222,17 @@ export default function AnalyticsTab() {
   };
   const jumiaProfitByOutlet = getJumiaProfitByOutlet(jumiaPickedUp);
 
+  const getBostaProfitByOutlet = (list) => {
+    return list.reduce((acc, o) => {
+      const outlet = normalizeOutlet(o.outlet);
+      acc[outlet] = (acc[outlet] || 0) + 10;
+      return acc;
+    }, { eltalg: 0, tegara: 0, mostashfa: 0 });
+  };
+  const bostaProfitByOutlet = getBostaProfitByOutlet(bostaPickedUp);
+
   // --- GRAND TOTAL ---
-  const grandTotal = jumiaProfit + bostaCash + basataVolume + activePenalties;
+  const grandTotal = jumiaProfit + bostaProfit + basataVolume + activePenalties;
 
   // --- CALLS LOG ANALYTICS ---
   const callsInPeriod = (callLogs || []).filter(l => isInRange(l.createdAt) && (selectedOutlet === 'All' || normalizeOutlet(l.outlet) === selectedOutlet));
@@ -288,12 +298,14 @@ export default function AnalyticsTab() {
       bosta: {
         pickedUpCount: bostaPickedUp.length,
         cash: bostaCash,
+        profit: bostaProfit,
         returnedCount: bostaReturned.length,
         returnedAmt: bostaReturnedAmt,
         sizes: bostaSizes,
         inventorySizes: bostaInventorySizes,
         inventoryCount: bostaInventory.length,
-        cashByOutlet: getCashByOutlet(bostaPickedUp)
+        cashByOutlet: getCashByOutlet(bostaPickedUp),
+        profitByOutlet: bostaProfitByOutlet
       },
       basata: {
         volume: basataVolume,
@@ -335,7 +347,7 @@ export default function AnalyticsTab() {
   // --- CHART DATA ---
   const revenueStreamData = [
     { name: t('jumia'), value: jumiaProfit, color: CHART_COLORS.jumia },
-    { name: t('bosta'), value: bostaCash, color: CHART_COLORS.bosta },
+    { name: t('bosta'), value: bostaProfit, color: CHART_COLORS.bosta },
     { name: t('basata'), value: basataVolume, color: CHART_COLORS.basata },
     { name: t('penalties'), value: activePenalties, color: CHART_COLORS.warning },
   ];
@@ -575,7 +587,7 @@ export default function AnalyticsTab() {
           <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', flex: '1 1 auto' }}>
             {[
               { label: t('jumia'), value: jumiaProfit, color: CHART_COLORS.jumia },
-              { label: t('bosta'), value: bostaCash, color: CHART_COLORS.bosta },
+              { label: t('bosta'), value: bostaProfit, color: CHART_COLORS.bosta },
               { label: t('basata'), value: basataVolume, color: CHART_COLORS.basata },
               { label: t('penalties'), value: activePenalties, color: CHART_COLORS.warning },
             ].map(s => (
@@ -592,7 +604,7 @@ export default function AnalyticsTab() {
       {/* Row 1: Key Metrics */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
         <MetricCard title={`${t('jumia')} ${language === 'ar' ? 'الأرباح' : 'Profit'}`} value={`${jumiaProfit.toLocaleString()} EGP`} icon={<DollarSign size={14} />} color={CHART_COLORS.jumia} sub={language === 'ar' ? `${jumiaPickedUp.length} طلب استلام عميل` : `${jumiaPickedUp.length} customer pick ups`} />
-        <MetricCard title={`${t('bosta')} ${t('cash')}`} value={`${bostaCash.toLocaleString()} EGP`} icon={<DollarSign size={14} />} color={CHART_COLORS.bosta} sub={language === 'ar' ? `${bostaPickedUp.length} طلب مستلم` : `${bostaPickedUp.length} orders picked up`} />
+        <MetricCard title={`${t('bosta')} ${language === 'ar' ? 'الأرباح' : 'Profit'}`} value={`${bostaProfit.toLocaleString()} EGP`} icon={<DollarSign size={14} />} color={CHART_COLORS.bosta} sub={language === 'ar' ? `${bostaPickedUp.length} طلب مستلم` : `${bostaPickedUp.length} orders picked up`} />
         <MetricCard title={`${t('basata')} POS`} value={`${basataVolume.toLocaleString()} EGP`} icon={<Zap size={14} />} color={CHART_COLORS.basata} sub={language === 'ar' ? `${activeBasata.length} عملية` : `${activeBasata.length} transactions`} />
         <MetricCard title={t('parkedPenalties')} value={`${activePenalties} EGP`} icon={<AlertOctagon size={14} />} color={CHART_COLORS.warning} sub={language === 'ar' ? `${jumiaInventory.length} طلب مخزن` : `${jumiaInventory.length} parked orders`} />
         <MetricCard title={language === 'ar' ? 'حالة SLA حرجة' : 'SLA Critical'} value={jumiaSlaCritical} icon={<ShieldAlert size={14} />} color={CHART_COLORS.danger} sub={language === 'ar' ? 'جوميا 5+ أيام تأخير' : 'Jumia 5+ days overdue'} />
@@ -779,12 +791,12 @@ export default function AnalyticsTab() {
               </tr>
               <tr>
                 <td><span style={{ color: CHART_COLORS.bosta, fontWeight: 700 }}>{t('bosta')}</span></td>
-                <td style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{bostaCash.toLocaleString()} EGP</td>
+                <td style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{bostaProfit.toLocaleString()} EGP</td>
                 <td style={{ color: 'var(--text-primary)' }}>{bostaPickedUp.length}</td>
                 <td style={{ color: 'var(--text-primary)' }}><span style={{ color: 'var(--color-danger)' }}>{bostaReturned.length}</span></td>
                 <td style={{ color: 'var(--color-danger)' }}>0 EGP</td>
                 <td style={{ color: 'var(--color-success)', fontWeight: 700 }}>
-                  {bostaCash.toLocaleString()} EGP
+                  {bostaProfit.toLocaleString()} EGP
                 </td>
               </tr>
               <tr>

@@ -223,8 +223,7 @@ export default function OrdersTab() {
       const delivered = outletOrders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt, filterDateStart, filterDateEnd)).length;
       const returned = outletOrders.filter(o => o.status === 'Returned' && isInRange(o.returnedAt, filterDateStart, filterDateEnd)).length;
       const cancelled = outletOrders.filter(o => o.status === 'Cancelled' && isInRange(o.returnedAt, filterDateStart, filterDateEnd)).length;
-      const available = outletOrders.filter(o => o.status === 'Inventory' && isInRange(o.receivedAt, filterDateStart, filterDateEnd)).length;
-      const totalStock = outletOrders.filter(o => o.status === 'Inventory').length;
+      const available = outletOrders.filter(o => o.status === 'Inventory').length;
       
       const totalMoney = outletOrders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt, filterDateStart, filterDateEnd)).reduce((sum, o) => sum + o.totalValue, 0);
       const paid = totalMoney; 
@@ -245,7 +244,6 @@ export default function OrdersTab() {
         returned,
         cancelled,
         available,
-        totalStock,
         totalMoney,
         paid,
         jumiaPay,
@@ -430,8 +428,8 @@ export default function OrdersTab() {
                   <th>{t('pickedUpByCustomer')}</th>
                   <th>{language === 'ar' ? 'ملغي' : 'Cancelled'}</th>
                   <th>{language === 'ar' ? 'مرتجع' : 'Returned'}</th>
-                  <th>{language === 'ar' ? 'المتبقي من المستلم' : 'New Stock Left'}</th>
-                  <th style={{ background: 'rgba(34, 197, 94, 0.05)', borderLeft: '1px solid var(--border-color)' }}>{language === 'ar' ? 'إجمالي المخزون' : 'Total Stock'}</th>
+                  <th>{t('inventory')}</th>
+                  
                   <th>{language === 'ar' ? 'اجمالي' : 'Total'}</th>
                   <th>{language === 'ar' ? 'سداد' : 'Paid'}</th>
                   <th style={{ color: 'var(--color-primary)' }}>{language === 'ar' ? 'رسوم التخزين' : 'Storage Fees'}</th>
@@ -449,7 +447,7 @@ export default function OrdersTab() {
                     <td style={{ color: 'var(--color-warning)' }}>{row.cancelled}</td>
                     <td style={{ color: 'var(--color-danger)' }}>{row.returned}</td>
                     <td style={{ fontWeight: 600 }}>{row.available}</td>
-                    <td style={{ fontWeight: 800, color: 'var(--color-success)', background: 'rgba(34, 197, 94, 0.05)', borderLeft: '1px solid var(--border-color)' }}>{row.totalStock}</td>
+                    
                     <td>{row.totalMoney.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td>{row.paid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td style={{ fontWeight: 600 }}>{row.storageFees.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>

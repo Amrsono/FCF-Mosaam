@@ -1,5 +1,6 @@
 import React from 'react';
 import { useDashboard, getDaysDifference } from '../context/DashboardContext';
+import { useAuth } from '../context/AuthContext';
 import { AlertTriangle, ShieldCheck, Clock, RefreshCcw, Package } from 'lucide-react';
 import ExportActions from '../components/ExportActions';
 import { useLanguage } from '../context/LanguageContext';

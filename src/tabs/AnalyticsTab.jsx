@@ -5,7 +5,7 @@ import {
   TrendingUp, PackageCheck, AlertOctagon, Users, DollarSign,
   Zap, BarChart2, Activity,
   ArrowUpRight, ArrowDownRight, ShieldAlert, Clock, Phone,
-  Calendar
+  Calendar, RotateCcw
 } from 'lucide-react';
 import ExportActions from '../components/ExportActions';
 import {
@@ -56,7 +56,7 @@ const CustomTooltip = ({ active, payload, label, language }) => {
 };
 
 export default function AnalyticsTab() {
-  const { orders, customers, basataTransactions, bostaOrders, callLogs, customerReturns, calculatePenalty } = useDashboard();
+  const { orders, customers, basataTransactions, bostaOrders, callLogs, customerReturns, calculatePenalty, globalFilters, updateFilters } = useDashboard();
   const { user } = useAuth();
   const { t, language } = useLanguage();
   
@@ -66,10 +66,15 @@ export default function AnalyticsTab() {
     return formatter.format(date); // en-CA gives YYYY-MM-DD
   };
 
-  const [startDate, setStartDate] = useState(() => formatDate(new Date()));
-  const [endDate, setEndDate] = useState(() => formatDate(new Date()));
-  const [timeframe, setTimeframe] = useState('daily');
-  const [selectedOutlet, setSelectedOutlet] = useState('All');
+  const f = globalFilters.analytics;
+  const startDate = f.dateStart;
+  const endDate = f.dateEnd;
+  const selectedOutlet = f.outlet;
+  const [timeframe, setTimeframe] = useState('daily'); // Keep timeframe local as it dictates ranges
+
+  const setStartDate = (val) => updateFilters('analytics', { dateStart: val });
+  const setEndDate = (val) => updateFilters('analytics', { dateEnd: val });
+  const setSelectedOutlet = (val) => updateFilters('analytics', { outlet: val });
 
   const handleTimeframeChange = (tf) => {
     setTimeframe(tf);
@@ -552,6 +557,25 @@ export default function AnalyticsTab() {
                 }}
               />
             </div>
+            
+            {(selectedOutlet !== 'All' || startDate !== formatDate(new Date()) || endDate !== formatDate(new Date())) && (
+              <button 
+                onClick={() => {
+                  const today = formatDate(new Date());
+                  updateFilters('analytics', {
+                    outlet: 'All',
+                    dateStart: today,
+                    dateEnd: today
+                  });
+                  setTimeframe('daily');
+                }}
+                className="btn btn-outline" 
+                style={{ padding: '0.4rem', color: 'var(--color-danger)' }}
+                title={language === 'ar' ? 'إعادة ضبط' : 'Reset'}
+              >
+                <RotateCcw size={16} />
+              </button>
+            )}
           </div>
           <div style={{ 
             display: 'flex', 

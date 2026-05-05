@@ -16,7 +16,9 @@ export default function BostaTab() {
     updateBostaOrder,
     cancelBostaOrder,
     deleteBostaOrder,
-    revertBostaOrderToInventory
+    revertBostaOrderToInventory,
+    globalFilters,
+    updateFilters
   } = useDashboard();
   const { user } = useAuth();
   const { t, language } = useLanguage();
@@ -35,12 +37,20 @@ export default function BostaTab() {
     return val;
   };
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('Inventory');
-  const [filterCategory, setFilterCategory] = useState('All');
-  const [filterOutlet, setFilterOutlet] = useState(user?.role === 'admin' ? 'All' : (user?.outlet || 'eltalg'));
-  const [filterDateStart, setFilterDateStart] = useState('');
-  const [filterDateEnd, setFilterDateEnd] = useState('');
+  const f = globalFilters.bosta;
+  const searchTerm = f.searchTerm;
+  const filterStatus = f.status;
+  const filterCategory = f.category;
+  const filterOutlet = user?.role === 'admin' ? f.outlet : (user?.outlet || 'eltalg');
+  const filterDateStart = f.dateStart;
+  const filterDateEnd = f.dateEnd;
+
+  const setSearchTerm = (val) => updateFilters('bosta', { searchTerm: val });
+  const setFilterStatus = (val) => updateFilters('bosta', { status: val });
+  const setFilterCategory = (val) => updateFilters('bosta', { category: val });
+  const setFilterOutlet = (val) => updateFilters('bosta', { outlet: val });
+  const setFilterDateStart = (val) => updateFilters('bosta', { dateStart: val });
+  const setFilterDateEnd = (val) => updateFilters('bosta', { dateEnd: val });
   const [showModal, setShowModal] = useState(false);
   const [editingOrder, setEditingOrder] = useState(null);
   const [showCrossSellModal, setShowCrossSellModal] = useState(false);
@@ -299,14 +309,14 @@ export default function BostaTab() {
             </div>
             {(filterDateStart || filterDateEnd || filterOutlet !== 'All' || searchTerm || filterStatus !== 'Inventory' || filterCategory !== 'All') && (
               <button 
-                onClick={() => {
-                  setSearchTerm('');
-                  setFilterStatus('Inventory');
-                  setFilterCategory('All');
-                  setFilterOutlet('All');
-                  setFilterDateStart('');
-                  setFilterDateEnd('');
-                }}
+                onClick={() => updateFilters('bosta', {
+                  searchTerm: '',
+                  status: 'Inventory',
+                  category: 'All',
+                  outlet: 'All',
+                  dateStart: '',
+                  dateEnd: ''
+                })}
                 className="btn btn-outline" 
                 style={{ padding: '0.4rem', borderColor: 'var(--color-danger)', color: 'var(--color-danger)' }}
                 title={language === 'ar' ? 'إعادة تعيين' : 'Reset Filters'}

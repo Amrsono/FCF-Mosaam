@@ -22,19 +22,31 @@ export default function OrdersTab() {
     updateOrder,
     cancelOrder,
     deleteOrder,
-    revertOrderToInventory
+    revertOrderToInventory,
+    globalFilters,
+    updateFilters
   } = useDashboard();
   const { user } = useAuth();
   const { t, language } = useLanguage();
   
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterCategory, setFilterCategory] = useState('All');
-  const [filterTier, setFilterTier] = useState('All');
-  const [filterStatus, setFilterStatus] = useState('Inventory');
-  const [filterOutlet, setFilterOutlet] = useState(user?.role === 'admin' ? 'All' : (user?.outlet || 'eltalg'));
-  const [filterDateStart, setFilterDateStart] = useState('');
-  const [filterDateEnd, setFilterDateEnd] = useState('');
-  const [filterPaymentMethod, setFilterPaymentMethod] = useState('All');
+  const f = globalFilters.orders;
+  const searchTerm = f.searchTerm;
+  const filterCategory = f.category;
+  const filterTier = f.tier;
+  const filterStatus = f.status;
+  const filterOutlet = user?.role === 'admin' ? f.outlet : (user?.outlet || 'eltalg');
+  const filterDateStart = f.dateStart;
+  const filterDateEnd = f.dateEnd;
+  const filterPaymentMethod = f.paymentMethod;
+
+  const setSearchTerm = (val) => updateFilters('orders', { searchTerm: val });
+  const setFilterCategory = (val) => updateFilters('orders', { category: val });
+  const setFilterTier = (val) => updateFilters('orders', { tier: val });
+  const setFilterStatus = (val) => updateFilters('orders', { status: val });
+  const setFilterOutlet = (val) => updateFilters('orders', { outlet: val });
+  const setFilterDateStart = (val) => updateFilters('orders', { dateStart: val });
+  const setFilterDateEnd = (val) => updateFilters('orders', { dateEnd: val });
+  const setFilterPaymentMethod = (val) => updateFilters('orders', { paymentMethod: val });
 
   const [showSimulateModal, setShowSimulateModal] = useState(false);
   const [editingOrder, setEditingOrder] = useState(null);
@@ -370,16 +382,16 @@ export default function OrdersTab() {
               </div>
               {(filterDateStart || filterDateEnd || filterOutlet !== 'All' || searchTerm || filterStatus !== 'Inventory' || filterCategory !== 'All' || filterTier !== 'All' || filterPaymentMethod !== 'All') && (
                 <button 
-                  onClick={() => {
-                    setSearchTerm('');
-                    setFilterStatus('Inventory');
-                    setFilterOutlet('All');
-                    setFilterCategory('All');
-                    setFilterTier('All');
-                    setFilterDateStart('');
-                    setFilterDateEnd('');
-                    setFilterPaymentMethod('All');
-                  }}
+                  onClick={() => updateFilters('orders', {
+                    searchTerm: '',
+                    status: 'Inventory',
+                    outlet: 'All',
+                    category: 'All',
+                    tier: 'All',
+                    dateStart: '',
+                    dateEnd: '',
+                    paymentMethod: 'All'
+                  })}
                   className="btn btn-outline" 
                   style={{ padding: '0.4rem', color: 'var(--color-danger)' }}
                 >

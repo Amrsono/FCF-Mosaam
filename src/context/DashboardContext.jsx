@@ -19,6 +19,54 @@ export const DashboardProvider = ({ children }) => {
   const [callLogs, setCallLogs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Global Filters Persistence
+  const [globalFilters, setGlobalFilters] = useState(() => {
+    const saved = localStorage.getItem('fcf_global_filters');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.warn("Failed to parse saved filters", e);
+      }
+    }
+    return {
+      orders: {
+        searchTerm: '',
+        status: 'Inventory',
+        category: 'All',
+        tier: 'All',
+        outlet: 'All',
+        dateStart: '',
+        dateEnd: '',
+        paymentMethod: 'All'
+      },
+      bosta: {
+        searchTerm: '',
+        status: 'Inventory',
+        category: 'All',
+        outlet: 'All',
+        dateStart: '',
+        dateEnd: ''
+      },
+      analytics: {
+        outlet: 'All',
+        dateStart: new Date().toISOString().split('T')[0],
+        dateEnd: new Date().toISOString().split('T')[0]
+      }
+    };
+  });
+
+  useEffect(() => {
+    localStorage.setItem('fcf_global_filters', JSON.stringify(globalFilters));
+  }, [globalFilters]);
+
+  const updateFilters = (tab, newFilters) => {
+    setGlobalFilters(prev => ({
+      ...prev,
+      [tab]: { ...prev[tab], ...newFilters }
+    }));
+  };
+
   const fetchData = async () => {
     try {
       setIsLoading(true);
@@ -502,6 +550,7 @@ export const DashboardProvider = ({ children }) => {
   return (
     <DashboardContext.Provider value={{ 
       orders, bostaOrders, customers, basataTransactions, customerReturns, callLogs, isLoading,
+      globalFilters, updateFilters,
       receiveOrder, bulkReceiveOrders, markOrderPickedUp, returnOrder,
       receiveBostaOrder, markBostaOrderPickedUp, returnBostaOrder,
       updateCustomer, addCustomer, calculatePenalty, calculateStorageFee,

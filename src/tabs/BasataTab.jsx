@@ -294,7 +294,7 @@ export default function BasataTab() {
                  <th>{language === 'ar' ? 'المنفذ' : 'Outlet'}</th>
                  <th>{t('amount')}</th>
                  <th>%</th>
-                 {user?.role === 'admin' && <th>{t('actions')}</th>}
+                 <th>{t('actions')}</th>
                </tr>
              </thead>
              <tbody>
@@ -323,22 +323,20 @@ export default function BasataTab() {
                    </td>
                    <td style={{ fontWeight: 700, color: 'var(--color-success)' }}>{tData.amount} EGP</td>
                    <td style={{ color: 'var(--text-secondary)' }}>{tData.percentage}%</td>
-                   {user?.role === 'admin' && (
-                     <td>
-                       <button 
-                         className="btn btn-outline" 
-                         style={{ padding: '0.4rem', borderColor: 'var(--color-danger)', color: 'var(--color-danger)' }}
-                         onClick={() => handleDelete(tData.id)}
-                         title={t('delete')}
-                       >
-                         <Trash2 size={16} />
-                       </button>
-                     </td>
-                   )}
+                   <td>
+                      <button 
+                        className="btn btn-outline" 
+                        style={{ padding: '0.4rem', borderColor: 'var(--color-danger)', color: 'var(--color-danger)' }}
+                        onClick={() => handleDelete(tData.id)}
+                        title={t('delete')}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </td>
                  </tr>
                )) : (
                  <tr>
-                   <td colSpan={user?.role === 'admin' ? 8 : 7} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>{t('noData')}</td>
+                   <td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>{t('noData')}</td>
                  </tr>
                )}
              </tbody>

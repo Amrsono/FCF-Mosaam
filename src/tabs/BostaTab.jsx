@@ -362,7 +362,7 @@ export default function BostaTab() {
                 <td>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
                     <span>{order.description}</span>
-                    <span style={{ fontSize: '0.85rem', color: '#6366f1', fontWeight: 600 }}>{order.totalValue} EGP</span>
+                    <span style={{ fontSize: '0.85rem', color: '#6366f1', fontWeight: 600 }}>{order.totalValue?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP</span>
                     <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{order.category}</span>
                   </div>
                 </td>
@@ -556,7 +556,7 @@ export default function BostaTab() {
               <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                 <div className="input-group" style={{ flex: '1 1 150px' }}>
                   <label className="input-label">{t('value')} (EGP)</label>
-                  <input required type="number" className="input-field" value={newOrder.totalValue} onChange={e => setNewOrder({ ...newOrder, totalValue: e.target.value })} placeholder="0.00" />
+                  <input required type="number" step="0.01" className="input-field" value={newOrder.totalValue} onChange={e => setNewOrder({ ...newOrder, totalValue: e.target.value })} placeholder="0.00" />
                 </div>
                 <div className="input-group" style={{ flex: '1 1 150px' }}>
                   <label className="input-label">{t('category')}</label>
@@ -628,6 +628,7 @@ export default function BostaTab() {
                   <label className="label">{t('value')} (EGP)</label>
                   <input 
                     type="number" 
+                    step="0.01"
                     className="input-field" 
                     value={editingOrder.totalValue} 
                     onChange={e => setEditingOrder({...editingOrder, totalValue: e.target.value})}

@@ -251,7 +251,7 @@ export default function BasataTab() {
            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap', flex: '1 1 auto', justifyContent: 'flex-end' }}>
                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.2rem' }}>
                  <div style={{ fontSize: 'clamp(1.1rem, 4vw, 1.5rem)', fontWeight: 600, color: 'var(--color-primary)', textAlign: 'right' }}>
-                   {t('totalVolume')}: {(totalRevenue || 0).toLocaleString()} EGP
+                    {t('totalVolume')}: {(totalRevenue || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP
                  </div>
                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
                    <div className="input-group" style={{ marginBottom: 0 }}>
@@ -321,7 +321,7 @@ export default function BasataTab() {
                         {getOutletLabel(tData.outlet)}
                       </span>
                    </td>
-                   <td style={{ fontWeight: 700, color: 'var(--color-success)' }}>{tData.amount} EGP</td>
+                    <td style={{ fontWeight: 700, color: 'var(--color-success)' }}>{tData.amount?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP</td>
                    <td style={{ color: 'var(--text-secondary)' }}>{tData.percentage}%</td>
                    <td>
                       <button 

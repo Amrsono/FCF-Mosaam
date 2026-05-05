@@ -179,7 +179,7 @@ export default function LogsTab() {
                           {orderId}
                         </td>
                         <td style={{ fontWeight: 700, color: parsedAmount !== null && parsedAmount > 0 ? 'var(--color-success)' : 'var(--text-muted)' }}>
-                          {parsedAmount !== null ? `${parsedAmount.toLocaleString()} EGP` : '-'}
+                          {parsedAmount !== null ? `${parsedAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP` : '-'}
                         </td>
                         <td style={{ maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--text-muted)' }} title={log.details}>
                           {log.details || '-'}

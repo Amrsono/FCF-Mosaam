@@ -421,9 +421,9 @@ export default function OrdersTab() {
                     <td style={{ color: 'var(--color-warning)' }}>{row.cancelled}</td>
                     <td style={{ color: 'var(--color-danger)' }}>{row.returned}</td>
                     <td style={{ fontWeight: 700 }}>{row.available}</td>
-                    <td>{row.totalMoney.toLocaleString()}</td>
-                    <td>{row.paid.toLocaleString()}</td>
-                    <td style={{ fontWeight: 600 }}>{row.storageFees.toLocaleString()}</td>
+                    <td>{row.totalMoney.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td>{row.paid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td style={{ fontWeight: 600 }}>{row.storageFees.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
                 ))}
                 {/* Grand Total Row */}
@@ -434,9 +434,9 @@ export default function OrdersTab() {
                   <td style={{ fontWeight: 700, color: 'var(--color-warning)' }}>{summaryByOutlet.reduce((sum, r) => sum + r.cancelled, 0)}</td>
                   <td style={{ fontWeight: 700, color: 'var(--color-danger)' }}>{summaryByOutlet.reduce((sum, r) => sum + r.returned, 0)}</td>
                   <td style={{ fontWeight: 800 }}>{summaryByOutlet.reduce((sum, r) => sum + r.available, 0)}</td>
-                  <td style={{ fontWeight: 700 }}>{summaryByOutlet.reduce((sum, r) => sum + r.totalMoney, 0).toLocaleString()}</td>
-                  <td style={{ fontWeight: 700 }}>{summaryByOutlet.reduce((sum, r) => sum + r.paid, 0).toLocaleString()}</td>
-                  <td style={{ fontWeight: 800, color: 'var(--color-primary)' }}>{summaryByOutlet.reduce((sum, r) => sum + r.storageFees, 0).toLocaleString()}</td>
+                  <td style={{ fontWeight: 700 }}>{summaryByOutlet.reduce((sum, r) => sum + r.totalMoney, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  <td style={{ fontWeight: 700 }}>{summaryByOutlet.reduce((sum, r) => sum + r.paid, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  <td style={{ fontWeight: 800, color: 'var(--color-primary)' }}>{summaryByOutlet.reduce((sum, r) => sum + r.storageFees, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 </tr>
               </tbody>
             </table>
@@ -473,7 +473,7 @@ export default function OrdersTab() {
                   <td>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                       <span style={{ fontSize: '0.9rem' }}>{order.description}</span>
-                      <span style={{ fontSize: '0.85rem', color: 'var(--color-primary)', fontWeight: 700 }}>{order.totalValue} EGP</span>
+                      <span style={{ fontSize: '0.85rem', color: 'var(--color-primary)', fontWeight: 700 }}>{order.totalValue?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP</span>
                     </div>
                   </td>
                   <td>
@@ -524,7 +524,7 @@ export default function OrdersTab() {
                         }}></div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                           <span style={{ fontWeight: 600 }}>{order.daysParked} {t('days')}</span>
-                          <span style={{ fontSize: '0.7rem', color: 'var(--color-primary)' }}>{order.penalty} EGP {t('penalty')}</span>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--color-primary)' }}>{order.penalty?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP {t('penalty')}</span>
                         </div>
                       </div>
                     ) : <span style={{ color: 'var(--text-muted)' }}>-</span>}
@@ -805,7 +805,7 @@ export default function OrdersTab() {
               <div style={{ display: 'flex', gap: '1rem' }}>
                 <div className="input-group" style={{ flex: 1 }}>
                   <label className="input-label">{language === 'ar' ? 'اجمالي الفلوس' : 'Total Value'}</label>
-                  <input required type="number" className="input-field" value={newOrder.totalValue} onChange={e => setNewOrder({...newOrder, totalValue: e.target.value})} placeholder="0.00" />
+                  <input required type="number" step="0.01" className="input-field" value={newOrder.totalValue} onChange={e => setNewOrder({...newOrder, totalValue: e.target.value})} placeholder="0.00" />
                 </div>
                 <div className="input-group" style={{ flex: 1 }}>
                   <label className="input-label">{t('category')}</label>
@@ -864,6 +864,7 @@ export default function OrdersTab() {
                   <label className="label" style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '0.4rem', display: 'block' }}>{t('value')} (EGP)</label>
                   <input 
                     type="number" 
+                    step="0.01"
                     className="input-field" 
                     value={editingOrder.totalValue} 
                     onChange={e => setEditingOrder({...editingOrder, totalValue: e.target.value})}

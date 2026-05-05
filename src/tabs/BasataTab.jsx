@@ -24,7 +24,7 @@ export default function BasataTab() {
   const todayDate = new Date().toLocaleDateString('en-CA');
   const [dateFrom, setDateFrom] = useState(todayDate);
   const [dateTo, setDateTo] = useState(todayDate);
-  const [filterOutlet, setFilterOutlet] = useState(user?.role === 'admin' ? 'All' : (user?.outlet || 'eltalg'));
+  const [filterOutlet, setFilterOutlet] = useState('All');
 
   const getOutletLabel = (val) => {
     if (!val) return '-';
@@ -269,7 +269,7 @@ export default function BasataTab() {
                        style={{ minWidth: '120px', padding: '0.2rem 0.4rem', fontSize: '0.8rem' }} 
                        value={filterOutlet || 'All'} 
                        onChange={e => setFilterOutlet(e.target.value)}
-                       disabled={user?.role !== 'admin'}
+                       disabled={false}
                      >
                        <option value="All">{language === 'ar' ? 'جميع المنافذ' : 'All Outlets'}</option>
                        <option value="eltalg">{t('banha1')}</option>

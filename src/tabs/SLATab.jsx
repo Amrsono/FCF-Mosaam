@@ -1,17 +1,31 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useDashboard, getDaysDifference } from '../context/DashboardContext';
 import { AlertTriangle, ShieldCheck, Clock, RefreshCcw, Package } from 'lucide-react';
 import ExportActions from '../components/ExportActions';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function SLATab() {
-  const { orders, returnOrder, bostaOrders, returnBostaOrder, calculatePenalty } = useDashboard();
+  const { orders, returnOrder, bostaOrders, returnBostaOrder, calculatePenalty, globalFilters, updateFilters } = useDashboard();
+  const { user } = useAuth();
   const { t, language } = useLanguage();
-  const [activeSource, setActiveSource] = useState('jumia'); // 'jumia' | 'bosta'
+
+  const f = globalFilters.sla || { outlet: 'All', source: 'jumia' };
+  const activeSource = f.source;
+  const filterOutlet = user?.role === 'admin' ? f.outlet : (user?.outlet || 'eltalg');
+
+  const setActiveSource = (val) => updateFilters('sla', { source: val });
+  const setFilterOutlet = (val) => updateFilters('sla', { outlet: val });
+
+  const normalizeOutlet = (val) => {
+    if (!val || val === 'eltalg' || val === 'Banha 1' || val === 'وبور الثلج' || val === 'وبور التلج') return 'eltalg';
+    if (val === 'tegara' || val === 'Banha 2' || val === 'تجارة' || val === 'تجاره') return 'tegara';
+    if (val === 'mostashfa' || val === 'Banha 3' || val === 'المستشفي' || val === 'المستشفى') return 'mostashfa';
+    return val;
+  };
 
   const buildSlaList = (orderSet) =>
     orderSet
-      .filter(o => o.status === 'Inventory')
+      .filter(o => o.status === 'Inventory' && (filterOutlet === 'All' || normalizeOutlet(o.outlet) === filterOutlet))
       .map(o => {
         const days = getDaysDifference(o.receivedAt);
         const penalty = calculatePenalty ? calculatePenalty(o) : 0;
@@ -96,24 +110,51 @@ export default function SLATab() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: '100%' }}>
 
-      {/* Source Toggle */}
-      <div style={{ display: 'flex', gap: '0.5rem', background: 'var(--bg-panel)', borderRadius: 'var(--radius-md)', padding: '0.4rem', alignSelf: 'stretch', border: '1px solid var(--border-color)', flexWrap: 'wrap' }}>
-        <button
-          className={`btn ${activeSource === 'jumia' ? 'btn-primary' : 'btn-outline'}`}
-          style={{ border: 'none', gap: '0.5rem', flex: '1 1 auto' }}
-          onClick={() => setActiveSource('jumia')}
-        >
-          <Package size={16} /> {language === 'ar' ? 'SLA لـ جوميا' : 'Jumia SLA'}
-          <span style={{ background: 'rgba(255,255,255,0.15)', borderRadius: '999px', padding: '0.1rem 0.5rem', fontSize: '0.8rem' }}>{jumiaInventory.length}</span>
-        </button>
-        <button
-          className={`btn ${activeSource === 'bosta' ? 'btn-primary' : 'btn-outline'}`}
-          style={{ border: 'none', gap: '0.5rem', flex: '1 1 auto', ...(activeSource === 'bosta' ? { background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' } : {}) }}
-          onClick={() => setActiveSource('bosta')}
-        >
-          <Package size={16} /> {language === 'ar' ? 'SLA لبوسطة' : 'Bosta SLA'}
-          <span style={{ background: 'rgba(255,255,255,0.15)', borderRadius: '999px', padding: '0.1rem 0.5rem', fontSize: '0.8rem' }}>{bostaInventory.length}</span>
-        </button>
+      {/* Source Toggle & Filters */}
+      <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', background: 'var(--bg-panel)', borderRadius: 'var(--radius-md)', padding: '0.4rem', flex: '1 1 300px', border: '1px solid var(--border-color)' }}>
+          <button
+            className={`btn ${activeSource === 'jumia' ? 'btn-primary' : 'btn-outline'}`}
+            style={{ border: 'none', gap: '0.5rem', flex: '1 1 auto' }}
+            onClick={() => setActiveSource('jumia')}
+          >
+            <Package size={16} /> {language === 'ar' ? 'SLA لـ جوميا' : 'Jumia SLA'}
+            <span style={{ background: 'rgba(255,255,255,0.15)', borderRadius: '999px', padding: '0.1rem 0.5rem', fontSize: '0.8rem' }}>{jumiaInventory.length}</span>
+          </button>
+          <button
+            className={`btn ${activeSource === 'bosta' ? 'btn-primary' : 'btn-outline'}`}
+            style={{ border: 'none', gap: '0.5rem', flex: '1 1 auto', ...(activeSource === 'bosta' ? { background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' } : {}) }}
+            onClick={() => setActiveSource('bosta')}
+          >
+            <Package size={16} /> {language === 'ar' ? 'SLA لبوسطة' : 'Bosta SLA'}
+            <span style={{ background: 'rgba(255,255,255,0.15)', borderRadius: '999px', padding: '0.1rem 0.5rem', fontSize: '0.8rem' }}>{bostaInventory.length}</span>
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: '0 1 250px' }}>
+          <select 
+            className="input-field" 
+            style={{ flex: 1 }} 
+            value={filterOutlet} 
+            onChange={e => setFilterOutlet(e.target.value)}
+            disabled={user?.role !== 'admin'}
+          >
+            <option value="All">{language === 'ar' ? 'جميع المنافذ' : 'All Outlets'}</option>
+            <option value="eltalg">{t('eltalg')}</option>
+            <option value="tegara">{t('tegara')}</option>
+            <option value="mostashfa">{t('mostashfa')}</option>
+          </select>
+          {(filterOutlet !== 'All') && (
+            <button 
+              onClick={() => setFilterOutlet('All')}
+              className="btn btn-outline" 
+              style={{ padding: '0.4rem', color: 'var(--color-danger)' }}
+              title={language === 'ar' ? 'إعادة ضبط' : 'Reset'}
+            >
+              <RefreshCcw size={16} />
+            </button>
+          )}
+        </div>
       </div>
 
       <SlaStats list={inventoryOrders} />

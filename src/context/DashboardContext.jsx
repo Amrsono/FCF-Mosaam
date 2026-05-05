@@ -45,6 +45,10 @@ export const DashboardProvider = ({ children }) => {
         dateStart: new Date().toISOString().split('T')[0],
         dateEnd: new Date().toISOString().split('T')[0],
         timeframe: 'daily'
+      },
+      sla: {
+        outlet: 'All',
+        source: 'jumia'
       }
     };
 

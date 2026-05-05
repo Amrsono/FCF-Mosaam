@@ -366,6 +366,12 @@ export default function AnalyticsTab() {
     amount: basataCategories[cat],
   }));
 
+  const basataByOutletData = [
+    { name: t('banha1'), amount: basataByOutlet.eltalg, color: CHART_COLORS.basata },
+    { name: t('banha2'), amount: basataByOutlet.tegara, color: '#06b6d4' },
+    { name: t('banha3'), amount: basataByOutlet.mostashfa, color: '#0891b2' },
+  ].filter(d => d.amount > 0);
+
   const basataProviderData = Object.keys(basataProviders)
     .sort((a, b) => basataProviders[b] - basataProviders[a])
     .slice(0, 6)
@@ -719,14 +725,18 @@ export default function AnalyticsTab() {
 
       {/* Row 4: Basata Category Bar + Top Providers */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 350px), 1fr))', gap: '1rem' }}>
-        <ChartCard title={language === 'ar' ? 'إيرادات بساطة حسب الفئة' : 'Basata Revenue by Category'} icon={<Zap size={16} color={CHART_COLORS.basata} />}>
-          {basataCatData.length > 0 ? (
+        <ChartCard title={language === 'ar' ? 'إيرادات بساطة حسب المنفذ' : 'Basata Revenue by Outlet'} icon={<Zap size={16} color={CHART_COLORS.basata} />}>
+          {basataByOutletData.length > 0 ? (
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={basataCatData}>
+              <BarChart data={basataByOutletData}>
                 <XAxis dataKey="name" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }} axisLine={false} tickLine={false} />
                 <YAxis orientation={language === 'ar' ? 'right' : 'left'} tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }} axisLine={false} tickLine={false} />
-                <Tooltip content={<CustomTooltip language={language} />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
-                <Bar dataKey="amount" name={t('amount')} fill={CHART_COLORS.basata} radius={[6, 6, 0, 0]} />
+                <Tooltip content={<CustomTooltip language={language} />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} formatter={(v) => `${v.toLocaleString()} EGP`} />
+                <Bar dataKey="amount" name={t('amount')} radius={[6, 6, 0, 0]}>
+                  {basataByOutletData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           ) : (

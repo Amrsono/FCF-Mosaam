@@ -66,6 +66,10 @@ export const translations = {
     parkedOrders: "Parked Orders",
     totalValue: "Total Value",
     totalPenalties: "Total Penalties",
+    packageSize: "Package Size",
+    small: "Small",
+    medium: "Medium",
+    big: "Big",
 
     // Customers Tab
     customerDirectory: "Customer Directory",
@@ -247,6 +251,10 @@ export const translations = {
     parkedOrders: "الطلبات المتوقفة",
     totalValue: "إجمالي القيمة",
     totalPenalties: "إجمالي الغرامات",
+    packageSize: "حجم الطرد",
+    small: "صغير",
+    medium: "متوسط",
+    big: "كبير",
 
     // Customers Tab
     customerDirectory: "دليل العملاء",

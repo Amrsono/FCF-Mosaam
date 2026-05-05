@@ -402,6 +402,9 @@ export default function OrdersTab() {
                   <th>{language === 'ar' ? 'اجمالي' : 'Total'}</th>
                   <th>{language === 'ar' ? 'سداد' : 'Paid'}</th>
                   <th style={{ color: 'var(--color-primary)' }}>{language === 'ar' ? 'رسوم التخزين' : 'Storage Fees'}</th>
+                  <th>S</th>
+                  <th>M</th>
+                  <th>L</th>
                 </tr>
               </thead>
               <tbody>
@@ -416,6 +419,9 @@ export default function OrdersTab() {
                     <td>{row.totalMoney.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td>{row.paid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td style={{ fontWeight: 600 }}>{row.storageFees.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td>{row.sCount}</td>
+                    <td>{row.mCount}</td>
+                    <td>{row.lCount}</td>
                   </tr>
                 ))}
                 {/* Grand Total Row */}
@@ -429,6 +435,9 @@ export default function OrdersTab() {
                   <td style={{ fontWeight: 700 }}>{summaryByOutlet.reduce((sum, r) => sum + r.totalMoney, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   <td style={{ fontWeight: 700 }}>{summaryByOutlet.reduce((sum, r) => sum + r.paid, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   <td style={{ fontWeight: 800, color: 'var(--color-primary)' }}>{summaryByOutlet.reduce((sum, r) => sum + r.storageFees, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  <td style={{ fontWeight: 700 }}>{summaryByOutlet.reduce((sum, r) => sum + r.sCount, 0)}</td>
+                  <td style={{ fontWeight: 700 }}>{summaryByOutlet.reduce((sum, r) => sum + r.mCount, 0)}</td>
+                  <td style={{ fontWeight: 700 }}>{summaryByOutlet.reduce((sum, r) => sum + r.lCount, 0)}</td>
                 </tr>
               </tbody>
             </table>
@@ -827,6 +836,14 @@ export default function OrdersTab() {
                   </select>
                 </div>
               </div>
+              <div className="input-group">
+                <label className="input-label">{t('packageSize')}</label>
+                <select className="input-field" value={newOrder.size} onChange={e => setNewOrder({...newOrder, size: e.target.value})}>
+                  <option value="S">{t('small')}</option>
+                  <option value="M">{t('medium')}</option>
+                  <option value="L">{t('big')}</option>
+                </select>
+              </div>
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
                 <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>{t('confirm')}</button>
                 <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowSimulateModal(false)}>{t('cancel')}</button>
@@ -904,6 +921,19 @@ export default function OrdersTab() {
                     <option value="General">General</option>
                   </select>
                 </div>
+              </div>
+
+              <div className="form-group">
+                <label className="label" style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '0.4rem', display: 'block' }}>{t('packageSize')}</label>
+                <select 
+                  className="input-field" 
+                  value={editingOrder.size} 
+                  onChange={e => setEditingOrder({...editingOrder, size: e.target.value})}
+                >
+                  <option value="S">{t('small')}</option>
+                  <option value="M">{t('medium')}</option>
+                  <option value="L">{t('big')}</option>
+                </select>
               </div>
 
               <div className="form-group">

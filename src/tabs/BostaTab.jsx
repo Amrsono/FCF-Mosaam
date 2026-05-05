@@ -56,7 +56,7 @@ export default function BostaTab() {
   const [originalOrderId, setOriginalOrderId] = useState(null);
 
   const [newOrder, setNewOrder] = useState({
-    id: '', customerPhone: '', customerName: '', description: '', totalValue: '', category: 'Electronics', outlet: user?.outlet || 'eltalg'
+    id: '', customerPhone: '', customerName: '', description: '', totalValue: '', category: 'Electronics', outlet: user?.outlet || 'eltalg', size: 'M'
   });
 
   const exportHeaders = [
@@ -144,10 +144,11 @@ export default function BostaTab() {
       description: newOrder.description,
       totalValue: Number(newOrder.totalValue),
       category: newOrder.category,
-      outlet: newOrder.outlet
+      outlet: newOrder.outlet,
+      size: newOrder.size
     });
     setShowModal(false);
-    setNewOrder({ id: '', customerPhone: '', customerName: '', description: '', totalValue: '', category: 'Electronics', outlet: user?.outlet || 'eltalg' });
+    setNewOrder({ id: '', customerPhone: '', customerName: '', description: '', totalValue: '', category: 'Electronics', outlet: user?.outlet || 'eltalg', size: 'M' });
   };
 
   const getSlaColor = (days) => {
@@ -569,6 +570,14 @@ export default function BostaTab() {
                 </div>
               </div>
               <div className="input-group">
+                <label className="input-label">{t('packageSize')}</label>
+                <select className="input-field" value={newOrder.size} onChange={e => setNewOrder({ ...newOrder, size: e.target.value })}>
+                  <option value="S">{t('small')}</option>
+                  <option value="M">{t('medium')}</option>
+                  <option value="L">{t('big')}</option>
+                </select>
+              </div>
+              <div className="input-group">
                 <label className="input-label">{language === 'ar' ? 'المنفذ (فرع الاستلام)' : 'Outlet (Receiving Branch)'}</label>
                 <select 
                   className="input-field" 
@@ -660,6 +669,19 @@ export default function BostaTab() {
               </div>
 
               <div className="form-group">
+                <label className="label">{t('packageSize')}</label>
+                <select 
+                  className="input-field" 
+                  value={editingOrder.size} 
+                  onChange={e => setEditingOrder({...editingOrder, size: e.target.value})}
+                >
+                  <option value="S">{t('small')}</option>
+                  <option value="M">{t('medium')}</option>
+                  <option value="L">{t('big')}</option>
+                </select>
+              </div>
+
+              <div className="form-group">
                 <label className="label">{language === 'ar' ? 'المنفذ' : 'Outlet'}</label>
                 <select 
                   className="input-field" 
@@ -697,7 +719,8 @@ export default function BostaTab() {
                       description: editingOrder.description,
                       totalValue: editingOrder.totalValue,
                       category: editingOrder.category,
-                      outlet: editingOrder.outlet
+                      outlet: editingOrder.outlet,
+                      size: editingOrder.size
                     });
                     if (res.success) {
                       setEditingOrder(null);

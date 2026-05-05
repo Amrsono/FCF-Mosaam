@@ -219,23 +219,25 @@ export default function OrdersTab() {
     return displayOutlets.map(outletName => {
       const outletOrders = allFilteredOrders.filter(o => normalizeOutlet(o.outlet) === outletName);
       
-      const received = outletOrders.filter(o => isInRange(o.receivedAt, filterDateStart, filterDateEnd)).length;
-      const delivered = outletOrders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt, filterDateStart, filterDateEnd)).length;
-      const returned = outletOrders.filter(o => o.status === 'Returned' && isInRange(o.returnedAt, filterDateStart, filterDateEnd)).length;
-      const cancelled = outletOrders.filter(o => o.status === 'Cancelled' && isInRange(o.returnedAt, filterDateStart, filterDateEnd)).length;
-      const available = outletOrders.filter(o => o.status === 'Inventory').length;
+      const receivedSet = outletOrders.filter(o => isInRange(o.receivedAt, filterDateStart, filterDateEnd));
       
-      const totalMoney = outletOrders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt, filterDateStart, filterDateEnd)).reduce((sum, o) => sum + o.totalValue, 0);
+      const received = receivedSet.length;
+      const delivered = receivedSet.filter(o => o.status === 'Picked Up').length;
+      const returned = receivedSet.filter(o => o.status === 'Returned').length;
+      const cancelled = receivedSet.filter(o => o.status === 'Cancelled').length;
+      const available = receivedSet.filter(o => o.status === 'Inventory').length;
+      
+      const totalMoney = receivedSet.filter(o => o.status === 'Picked Up').reduce((sum, o) => sum + o.totalValue, 0);
       const paid = totalMoney; 
       
-      const jumiaPay = outletOrders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt, filterDateStart, filterDateEnd) && o.paymentMethod?.toLowerCase().includes('jumia')).reduce((sum, o) => sum + o.totalValue, 0);
-      const creditCard = outletOrders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt, filterDateStart, filterDateEnd) && (o.paymentMethod?.toLowerCase().includes('card') || o.paymentMethod?.toLowerCase().includes('visa'))).reduce((sum, o) => sum + o.totalValue, 0);
+      const jumiaPay = receivedSet.filter(o => o.status === 'Picked Up' && o.paymentMethod?.toLowerCase().includes('jumia')).reduce((sum, o) => sum + o.totalValue, 0);
+      const creditCard = receivedSet.filter(o => o.status === 'Picked Up' && (o.paymentMethod?.toLowerCase().includes('card') || o.paymentMethod?.toLowerCase().includes('visa'))).reduce((sum, o) => sum + o.totalValue, 0);
 
-      const sCount = outletOrders.filter(o => o.status === 'Inventory' && o.size === 'S' && isInRange(o.receivedAt, filterDateStart, filterDateEnd)).length;
-      const mCount = outletOrders.filter(o => o.status === 'Inventory' && o.size === 'M' && isInRange(o.receivedAt, filterDateStart, filterDateEnd)).length;
-      const lCount = outletOrders.filter(o => o.status === 'Inventory' && o.size === 'L' && isInRange(o.receivedAt, filterDateStart, filterDateEnd)).length;
+      const sCount = receivedSet.filter(o => o.status === 'Inventory' && o.size === 'S').length;
+      const mCount = receivedSet.filter(o => o.status === 'Inventory' && o.size === 'M').length;
+      const lCount = receivedSet.filter(o => o.status === 'Inventory' && o.size === 'L').length;
 
-      const storageFees = outletOrders.filter(o => o.status === 'Inventory' && isInRange(o.receivedAt, filterDateStart, filterDateEnd)).reduce((sum, o) => sum + (o.penalty || 0), 0);
+      const storageFees = receivedSet.filter(o => o.status === 'Inventory').reduce((sum, o) => sum + (o.penalty || 0), 0);
 
       return {
         outlet: outletName,

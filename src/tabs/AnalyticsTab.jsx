@@ -367,9 +367,9 @@ export default function AnalyticsTab() {
   }));
 
   const basataByOutletData = [
-    { name: t('banha1'), amount: basataByOutlet.eltalg, color: CHART_COLORS.basata },
-    { name: t('banha2'), amount: basataByOutlet.tegara, color: '#06b6d4' },
-    { name: t('banha3'), amount: basataByOutlet.mostashfa, color: '#0891b2' },
+    { name: t('eltalg'), amount: basataByOutlet.eltalg, color: CHART_COLORS.basata },
+    { name: t('tegara'), amount: basataByOutlet.tegara, color: '#06b6d4' },
+    { name: t('mostashfa'), amount: basataByOutlet.mostashfa, color: '#0891b2' },
   ].filter(d => d.amount > 0);
 
   const basataProviderData = Object.keys(basataProviders)
@@ -482,9 +482,9 @@ export default function AnalyticsTab() {
                 }}
               >
                 <option value="All">{language === 'ar' ? 'جميع المنافذ' : 'All Outlets'}</option>
-                <option value="eltalg">{t('banha1')}</option>
-                <option value="tegara">{t('banha2')}</option>
-                <option value="mostashfa">{t('banha3')}</option>
+                <option value="eltalg">{t('eltalg')}</option>
+                <option value="tegara">{t('tegara')}</option>
+                <option value="mostashfa">{t('mostashfa')}</option>
               </select>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>

@@ -28,9 +28,9 @@ export default function BasataTab() {
 
   const getOutletLabel = (val) => {
     if (!val) return '-';
-    if (val === 'eltalg' || val === 'Banha 1' || val === 'وبور الثلج' || val === 'وبور التلج') return t('banha1');
-    if (val === 'tegara' || val === 'Banha 2' || val === 'تجارة' || val === 'تجاره') return t('banha2');
-    if (val === 'mostashfa' || val === 'Banha 3' || val === 'المستشفي' || val === 'المستشفى') return t('banha3');
+    if (val === 'eltalg') return t('eltalg');
+    if (val === 'tegara') return t('tegara');
+    if (val === 'mostashfa') return t('mostashfa');
     return val;
   };
 
@@ -272,9 +272,9 @@ export default function BasataTab() {
                        disabled={false}
                      >
                        <option value="All">{language === 'ar' ? 'جميع المنافذ' : 'All Outlets'}</option>
-                       <option value="eltalg">{t('banha1')}</option>
-                       <option value="tegara">{t('banha2')}</option>
-                       <option value="mostashfa">{t('banha3')}</option>
+                       <option value="eltalg">{t('eltalg')}</option>
+                       <option value="tegara">{t('tegara')}</option>
+                       <option value="mostashfa">{t('mostashfa')}</option>
                      </select>
                    </div>
                  </div>

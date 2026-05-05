@@ -185,27 +185,21 @@ export default function OrdersTab() {
     setCurrentPage(1);
   }, [searchTerm, filterCategory, filterTier, filterStatus, filterOutlet, filterDateStart, filterDateEnd, filterPaymentMethod, itemsPerPage]);
 
-  // Summary by Outlet (calculated from base filtered data)
+  // Summary by Outlet (calculated from already filtered data)
   const summaryByOutlet = useMemo(() => {
-    const outlets = ['eltalg', 'tegara', 'mostashfa'];
+    const outlets = filterOutlet === 'All' ? ['eltalg', 'tegara', 'mostashfa'] : [filterOutlet];
+    
     return outlets.map(outletName => {
-      // For summary, we start from the full orders list but respect other non-date filters
-      const outletOrders = orders.filter(o => {
-        const matchesOutlet = normalizeOutlet(o.outlet) === outletName;
-        const matchesCategory = filterCategory === 'All' || o.category === filterCategory;
-        const matchesSearch = o.id.toLowerCase().includes(searchTerm.toLowerCase()) || o.customerPhone.includes(searchTerm);
-        const matchesPayment = filterPaymentMethod === 'All' || o.paymentMethod === filterPaymentMethod;
-        return matchesOutlet && matchesCategory && matchesSearch && matchesPayment;
-      });
+      const outletOrders = orderList.filter(o => normalizeOutlet(o.outlet) === outletName);
       
       const received = outletOrders.filter(o => isInRange(o.receivedAt, filterDateStart, filterDateEnd)).length;
       const delivered = outletOrders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt, filterDateStart, filterDateEnd)).length;
       const returned = outletOrders.filter(o => o.status === 'Returned' && isInRange(o.returnedAt, filterDateStart, filterDateEnd)).length;
       const cancelled = outletOrders.filter(o => o.status === 'Cancelled' && isInRange(o.returnedAt, filterDateStart, filterDateEnd)).length;
-      const available = outletOrders.filter(o => o.status === 'Inventory').length; // Current stock is always current
+      const available = outletOrders.filter(o => o.status === 'Inventory').length;
       
       const totalMoney = outletOrders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt, filterDateStart, filterDateEnd)).reduce((sum, o) => sum + o.totalValue, 0);
-      const paid = totalMoney; // Same as above for this simplified summary
+      const paid = totalMoney; 
       
       const jumiaPay = outletOrders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt, filterDateStart, filterDateEnd) && o.paymentMethod?.toLowerCase().includes('jumia')).reduce((sum, o) => sum + o.totalValue, 0);
       const creditCard = outletOrders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt, filterDateStart, filterDateEnd) && (o.paymentMethod?.toLowerCase().includes('card') || o.paymentMethod?.toLowerCase().includes('visa'))).reduce((sum, o) => sum + o.totalValue, 0);
@@ -214,8 +208,7 @@ export default function OrdersTab() {
       const mCount = outletOrders.filter(o => o.status === 'Inventory' && o.size === 'M').length;
       const lCount = outletOrders.filter(o => o.status === 'Inventory' && o.size === 'L').length;
 
-      const storageFees = outletOrders.filter(o => o.status === 'Inventory').reduce((sum, o) => sum + calculateStorageFee(o), 0);
-      const totalIncome = storageFees;
+      const storageFees = outletOrders.filter(o => o.status === 'Inventory').reduce((sum, o) => sum + (o.penalty || 0), 0);
 
       return {
         outlet: outletName,
@@ -229,13 +222,12 @@ export default function OrdersTab() {
         jumiaPay,
         creditCard,
         storageFees,
-        totalIncome,
         sCount,
         mCount,
         lCount
       };
     });
-  }, [orders, searchTerm, filterCategory, filterOutlet, filterDateStart, filterDateEnd, filterPaymentMethod, calculateStorageFee]);
+  }, [orderList, filterOutlet, filterDateStart, filterDateEnd]);
 
   const handleSimulateReceive = (e) => {
     e.preventDefault();
@@ -691,7 +683,13 @@ export default function OrdersTab() {
               <option value="All">{language === 'ar' ? 'الكل' : 'All'}</option>
             </select>
             <ExportActions
-              data={(customerReturns || []).filter(r => returnFilterStatus === 'All' || r.status === returnFilterStatus)}
+              data={(customerReturns || []).filter(r => {
+                const matchesStatus = returnFilterStatus === 'All' || r.status === returnFilterStatus;
+                const matchesSearch = !searchTerm || (r.orderId?.toLowerCase().includes(searchTerm.toLowerCase()) || r.customerPhone.includes(searchTerm));
+                const matchesOutlet = filterOutlet === 'All' || normalizeOutlet(r.outlet) === filterOutlet;
+                const matchesDate = !filterDateStart && !filterDateEnd ? true : (isInRange(r.receivedAt, filterDateStart, filterDateEnd) || (r.returnedAt && isInRange(r.returnedAt, filterDateStart, filterDateEnd)));
+                return matchesStatus && matchesSearch && matchesOutlet && matchesDate;
+              })}
               headers={[
                 { label: t('orderId'), accessor: 'orderId' },
                 { label: t('customer'), accessor: 'customerName' },
@@ -725,7 +723,19 @@ export default function OrdersTab() {
               </tr>
             </thead>
             <tbody>
-              {(customerReturns || []).filter(r => returnFilterStatus === 'All' || r.status === returnFilterStatus).length > 0 ? (customerReturns || []).filter(r => returnFilterStatus === 'All' || r.status === returnFilterStatus).map(ret => (
+              {(customerReturns || []).filter(r => {
+                const matchesStatus = returnFilterStatus === 'All' || r.status === returnFilterStatus;
+                const matchesSearch = !searchTerm || (r.orderId?.toLowerCase().includes(searchTerm.toLowerCase()) || r.customerPhone.includes(searchTerm));
+                const matchesOutlet = filterOutlet === 'All' || normalizeOutlet(r.outlet) === filterOutlet;
+                const matchesDate = !filterDateStart && !filterDateEnd ? true : (isInRange(r.receivedAt, filterDateStart, filterDateEnd) || (r.returnedAt && isInRange(r.returnedAt, filterDateStart, filterDateEnd)));
+                return matchesStatus && matchesSearch && matchesOutlet && matchesDate;
+              }).length > 0 ? (customerReturns || []).filter(r => {
+                const matchesStatus = returnFilterStatus === 'All' || r.status === returnFilterStatus;
+                const matchesSearch = !searchTerm || (r.orderId?.toLowerCase().includes(searchTerm.toLowerCase()) || r.customerPhone.includes(searchTerm));
+                const matchesOutlet = filterOutlet === 'All' || normalizeOutlet(r.outlet) === filterOutlet;
+                const matchesDate = !filterDateStart && !filterDateEnd ? true : (isInRange(r.receivedAt, filterDateStart, filterDateEnd) || (r.returnedAt && isInRange(r.returnedAt, filterDateStart, filterDateEnd)));
+                return matchesStatus && matchesSearch && matchesOutlet && matchesDate;
+              }).map(ret => (
                 <tr key={ret.id}>
                   <td style={{ fontWeight: 600 }}>{ret.orderId || '-'}</td>
                   <td>

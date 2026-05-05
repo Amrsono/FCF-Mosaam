@@ -65,10 +65,11 @@ export const exportToPPTX = async (analytics, filename, language = 'en') => {
       [`  - Small (S)`, String(analytics.jumia.sizes?.S || 0)],
       [`  - Medium (M)`, String(analytics.jumia.sizes?.M || 0)],
       [`  - Large (L)`, String(analytics.jumia.sizes?.L || 0)],
-      [language === 'ar' ? 'إجمالي النقد المحصل' : 'Total Cash Collected', `${analytics.jumia.cash.toLocaleString()} EGP`],
-      [`  - ${language === 'ar' ? 'بنها 1 "eltalg"' : 'Banha 1 "eltalg"'}`, `${(analytics.jumia.cashByOutlet?.eltalg || 0).toLocaleString()} EGP`],
-      [`  - ${language === 'ar' ? 'بنها 2 "tegara"' : 'Banha 2 "tegara"'}`, `${(analytics.jumia.cashByOutlet?.tegara || 0).toLocaleString()} EGP`],
-      [`  - ${language === 'ar' ? 'بنها 3 "mostashfa"' : 'Banha 3 "mostashfa"'}`, `${(analytics.jumia.cashByOutlet?.mostashfa || 0).toLocaleString()} EGP`],
+      [language === 'ar' ? 'إجمالي الأرباح (حسب الحجم)' : 'Total Station Profit (by size)', `${analytics.jumia.profit.toLocaleString()} EGP`],
+      [`  - ${language === 'ar' ? 'بنها 1 "eltalg"' : 'Banha 1 "eltalg"'}`, `${(analytics.jumia.profitByOutlet?.eltalg || 0).toLocaleString()} EGP`],
+      [`  - ${language === 'ar' ? 'بنها 2 "tegara"' : 'Banha 2 "tegara"'}`, `${(analytics.jumia.profitByOutlet?.tegara || 0).toLocaleString()} EGP`],
+      [`  - ${language === 'ar' ? 'بنها 3 "mostashfa"' : 'Banha 3 "mostashfa"'}`, `${(analytics.jumia.profitByOutlet?.mostashfa || 0).toLocaleString()} EGP`],
+      [language === 'ar' ? 'إجمالي النقد المحصل (COD)' : 'Total COD Collected', `${analytics.jumia.cash.toLocaleString()} EGP`],
       [`  - ${language === 'ar' ? 'نقدي' : 'Cash'}`, `${(analytics.jumia.cashTotal || 0).toLocaleString()} EGP`],
       [`  - ${language === 'ar' ? 'جوميا باي (أونلاين)' : 'Jumia Pay (Online)'}`, `${(analytics.jumia.jumiaPayTotal || 0).toLocaleString()} EGP`],
       [language === 'ar' ? 'المرتجع' : 'Returns', String(analytics.jumia.returnedCount)],
@@ -138,7 +139,7 @@ export const exportToPPTX = async (analytics, filename, language = 'en') => {
     slide6.addText(language === 'ar' ? "الملخص المالي النهائي" : "Final Financial Summary", { x: 0.5, y: 0.5, fontSize: 24, bold: true, color: "10b981" });
     const fStats = [
       [language === 'ar' ? 'القناة' : 'Channel', language === 'ar' ? 'صافي المركز' : 'Net Position'],
-      ["Jumia", `${analytics.jumia.cash.toLocaleString()} EGP`],
+      ["Jumia (Profit)", `${analytics.jumia.profit.toLocaleString()} EGP`],
       ["Bosta", `${analytics.bosta.cash.toLocaleString()} EGP`],
       ["Basata", `${analytics.basata.volume.toLocaleString()} EGP`],
       [language === 'ar' ? 'الإجمالي النهائي' : 'GRAND TOTAL', `${analytics.grandTotal.toLocaleString()} EGP`]

@@ -138,6 +138,14 @@ export default function AnalyticsTab() {
   
   const jumiaCash = jumiaPickedUp.reduce((s, o) => s + o.totalValue, 0);
   const jumiaReturnedAmt = stdReturned.reduce((s, o) => s + o.totalValue, 0); // Customer returns don't have a value in our system
+
+  const getJumiaCharge = (size) => {
+    const s = (size || 'M').toUpperCase();
+    if (s === 'S') return 18;
+    if (s === 'L') return 45;
+    return 30;
+  };
+  const jumiaProfit = jumiaPickedUp.reduce((s, o) => s + getJumiaCharge(o.size), 0);
   // --- BOSTA ---
   const bostaInventory = bostaOrders.filter(o => o.status === 'Inventory' && isInRange(o.receivedAt) && matchesOutlet(o));
 
@@ -204,8 +212,17 @@ export default function AnalyticsTab() {
   };
   const basataByOutlet = getBasataByOutlet(activeBasata);
 
+  const getJumiaProfitByOutlet = (list) => {
+    return list.reduce((acc, o) => {
+      const outlet = normalizeOutlet(o.outlet);
+      acc[outlet] = (acc[outlet] || 0) + getJumiaCharge(o.size);
+      return acc;
+    }, { eltalg: 0, tegara: 0, mostashfa: 0 });
+  };
+  const jumiaProfitByOutlet = getJumiaProfitByOutlet(jumiaPickedUp);
+
   // --- GRAND TOTAL ---
-  const grandTotal = jumiaCash + bostaCash + basataVolume + activePenalties;
+  const grandTotal = jumiaProfit + bostaCash + basataVolume + activePenalties;
 
   // --- CALLS LOG ANALYTICS ---
   const callsInPeriod = (callLogs || []).filter(l => isInRange(l.createdAt) && (selectedOutlet === 'All' || normalizeOutlet(l.outlet) === selectedOutlet));
@@ -255,6 +272,7 @@ export default function AnalyticsTab() {
       jumia: {
         pickedUpCount: jumiaPickedUp.length,
         cash: jumiaCash,
+        profit: jumiaProfit,
         cashTotal: jumiaCashTotal,
         cardTotal: jumiaCardTotal,
         jumiaPayTotal: jumiaPayTotal,
@@ -264,7 +282,8 @@ export default function AnalyticsTab() {
         sizes: jumiaSizes,
         inventorySizes: jumiaInventorySizes,
         inventoryCount: jumiaInventory.length,
-        cashByOutlet: getCashByOutlet(jumiaPickedUp)
+        cashByOutlet: getCashByOutlet(jumiaPickedUp),
+        profitByOutlet: jumiaProfitByOutlet
       },
       bosta: {
         pickedUpCount: bostaPickedUp.length,
@@ -315,7 +334,7 @@ export default function AnalyticsTab() {
 
   // --- CHART DATA ---
   const revenueStreamData = [
-    { name: t('jumia'), value: jumiaCash, color: CHART_COLORS.jumia },
+    { name: t('jumia'), value: jumiaProfit, color: CHART_COLORS.jumia },
     { name: t('bosta'), value: bostaCash, color: CHART_COLORS.bosta },
     { name: t('basata'), value: basataVolume, color: CHART_COLORS.basata },
     { name: t('penalties'), value: activePenalties, color: CHART_COLORS.warning },
@@ -555,7 +574,7 @@ export default function AnalyticsTab() {
           </div>
           <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', flex: '1 1 auto' }}>
             {[
-              { label: t('jumia'), value: jumiaCash, color: CHART_COLORS.jumia },
+              { label: t('jumia'), value: jumiaProfit, color: CHART_COLORS.jumia },
               { label: t('bosta'), value: bostaCash, color: CHART_COLORS.bosta },
               { label: t('basata'), value: basataVolume, color: CHART_COLORS.basata },
               { label: t('penalties'), value: activePenalties, color: CHART_COLORS.warning },
@@ -572,7 +591,7 @@ export default function AnalyticsTab() {
 
       {/* Row 1: Key Metrics */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
-        <MetricCard title={`${t('jumia')} ${t('cash')}`} value={`${jumiaCash.toLocaleString()} EGP`} icon={<DollarSign size={14} />} color={CHART_COLORS.jumia} sub={language === 'ar' ? `${jumiaPickedUp.length} طلب استلام عميل` : `${jumiaPickedUp.length} customer pick ups`} />
+        <MetricCard title={`${t('jumia')} ${language === 'ar' ? 'الأرباح' : 'Profit'}`} value={`${jumiaProfit.toLocaleString()} EGP`} icon={<DollarSign size={14} />} color={CHART_COLORS.jumia} sub={language === 'ar' ? `${jumiaPickedUp.length} طلب استلام عميل` : `${jumiaPickedUp.length} customer pick ups`} />
         <MetricCard title={`${t('bosta')} ${t('cash')}`} value={`${bostaCash.toLocaleString()} EGP`} icon={<DollarSign size={14} />} color={CHART_COLORS.bosta} sub={language === 'ar' ? `${bostaPickedUp.length} طلب مستلم` : `${bostaPickedUp.length} orders picked up`} />
         <MetricCard title={`${t('basata')} POS`} value={`${basataVolume.toLocaleString()} EGP`} icon={<Zap size={14} />} color={CHART_COLORS.basata} sub={language === 'ar' ? `${activeBasata.length} عملية` : `${activeBasata.length} transactions`} />
         <MetricCard title={t('parkedPenalties')} value={`${activePenalties} EGP`} icon={<AlertOctagon size={14} />} color={CHART_COLORS.warning} sub={language === 'ar' ? `${jumiaInventory.length} طلب مخزن` : `${jumiaInventory.length} parked orders`} />
@@ -750,12 +769,12 @@ export default function AnalyticsTab() {
             <tbody>
               <tr>
                 <td><span style={{ color: CHART_COLORS.jumia, fontWeight: 700 }}>{t('jumia')}</span></td>
-                <td style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{jumiaCash.toLocaleString()} EGP</td>
+                <td style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{jumiaProfit.toLocaleString()} EGP</td>
                 <td style={{ color: 'var(--text-primary)' }}>{jumiaPickedUp.length}</td>
                 <td style={{ color: 'var(--text-primary)' }}><span style={{ color: 'var(--color-danger)' }}>{jumiaReturned.length}</span></td>
                 <td style={{ color: 'var(--color-danger)' }}>0 EGP</td>
                 <td style={{ color: 'var(--color-success)', fontWeight: 700 }}>
-                  {jumiaCash.toLocaleString()} EGP
+                  {jumiaProfit.toLocaleString()} EGP
                 </td>
               </tr>
               <tr>

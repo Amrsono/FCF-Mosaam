@@ -23,19 +23,7 @@ export default function BostaTab() {
   const { user } = useAuth();
   const { t, language } = useLanguage();
   
-  const getOutletLabel = (val) => {
-    if (val === 'eltalg' || val === 'Banha 1' || val === 'وبور الثلج' || val === 'وبور التلج') return t('eltalg');
-    if (val === 'tegara' || val === 'Banha 2' || val === 'تجارة' || val === 'تجاره') return t('tegara');
-    if (val === 'mostashfa' || val === 'Banha 3' || val === 'المستشفي' || val === 'المستشفى') return t('mostashfa');
-    return val;
-  };
 
-  const normalizeOutlet = (val) => {
-    if (!val || val === 'eltalg' || val === 'Banha 1' || val === 'وبور الثلج' || val === 'وبور التلج') return 'eltalg';
-    if (val === 'tegara' || val === 'Banha 2' || val === 'تجارة' || val === 'تجاره') return 'tegara';
-    if (val === 'mostashfa' || val === 'Banha 3' || val === 'المستشفي' || val === 'المستشفى') return 'mostashfa';
-    return val;
-  };
 
   const f = globalFilters.bosta;
   const searchTerm = f.searchTerm;

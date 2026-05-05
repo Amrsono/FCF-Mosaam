@@ -86,7 +86,11 @@ export default function CustomersTab() {
               const isEditing = editingPhone === customer.phone;
               return (
                 <tr key={customer.phone}>
-                  <td style={{ fontWeight: 600 }}>{customer.phone}</td>
+                  <td style={{ fontWeight: 600 }}>
+                    {isEditing ? (
+                      <input className="input-field" style={{ padding: '0.4rem', width: '110px' }} value={editForm.phone} onChange={e => setEditForm({ ...editForm, phone: e.target.value })} />
+                    ) : customer.phone}
+                  </td>
                   <td>
                     {isEditing ? (
                       <input className="input-field" style={{ padding: '0.4rem', width: '120px' }} value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} />

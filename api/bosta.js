@@ -106,11 +106,26 @@ export default async function handler(req, res) {
       }
 
       if (action === 'UPDATE_INFO') {
-        const { newId, description, totalValue, category, outlet, size, paymentMethod, orderCost } = req.body;
+        const { newId, customerPhone, description, totalValue, category, outlet, size, paymentMethod, orderCost } = req.body;
+
+        // If phone changed, ensure customer exists (Upsert)
+        if (customerPhone) {
+          await prisma.customer.upsert({
+            where: { phone: customerPhone },
+            update: {},
+            create: {
+              phone: customerPhone,
+              name: 'Unknown',
+              tier: 'New'
+            }
+          });
+        }
+
         const updated = await prisma.bostaOrder.update({
           where: { id },
           data: {
             id: newId,
+            customerPhone,
             description,
             totalValue: totalValue !== undefined ? parseFloat(totalValue) : undefined,
             category,

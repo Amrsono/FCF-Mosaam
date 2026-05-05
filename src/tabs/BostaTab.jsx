@@ -614,6 +614,16 @@ export default function BostaTab() {
               </div>
 
               <div className="form-group">
+                <label className="label">{t('phone')}</label>
+                <input 
+                  type="text" 
+                  className="input-field" 
+                  value={editingOrder.customerPhone} 
+                  onChange={e => setEditingOrder({...editingOrder, customerPhone: e.target.value})}
+                />
+              </div>
+
+              <div className="form-group">
                 <label className="label">{t('description')}</label>
                 <textarea 
                   className="input-field" 
@@ -683,6 +693,7 @@ export default function BostaTab() {
                   onClick={async () => {
                     const res = await updateBostaOrder(originalOrderId, {
                       newId: editingOrder.id,
+                      customerPhone: editingOrder.customerPhone,
                       description: editingOrder.description,
                       totalValue: editingOrder.totalValue,
                       category: editingOrder.category,

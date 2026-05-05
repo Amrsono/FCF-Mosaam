@@ -850,6 +850,16 @@ export default function OrdersTab() {
               </div>
 
               <div className="form-group">
+                <label className="label" style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '0.4rem', display: 'block' }}>{t('phone')}</label>
+                <input 
+                  type="text" 
+                  className="input-field" 
+                  value={editingOrder.customerPhone} 
+                  onChange={e => setEditingOrder({...editingOrder, customerPhone: e.target.value})}
+                />
+              </div>
+
+              <div className="form-group">
                 <label className="label" style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '0.4rem', display: 'block' }}>{t('description')}</label>
                 <textarea 
                   className="input-field" 
@@ -920,6 +930,7 @@ export default function OrdersTab() {
                   onClick={async () => {
                     const res = await updateOrder(originalOrderId, {
                       newId: editingOrder.id,
+                      customerPhone: editingOrder.customerPhone,
                       description: editingOrder.description,
                       totalValue: parseFloat(editingOrder.totalValue),
                       category: editingOrder.category,

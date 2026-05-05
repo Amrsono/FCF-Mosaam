@@ -43,6 +43,49 @@ export default async function handler(req, res) {
 
       if (!phone || !data) return res.status(400).json({ error: 'Missing parameters' });
 
+      // Handle Phone Number Change
+      if (data.phone && data.phone !== phone) {
+        const existing = await prisma.customer.findUnique({ where: { phone: data.phone } });
+        if (existing) {
+          return res.status(409).json({ error: 'New phone number already belongs to another customer.' });
+        }
+
+        const updatedCustomer = await prisma.$transaction(async (tx) => {
+          // 1. Get current customer data
+          const current = await tx.customer.findUnique({ where: { phone } });
+          if (!current) throw new Error('Customer not found');
+
+          // 2. Create new customer with new phone
+          const next = await tx.customer.create({
+            data: {
+              ...current,
+              id: undefined, // Let it generate a new UUID or we can reuse current.id if we manually handle it, but phone is the unique ref
+              phone: data.phone,
+              name: data.name || current.name,
+              email: data.email !== undefined ? data.email : current.email,
+              address: data.address !== undefined ? data.address : current.address,
+              tier: data.tier || current.tier,
+              deliveries: current.deliveries,
+              bostaDeliveries: current.bostaDeliveries
+            }
+          });
+
+          // 3. Update all related records
+          await tx.order.updateMany({ where: { customerPhone: phone }, data: { customerPhone: data.phone } });
+          await tx.bostaOrder.updateMany({ where: { customerPhone: phone }, data: { customerPhone: data.phone } });
+          await tx.callLog.updateMany({ where: { customerPhone: phone }, data: { customerPhone: data.phone } });
+          await tx.customerReturn.updateMany({ where: { customerPhone: phone }, data: { customerPhone: data.phone } });
+
+          // 4. Delete old customer
+          await tx.customer.delete({ where: { phone } });
+
+          return next;
+        });
+
+        return res.status(200).json(updatedCustomer);
+      }
+
+      // Normal update (no phone change)
       const updatedCustomer = await prisma.customer.update({
         where: { phone },
         data // object containing name, email, tier, address, etc.

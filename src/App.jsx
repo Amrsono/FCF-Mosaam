@@ -246,14 +246,14 @@ function AppContent() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <LanguageProvider>
-        <ThemeProvider>
-          <DashboardProvider>
+    <DashboardProvider>
+      <AuthProvider>
+        <LanguageProvider>
+          <ThemeProvider>
             <AppContent />
-          </DashboardProvider>
-        </ThemeProvider>
-      </LanguageProvider>
-    </AuthProvider>
+          </ThemeProvider>
+        </LanguageProvider>
+      </AuthProvider>
+    </DashboardProvider>
   );
 }

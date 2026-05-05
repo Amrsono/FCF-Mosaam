@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useDashboard } from '../context/DashboardContext';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -70,11 +70,12 @@ export default function AnalyticsTab() {
   const startDate = f.dateStart;
   const endDate = f.dateEnd;
   const selectedOutlet = f.outlet;
-  const [timeframe, setTimeframe] = useState('daily'); // Keep timeframe local as it dictates ranges
+  const timeframe = f.timeframe;
 
   const setStartDate = (val) => updateFilters('analytics', { dateStart: val });
   const setEndDate = (val) => updateFilters('analytics', { dateEnd: val });
   const setSelectedOutlet = (val) => updateFilters('analytics', { outlet: val });
+  const setTimeframe = (val) => updateFilters('analytics', { timeframe: val });
 
   const handleTimeframeChange = (tf) => {
     setTimeframe(tf);

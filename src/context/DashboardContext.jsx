@@ -21,15 +21,7 @@ export const DashboardProvider = ({ children }) => {
 
   // Global Filters Persistence
   const [globalFilters, setGlobalFilters] = useState(() => {
-    const saved = localStorage.getItem('fcf_global_filters');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.warn("Failed to parse saved filters", e);
-      }
-    }
-    return {
+    const defaults = {
       orders: {
         searchTerm: '',
         status: 'Inventory',
@@ -51,20 +43,41 @@ export const DashboardProvider = ({ children }) => {
       analytics: {
         outlet: 'All',
         dateStart: new Date().toISOString().split('T')[0],
-        dateEnd: new Date().toISOString().split('T')[0]
+        dateEnd: new Date().toISOString().split('T')[0],
+        timeframe: 'daily'
       }
     };
+
+    const saved = localStorage.getItem('fcf_global_filters');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return {
+          orders: { ...defaults.orders, ...(parsed.orders || {}) },
+          bosta: { ...defaults.bosta, ...(parsed.bosta || {}) },
+          analytics: { ...defaults.analytics, ...(parsed.analytics || {}) }
+        };
+      } catch (e) {
+        console.warn("Failed to parse saved filters", e);
+      }
+    }
+    return defaults;
   });
 
   useEffect(() => {
-    localStorage.setItem('fcf_global_filters', JSON.stringify(globalFilters));
+    if (globalFilters) {
+      localStorage.setItem('fcf_global_filters', JSON.stringify(globalFilters));
+    }
   }, [globalFilters]);
 
   const updateFilters = (tab, newFilters) => {
-    setGlobalFilters(prev => ({
-      ...prev,
-      [tab]: { ...prev[tab], ...newFilters }
-    }));
+    setGlobalFilters(prev => {
+      const currentTabFilters = prev[tab] || {};
+      return {
+        ...prev,
+        [tab]: { ...currentTabFilters, ...newFilters }
+      };
+    });
   };
 
   const fetchData = async () => {

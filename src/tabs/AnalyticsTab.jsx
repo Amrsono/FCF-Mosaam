@@ -377,6 +377,12 @@ export default function AnalyticsTab() {
     .slice(0, 6)
     .map(p => ({ name: p, count: basataProviders[p] }));
 
+  const jumiaProfitByOutletData = [
+    { name: t('eltalg'), amount: jumiaProfitByOutlet.eltalg, color: CHART_COLORS.jumia },
+    { name: t('tegara'), amount: jumiaProfitByOutlet.tegara, color: '#fb923c' },
+    { name: t('mostashfa'), amount: jumiaProfitByOutlet.mostashfa, color: '#ea580c' },
+  ].filter(d => d.amount > 0);
+
   const comparisonData = [
     { name: language === 'ar' ? 'المدخلات' : 'Inventory', jumia: jumiaInventory.length, bosta: bostaInventory.length },
     { name: t('pickedUpByCustomer'), jumia: jumiaPickedUp.length, bosta: bostaPickedUp.length },
@@ -641,15 +647,17 @@ export default function AnalyticsTab() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title={language === 'ar' ? 'مقارنة طلبات جوميا وبوسطة' : 'Jumia vs Bosta Orders Comparison'} icon={<BarChart2 size={16} color={CHART_COLORS.bosta} />}>
+        <ChartCard title={language === 'ar' ? 'أرباح جوميا حسب المنفذ' : 'Jumia Profit by Outlet'} icon={<BarChart2 size={16} color={CHART_COLORS.jumia} />}>
           <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={comparisonData} barGap={4}>
+            <BarChart data={jumiaProfitByOutletData} barGap={4}>
               <XAxis dataKey="name" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} axisLine={false} tickLine={false} />
               <YAxis orientation={language === 'ar' ? 'right' : 'left'} tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} axisLine={false} tickLine={false} />
-              <Tooltip content={<CustomTooltip language={language} />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
-              <Legend formatter={(val) => <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem', textTransform: 'capitalize' }}>{val}</span>} />
-              <Bar dataKey="jumia" name={t('jumia')} fill={CHART_COLORS.jumia} radius={[6, 6, 0, 0]} />
-              <Bar dataKey="bosta" name={t('bosta')} fill={CHART_COLORS.bosta} radius={[6, 6, 0, 0]} />
+              <Tooltip content={<CustomTooltip language={language} />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} formatter={(v) => `${v.toLocaleString()} EGP`} />
+              <Bar dataKey="amount" name={language === 'ar' ? 'الأرباح' : 'Profit'} fill={CHART_COLORS.jumia} radius={[6, 6, 0, 0]}>
+                {jumiaProfitByOutletData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -781,7 +789,8 @@ export default function AnalyticsTab() {
             <thead>
               <tr>
                 <th>{t('stream')}</th>
-                <th>{language === 'ar' ? 'الإيرادات' : 'Revenue'}</th>
+                <th>{language === 'ar' ? 'إجمالي التحصيل' : 'COD Collected'}</th>
+                <th>{language === 'ar' ? 'الأرباح' : 'Profit'}</th>
                 <th>{t('pickedUpByCustomer')}</th>
                 <th>{t('returnedStatus')}</th>
                 <th>{language === 'ar' ? 'مبلغ المرتجع' : 'Return Amount'}</th>
@@ -791,6 +800,7 @@ export default function AnalyticsTab() {
             <tbody>
               <tr>
                 <td><span style={{ color: CHART_COLORS.jumia, fontWeight: 700 }}>{t('jumia')}</span></td>
+                <td style={{ color: 'var(--text-muted)' }}>{jumiaCash.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP</td>
                 <td style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{jumiaProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP</td>
                 <td style={{ color: 'var(--text-primary)' }}>{jumiaPickedUp.length}</td>
                 <td style={{ color: 'var(--text-primary)' }}><span style={{ color: 'var(--color-danger)' }}>{jumiaReturned.length}</span></td>
@@ -801,6 +811,7 @@ export default function AnalyticsTab() {
               </tr>
               <tr>
                 <td><span style={{ color: CHART_COLORS.bosta, fontWeight: 700 }}>{t('bosta')}</span></td>
+                <td style={{ color: 'var(--text-muted)' }}>{bostaCash.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP</td>
                 <td style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{bostaProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP</td>
                 <td style={{ color: 'var(--text-primary)' }}>{bostaPickedUp.length}</td>
                 <td style={{ color: 'var(--text-primary)' }}><span style={{ color: 'var(--color-danger)' }}>{bostaReturned.length}</span></td>
@@ -811,6 +822,7 @@ export default function AnalyticsTab() {
               </tr>
               <tr>
                 <td><span style={{ color: CHART_COLORS.basata, fontWeight: 700 }}>{t('basata')} POS</span></td>
+                <td style={{ color: 'var(--text-muted)' }}>{basataVolume.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP</td>
                 <td style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{basataVolume.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP</td>
                 <td style={{ color: 'var(--text-primary)' }}>{activeBasata.length} {language === 'ar' ? 'عملية' : 'trx'}</td>
                 <td style={{ color: 'var(--text-muted)' }}>—</td>
@@ -827,6 +839,7 @@ export default function AnalyticsTab() {
               </tr>
               <tr style={{ borderTop: '2px solid var(--border-color)', background: 'var(--bg-overlay)' }}>
                 <td style={{ color: 'var(--text-primary)', fontWeight: 800 }}>{language === 'ar' ? 'الإجمالي' : 'TOTAL'}</td>
+                <td style={{ color: 'var(--text-muted)', fontWeight: 700 }}>{(jumiaCash + bostaCash + basataVolume).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP</td>
                 <td style={{ color: 'var(--text-primary)', fontWeight: 800 }}>{grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP</td>
                 <td style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{jumiaPickedUp.length + bostaPickedUp.length + activeBasata.length}</td>
                 <td style={{ color: 'var(--color-danger)', fontWeight: 700 }}>{jumiaReturned.length + bostaReturned.length}</td>

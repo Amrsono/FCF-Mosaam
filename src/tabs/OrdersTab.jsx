@@ -174,13 +174,7 @@ export default function OrdersTab() {
     return allFilteredOrders
       .filter(order => {
         if (filterDateStart || filterDateEnd) {
-          if (filterStatus === 'Inventory') return isInRange(order.receivedAt, filterDateStart, filterDateEnd);
-          if (filterStatus === 'Picked Up') return isInRange(order.pickedUpAt, filterDateStart, filterDateEnd);
-          if (filterStatus === 'Returned' || filterStatus === 'Cancelled') return isInRange(order.returnedAt, filterDateStart, filterDateEnd);
-          // Status === 'All' -> Match if ANY relevant date is in range
-          return isInRange(order.receivedAt, filterDateStart, filterDateEnd) || 
-                 isInRange(order.pickedUpAt, filterDateStart, filterDateEnd) || 
-                 isInRange(order.returnedAt, filterDateStart, filterDateEnd);
+          return isInRange(order.receivedAt, filterDateStart, filterDateEnd);
         }
         return true;
       })

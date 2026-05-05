@@ -119,7 +119,22 @@ export default function AnalyticsTab() {
   const isInRange = (dateStr) => {
     if (!dateStr) return false;
     const d = new Date(dateStr);
-    return d >= startLimit && d <= endLimit;
+    
+    const parseEgyptDateLocally = (str, setToEnd) => {
+      const [y, m, day] = str.split('-').map(Number);
+      const date = new Date(y, m - 1, day);
+      if (setToEnd) {
+        date.setHours(23, 59, 59, 999);
+      } else {
+        date.setHours(0, 0, 0, 0);
+      }
+      return date;
+    };
+
+    const sLimit = parseEgyptDateLocally(startDate, false);
+    const eLimit = parseEgyptDateLocally(endDate, true);
+    
+    return d >= sLimit && d <= eLimit;
   };
 
   const matchesOutlet = (o) => {

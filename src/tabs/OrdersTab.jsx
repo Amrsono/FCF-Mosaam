@@ -110,21 +110,27 @@ export default function OrdersTab() {
     return val;
   };
 
-  // Base filtering logic (excluding status for summary)
-  const isInRange = (dateStr, startStr, endStr) => {
+  const isInRange = (dateStr, start, end) => {
+    if (!start && !end) return true;
     if (!dateStr) return false;
+    
     const d = new Date(dateStr);
-    if (startStr) {
-      const s = new Date(startStr);
-      s.setHours(0, 0, 0, 0);
-      if (d < s) return false;
-    }
-    if (endStr) {
-      const e = new Date(endStr);
-      e.setHours(23, 59, 59, 999);
-      if (d > e) return false;
-    }
-    return true;
+    
+    const parseEgyptDate = (str, setToEnd) => {
+      const [y, m, day] = str.split('-').map(Number);
+      const date = new Date(y, m - 1, day);
+      if (setToEnd) {
+        date.setHours(23, 59, 59, 999);
+      } else {
+        date.setHours(0, 0, 0, 0);
+      }
+      return date;
+    };
+
+    const sLimit = start ? parseEgyptDate(start, false) : null;
+    const eLimit = end ? parseEgyptDate(end, true) : null;
+    
+    return (!sLimit || d >= sLimit) && (!eLimit || d <= eLimit);
   };
 
   const allFilteredOrders = useMemo(() => {
@@ -204,6 +210,7 @@ export default function OrdersTab() {
       const returned = outletOrders.filter(o => o.status === 'Returned' && isInRange(o.returnedAt, filterDateStart, filterDateEnd)).length;
       const cancelled = outletOrders.filter(o => o.status === 'Cancelled' && isInRange(o.returnedAt, filterDateStart, filterDateEnd)).length;
       const available = outletOrders.filter(o => o.status === 'Inventory' && isInRange(o.receivedAt, filterDateStart, filterDateEnd)).length;
+      const totalStock = outletOrders.filter(o => o.status === 'Inventory').length;
       
       const totalMoney = outletOrders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt, filterDateStart, filterDateEnd)).reduce((sum, o) => sum + o.totalValue, 0);
       const paid = totalMoney; 
@@ -224,6 +231,7 @@ export default function OrdersTab() {
         returned,
         cancelled,
         available,
+        totalStock,
         totalMoney,
         paid,
         jumiaPay,
@@ -408,7 +416,8 @@ export default function OrdersTab() {
                   <th>{t('pickedUpByCustomer')}</th>
                   <th>{language === 'ar' ? 'ملغي' : 'Cancelled'}</th>
                   <th>{language === 'ar' ? 'مرتجع' : 'Returned'}</th>
-                  <th>{language === 'ar' ? 'متاح' : 'Inventory'}</th>
+                  <th>{language === 'ar' ? 'المتبقي من المستلم' : 'New Stock Left'}</th>
+                  <th style={{ background: 'rgba(34, 197, 94, 0.05)', borderLeft: '1px solid var(--border-color)' }}>{language === 'ar' ? 'إجمالي المخزون' : 'Total Stock'}</th>
                   <th>{language === 'ar' ? 'اجمالي' : 'Total'}</th>
                   <th>{language === 'ar' ? 'سداد' : 'Paid'}</th>
                   <th style={{ color: 'var(--color-primary)' }}>{language === 'ar' ? 'رسوم التخزين' : 'Storage Fees'}</th>
@@ -425,7 +434,8 @@ export default function OrdersTab() {
                     <td style={{ color: 'var(--color-success)' }}>{row.delivered}</td>
                     <td style={{ color: 'var(--color-warning)' }}>{row.cancelled}</td>
                     <td style={{ color: 'var(--color-danger)' }}>{row.returned}</td>
-                    <td style={{ fontWeight: 700 }}>{row.available}</td>
+                    <td style={{ fontWeight: 600 }}>{row.available}</td>
+                    <td style={{ fontWeight: 800, color: 'var(--color-success)', background: 'rgba(34, 197, 94, 0.05)', borderLeft: '1px solid var(--border-color)' }}>{row.totalStock}</td>
                     <td>{row.totalMoney.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td>{row.paid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td style={{ fontWeight: 600 }}>{row.storageFees.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
@@ -441,7 +451,8 @@ export default function OrdersTab() {
                   <td style={{ fontWeight: 700, color: 'var(--color-success)' }}>{summaryByOutlet.reduce((sum, r) => sum + r.delivered, 0)}</td>
                   <td style={{ fontWeight: 700, color: 'var(--color-warning)' }}>{summaryByOutlet.reduce((sum, r) => sum + r.cancelled, 0)}</td>
                   <td style={{ fontWeight: 700, color: 'var(--color-danger)' }}>{summaryByOutlet.reduce((sum, r) => sum + r.returned, 0)}</td>
-                  <td style={{ fontWeight: 800 }}>{summaryByOutlet.reduce((sum, r) => sum + r.available, 0)}</td>
+                  <td style={{ fontWeight: 700 }}>{summaryByOutlet.reduce((sum, r) => sum + r.available, 0)}</td>
+                  <td style={{ fontWeight: 800, color: 'var(--color-success)', background: 'rgba(34, 197, 94, 0.1)', borderLeft: '1px solid var(--border-color)' }}>{summaryByOutlet.reduce((sum, r) => sum + r.totalStock, 0)}</td>
                   <td style={{ fontWeight: 700 }}>{summaryByOutlet.reduce((sum, r) => sum + r.totalMoney, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   <td style={{ fontWeight: 700 }}>{summaryByOutlet.reduce((sum, r) => sum + r.paid, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   <td style={{ fontWeight: 800, color: 'var(--color-primary)' }}>{summaryByOutlet.reduce((sum, r) => sum + r.storageFees, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>

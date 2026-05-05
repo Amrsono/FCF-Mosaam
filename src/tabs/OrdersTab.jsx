@@ -127,7 +127,7 @@ export default function OrdersTab() {
     return true;
   };
 
-  const baseFilteredOrders = useMemo(() => {
+  const allFilteredOrders = useMemo(() => {
     return orders.map(order => {
       const cust = customers.find(c => c.phone === order.customerPhone);
       return {
@@ -143,35 +143,30 @@ export default function OrdersTab() {
       const matchesCategory = filterCategory === 'All' || order.category === filterCategory;
       const matchesTier = filterTier === 'All' || order.tier === filterTier;
       const matchesOutlet = filterOutlet === 'All' || normalizeOutlet(order.outlet) === filterOutlet;
-      
-      let matchesDate = true;
-      if (filterDateStart || filterDateEnd) {
-        if (filterStatus === 'Inventory') {
-          matchesDate = isInRange(order.receivedAt, filterDateStart, filterDateEnd);
-        } else if (filterStatus === 'Picked Up') {
-          matchesDate = isInRange(order.pickedUpAt, filterDateStart, filterDateEnd);
-        } else if (filterStatus === 'Returned' || filterStatus === 'Cancelled') {
-          matchesDate = isInRange(order.returnedAt, filterDateStart, filterDateEnd);
-        } else {
-          // Status === 'All' -> Match if ANY relevant date is in range
-          matchesDate = isInRange(order.receivedAt, filterDateStart, filterDateEnd) || 
-                        isInRange(order.pickedUpAt, filterDateStart, filterDateEnd) || 
-                        isInRange(order.returnedAt, filterDateStart, filterDateEnd);
-        }
-      }
-      
       const matchesPayment = filterPaymentMethod === 'All' || order.paymentMethod === filterPaymentMethod;
       
-      return matchesSearch && matchesCategory && matchesTier && matchesOutlet && matchesDate && matchesPayment;
+      return matchesSearch && matchesCategory && matchesTier && matchesOutlet && matchesPayment;
     });
-  }, [orders, customers, searchTerm, filterCategory, filterTier, filterOutlet, filterDateStart, filterDateEnd, filterPaymentMethod, calculatePenalty, language, filterStatus]);
+  }, [orders, customers, searchTerm, filterCategory, filterTier, filterOutlet, filterPaymentMethod, calculatePenalty, language]);
 
-  // Display filtering logic (including status)
+  // Display filtering logic (including status and status-specific date logic)
   const orderList = useMemo(() => {
-    return baseFilteredOrders
+    return allFilteredOrders
+      .filter(order => {
+        if (filterDateStart || filterDateEnd) {
+          if (filterStatus === 'Inventory') return isInRange(order.receivedAt, filterDateStart, filterDateEnd);
+          if (filterStatus === 'Picked Up') return isInRange(order.pickedUpAt, filterDateStart, filterDateEnd);
+          if (filterStatus === 'Returned' || filterStatus === 'Cancelled') return isInRange(order.returnedAt, filterDateStart, filterDateEnd);
+          // Status === 'All' -> Match if ANY relevant date is in range
+          return isInRange(order.receivedAt, filterDateStart, filterDateEnd) || 
+                 isInRange(order.pickedUpAt, filterDateStart, filterDateEnd) || 
+                 isInRange(order.returnedAt, filterDateStart, filterDateEnd);
+        }
+        return true;
+      })
       .filter(order => filterStatus === 'All' || order.status === filterStatus)
       .sort((a, b) => new Date(b.receivedAt) - new Date(a.receivedAt));
-  }, [baseFilteredOrders, filterStatus]);
+  }, [allFilteredOrders, filterStatus, filterDateStart, filterDateEnd]);
   
   // Calculate Pagination
   const totalPages = Math.ceil(orderList.length / itemsPerPage);
@@ -190,13 +185,13 @@ export default function OrdersTab() {
     const outlets = filterOutlet === 'All' ? ['eltalg', 'tegara', 'mostashfa'] : [filterOutlet];
     
     return outlets.map(outletName => {
-      const outletOrders = orderList.filter(o => normalizeOutlet(o.outlet) === outletName);
+      const outletOrders = allFilteredOrders.filter(o => normalizeOutlet(o.outlet) === outletName);
       
       const received = outletOrders.filter(o => isInRange(o.receivedAt, filterDateStart, filterDateEnd)).length;
       const delivered = outletOrders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt, filterDateStart, filterDateEnd)).length;
       const returned = outletOrders.filter(o => o.status === 'Returned' && isInRange(o.returnedAt, filterDateStart, filterDateEnd)).length;
       const cancelled = outletOrders.filter(o => o.status === 'Cancelled' && isInRange(o.returnedAt, filterDateStart, filterDateEnd)).length;
-      const available = outletOrders.filter(o => o.status === 'Inventory').length;
+      const available = outletOrders.filter(o => o.status === 'Inventory' && isInRange(o.receivedAt, filterDateStart, filterDateEnd)).length;
       
       const totalMoney = outletOrders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt, filterDateStart, filterDateEnd)).reduce((sum, o) => sum + o.totalValue, 0);
       const paid = totalMoney; 
@@ -204,11 +199,11 @@ export default function OrdersTab() {
       const jumiaPay = outletOrders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt, filterDateStart, filterDateEnd) && o.paymentMethod?.toLowerCase().includes('jumia')).reduce((sum, o) => sum + o.totalValue, 0);
       const creditCard = outletOrders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt, filterDateStart, filterDateEnd) && (o.paymentMethod?.toLowerCase().includes('card') || o.paymentMethod?.toLowerCase().includes('visa'))).reduce((sum, o) => sum + o.totalValue, 0);
 
-      const sCount = outletOrders.filter(o => o.status === 'Inventory' && o.size === 'S').length;
-      const mCount = outletOrders.filter(o => o.status === 'Inventory' && o.size === 'M').length;
-      const lCount = outletOrders.filter(o => o.status === 'Inventory' && o.size === 'L').length;
+      const sCount = outletOrders.filter(o => o.status === 'Inventory' && o.size === 'S' && isInRange(o.receivedAt, filterDateStart, filterDateEnd)).length;
+      const mCount = outletOrders.filter(o => o.status === 'Inventory' && o.size === 'M' && isInRange(o.receivedAt, filterDateStart, filterDateEnd)).length;
+      const lCount = outletOrders.filter(o => o.status === 'Inventory' && o.size === 'L' && isInRange(o.receivedAt, filterDateStart, filterDateEnd)).length;
 
-      const storageFees = outletOrders.filter(o => o.status === 'Inventory').reduce((sum, o) => sum + (o.penalty || 0), 0);
+      const storageFees = outletOrders.filter(o => o.status === 'Inventory' && isInRange(o.receivedAt, filterDateStart, filterDateEnd)).reduce((sum, o) => sum + (o.penalty || 0), 0);
 
       return {
         outlet: outletName,
@@ -227,7 +222,7 @@ export default function OrdersTab() {
         lCount
       };
     });
-  }, [orderList, filterOutlet, filterDateStart, filterDateEnd]);
+  }, [allFilteredOrders, filterOutlet, filterDateStart, filterDateEnd]);
 
   const handleSimulateReceive = (e) => {
     e.preventDefault();

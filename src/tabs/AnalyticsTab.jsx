@@ -17,9 +17,9 @@ import { exportToPPTX } from '../utils/exportUtils';
 import { Presentation } from 'lucide-react';
 
 const normalizeOutlet = (val) => {
-  if (!val || val === 'Banha 1' || val === 'وبور الثلج' || val === 'وبور التلج') return 'eltalg';
-  if (val === 'Banha 2' || val === 'تجارة' || val === 'تجاره') return 'tegara';
-  if (val === 'Banha 3' || val === 'المستشفي' || val === 'المستشفى') return 'mostashfa';
+  if (!val || val === 'eltalg' || val === 'Banha 1' || val === 'وبور الثلج' || val === 'وبور التلج') return 'eltalg';
+  if (val === 'tegara' || val === 'Banha 2' || val === 'تجارة' || val === 'تجاره') return 'tegara';
+  if (val === 'mostashfa' || val === 'Banha 3' || val === 'المستشفي' || val === 'المستشفى') return 'mostashfa';
   return val;
 };
 

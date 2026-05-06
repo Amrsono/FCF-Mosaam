@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 import { ShieldAlert, Search, Filter, Download, Users, X, CheckCircle, AlertCircle as AlertIcon } from 'lucide-react';
 import { exportToExcel } from '../utils/exportUtils';
 
 export default function LogsTab() {
   const { t, language } = useLanguage();
+  const { user } = useAuth();
   const [logs, setLogs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -99,7 +101,7 @@ export default function LogsTab() {
   return (
     <div className="tab-pane" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: '100%' }}>
       <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-main)', borderBottom: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <div style={{ background: 'var(--color-primary)', padding: '0.5rem', borderRadius: 'var(--radius-md)' }}>
               <ShieldAlert size={24} color="white" />
@@ -107,14 +109,16 @@ export default function LogsTab() {
             <h2 style={{ margin: 0, color: 'var(--text-primary)' }}>{t('logs')}</h2>
           </div>
 
-          <button 
-            className="btn btn-primary" 
-            onClick={() => { setShowUserModal(true); fetchUsers(); }}
-            style={{ gap: '0.5rem' }}
-          >
-            <Users size={18} />
-            {t('manageUsers')}
-          </button>
+          {user?.role === 'admin' && (
+            <button 
+              className="btn btn-primary" 
+              onClick={() => { setShowUserModal(true); fetchUsers(); }}
+              style={{ gap: '0.5rem', display: 'flex', alignItems: 'center' }}
+            >
+              <Users size={18} />
+              <span>{t('manageUsers') || 'Manage Users'}</span>
+            </button>
+          )}
         </div>
         
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>

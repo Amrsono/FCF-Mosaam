@@ -188,6 +188,7 @@ export const translations = {
     weeklyTransactions: "Weekly Transactions",
     monthlyTransactions: "Monthly Transactions",
     pickedFromJumia: "Picked up from Jumia",
+    pickedFromBosta: "Picked up from Bosta",
     pickedUpByCustomer: "Picked Up by customer",
   },
   ar: {
@@ -379,6 +380,7 @@ export const translations = {
     weeklyTransactions: "المعاملات الأسبوعية",
     monthlyTransactions: "المعاملات الشهرية",
     pickedFromJumia: "استلام من جوميا",
+    pickedFromBosta: "استلام من بوسطة",
     pickedUpByCustomer: "استلام من قبل العميل",
   }
 };

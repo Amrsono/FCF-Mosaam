@@ -331,8 +331,8 @@ export default function OrdersTab() {
 
   const getStatusLabel = (status) => {
     switch (status) {
-      case 'Inventory': return t('inventoryStatus');
-      case 'Picked Up': return t('pickedUpStatus');
+      case 'Inventory': return t('pickedFromJumia');
+      case 'Picked Up': return t('pickedUpByCustomer');
       case 'Returned': return t('returnedStatus');
       case 'Cancelled': return language === 'ar' ? 'ملغي' : 'Cancelled';
       default: return status;
@@ -364,8 +364,8 @@ export default function OrdersTab() {
             
             <select className="input-field" style={{ flex: '1 1 140px' }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
               <option value="All">{language === 'ar' ? 'جميع الحالات' : 'All Statuses'}</option>
-              <option value="Inventory">{t('inventoryStatus')}</option>
-              <option value="Picked Up">{t('pickedUpStatus')}</option>
+              <option value="Inventory">{t('pickedFromJumia')}</option>
+              <option value="Picked Up">{t('pickedUpByCustomer')}</option>
               <option value="Cancelled">{language === 'ar' ? 'طلبات ملغية' : 'Cancelled Orders'}</option>
               <option value="Returned">{t('returnedStatus')}</option>
             </select>

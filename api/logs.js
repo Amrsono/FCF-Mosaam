@@ -43,7 +43,7 @@ export default async function handler(req, res) {
         data: {
           username: decoded.username,
           action,
-          details: details ? JSON.stringify(details) : null,
+          details: details ? (typeof details === 'string' ? details : JSON.stringify(details)) : null,
         },
       });
 

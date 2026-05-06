@@ -190,6 +190,18 @@ export const translations = {
     pickedFromJumia: "Picked up from Jumia",
     pickedFromBosta: "Picked up from Bosta",
     pickedUpByCustomer: "Picked Up by customer",
+
+    // Landing Page (Incubator)
+    selectService: "Select Service Module",
+    selectServiceDesc: "Choose a service to access relevant tools and management dashboards.",
+    jumiaDesc: "Jumia Hub: Inventory management, SLA tracking, and customer returns.",
+    bostaDesc: "Bosta Logistics: Delivery management and tracking.",
+    basataDesc: "Basata POS: Financial services, top-ups, and transaction reports.",
+    operationsTools: "Operations & Admin Tools",
+    backToHome: "Back to Home",
+    analyticsDesc: "Business intelligence and performance metrics.",
+    logsDesc: "System activity and security audit logs.",
+    callsDesc: "Customer support and call management.",
   },
   ar: {
     // Sidebar
@@ -382,5 +394,17 @@ export const translations = {
     pickedFromJumia: "استلام من جوميا",
     pickedFromBosta: "استلام من بوسطة",
     pickedUpByCustomer: "استلام من قبل العميل",
+
+    // Landing Page (Incubator)
+    selectService: "اختر وحدة الخدمة",
+    selectServiceDesc: "اختر خدمة للوصول إلى الأدوات ذات الصلة ولوحات إدارة العمليات.",
+    jumiaDesc: "مركز جوميا: إدارة المخزون، تتبع SLA، ومرتجعات العملاء.",
+    bostaDesc: "لوجستيات بوسطة: إدارة وتسليم الطرود وتتبعها.",
+    basataDesc: "بساطة POS: الخدمات المالية، الشحن، وتقارير المعاملات.",
+    operationsTools: "أدوات العمليات والإدارة",
+    backToHome: "العودة للرئيسية",
+    analyticsDesc: "تحليل البيانات ومقاييس الأداء.",
+    logsDesc: "سجلات نشاط النظام والتدقيق الأمني.",
+    callsDesc: "إدارة اتصالات وخدمة العملاء.",
   }
 };

@@ -13,6 +13,7 @@ import BostaTab from './tabs/BostaTab';
 import LogsTab from './tabs/LogsTab';
 import CallsLogTab from './tabs/CallsLogTab';
 import LoginPage from './pages/LoginPage';
+import LandingPage from './pages/LandingPage';
 
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
@@ -20,6 +21,7 @@ import { Languages, Moon, Sun, Monitor } from 'lucide-react';
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState('orders');
+  const [currentService, setCurrentService] = useState('home');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, logout, isLoading } = useAuth();
   const { t, language, toggleLanguage } = useLanguage();
@@ -37,20 +39,29 @@ function AppContent() {
 
   if (!user) return <LoginPage />;
 
-  const tabs = [
-    { id: 'orders',    label: t('inventory'), icon: <Package size={20} /> },
-    { id: 'customers', label: t('customers'), icon: <Users size={20} /> },
-    { id: 'sla',       label: t('sla'),       icon: <Clock size={20} /> },
-    { id: 'penalties', label: t('penalties'), icon: <AlertTriangle size={20} /> },
-    { id: 'basata',    label: t('basata'),    icon: <Zap size={20} /> },
-    { id: 'bosta',     label: t('bosta'),     icon: <Package size={20} /> },
-    { id: 'returned',  label: t('returned'),  icon: <Package size={20} /> },
-    { id: 'calls',     label: t('callsLog'),  icon: <Phone size={20} /> },
+  const allTabs = [
+    { id: 'orders',    label: t('inventory'), icon: <Package size={20} />, service: 'jumia' },
+    { id: 'customers', label: t('customers'), icon: <Users size={20} />, service: 'jumia' },
+    { id: 'sla',       label: t('sla'),       icon: <Clock size={20} />, service: 'jumia' },
+    { id: 'penalties', label: t('penalties'), icon: <AlertTriangle size={20} />, service: 'jumia' },
+    { id: 'returned',  label: t('returned'),  icon: <Package size={20} />, service: 'jumia' },
+    { id: 'basata',    label: t('basata'),    icon: <Zap size={20} />, service: 'basata' },
+    { id: 'bosta',     label: t('bosta'),     icon: <Package size={20} />, service: 'bosta' },
+    { id: 'calls',     label: t('callsLog'),  icon: <Phone size={20} />, service: 'admin' },
     ...(user?.role === 'admin' ? [
-      { id: 'analytics', label: t('analytics'), icon: <BarChart3 size={20} /> },
-      { id: 'logs', label: t('logs'), icon: <Shield size={20} /> }
+      { id: 'analytics', label: t('analytics'), icon: <BarChart3 size={20} />, service: 'admin' },
+      { id: 'logs', label: t('logs'), icon: <Shield size={20} />, service: 'admin' }
     ] : []),
   ];
+
+  const handleSelectService = (serviceId, tabId) => {
+    setCurrentService(serviceId);
+    setActiveTab(tabId);
+  };
+
+  const visibleTabs = currentService === 'home' 
+    ? [] 
+    : allTabs.filter(tab => tab.service === currentService);
 
   return (
     <div className="app-container" dir={language === 'ar' ? 'rtl' : 'ltr'}>
@@ -60,20 +71,26 @@ function AppContent() {
           <button className="menu-toggle" onClick={() => setIsMobileMenuOpen(true)}>
             <Menu size={24} />
           </button>
-          <h2>{tabs.find(t => t.id === activeTab)?.label}</h2>
+          <h2>{currentService === 'home' ? t('selectService') : allTabs.find(t => t.id === activeTab)?.label}</h2>
         </header>
 
         <section className="content-area">
-          {activeTab === 'orders'    && <OrdersTab />}
-          {activeTab === 'customers' && <CustomersTab />}
-          {activeTab === 'sla'       && <SLATab />}
-          {activeTab === 'penalties' && <ParkedPenaltiesTab />}
-          {activeTab === 'basata'    && <BasataTab />}
-          {activeTab === 'bosta'     && <BostaTab />}
-          {activeTab === 'returned'  && <ReturnedTab />}
-          {activeTab === 'calls'     && <CallsLogTab />}
-          {activeTab === 'analytics' && user?.role === 'admin' && <AnalyticsTab />}
-          {activeTab === 'logs'      && user?.role === 'admin' && <LogsTab />}
+          {currentService === 'home' ? (
+            <LandingPage onSelectService={handleSelectService} />
+          ) : (
+            <>
+              {activeTab === 'orders'    && <OrdersTab />}
+              {activeTab === 'customers' && <CustomersTab />}
+              {activeTab === 'sla'       && <SLATab />}
+              {activeTab === 'penalties' && <ParkedPenaltiesTab />}
+              {activeTab === 'basata'    && <BasataTab />}
+              {activeTab === 'bosta'     && <BostaTab />}
+              {activeTab === 'returned'  && <ReturnedTab />}
+              {activeTab === 'calls'     && <CallsLogTab />}
+              {activeTab === 'analytics' && user?.role === 'admin' && <AnalyticsTab />}
+              {activeTab === 'logs'      && user?.role === 'admin' && <LogsTab />}
+            </>
+          )}
         </section>
       </main>
 
@@ -98,7 +115,24 @@ function AppContent() {
         </div>
 
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1, padding: '0 1.25rem', overflowY: 'auto' }}>
-          {tabs.map((tab) => (
+          {currentService !== 'home' && (
+            <button
+              className="nav-item"
+              onClick={() => setCurrentService('home')}
+              style={{ 
+                marginBottom: '1rem', 
+                background: 'rgba(var(--color-primary-rgb), 0.1)', 
+                color: 'var(--color-primary)',
+                border: '1px dashed var(--color-primary)',
+                justifyContent: 'center'
+              }}
+            >
+              <LayoutDashboard size={20} />
+              {t('backToHome')}
+            </button>
+          )}
+          
+          {visibleTabs.map((tab) => (
             <button
               key={tab.id}
               className={`nav-item ${activeTab === tab.id ? 'active' : ''}`}

@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 import { prisma } from './_lib/prisma.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fcf-mosaam-secret-change-in-production';
@@ -74,6 +75,51 @@ export default async function handler(req, res) {
       });
 
       return res.status(200).json(updatedUser);
+    }
+
+    // POST: Create a new user
+    if (req.method === 'POST') {
+      const { username, password, role, outlet } = req.body;
+
+      if (!username || !password || !role || !outlet) {
+        return res.status(400).json({ error: 'Username, password, role, and outlet are required.' });
+      }
+
+      // Check if user already exists
+      const existingUser = await prisma.admin.findUnique({
+        where: { username: username.toLowerCase() }
+      });
+
+      if (existingUser) {
+        return res.status(400).json({ error: 'Username already exists.' });
+      }
+
+      const passwordHash = await bcrypt.hash(password, 10);
+
+      const newUser = await prisma.admin.create({
+        data: {
+          username: username.toLowerCase(),
+          passwordHash,
+          role,
+          outlet
+        }
+      });
+
+      // Log the creation
+      await prisma.userLog.create({
+        data: {
+          username: decoded.username,
+          action: 'Create User',
+          details: JSON.stringify({ targetUser: username.toLowerCase(), role, outlet })
+        }
+      });
+
+      return res.status(201).json({
+        id: newUser.id,
+        username: newUser.username,
+        role: newUser.role,
+        outlet: newUser.outlet
+      });
     }
 
     return res.status(405).json({ error: 'Method Not Allowed' });

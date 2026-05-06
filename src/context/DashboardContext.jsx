@@ -224,6 +224,7 @@ export const DashboardProvider = ({ children }) => {
       });
       if (res.ok) {
         await fetchData();
+        logUserAction('Mark Order Picked Up', { id: orderId, paymentMethod });
       }
     } catch (err) {
       console.error(err);
@@ -239,6 +240,7 @@ export const DashboardProvider = ({ children }) => {
       });
       if (res.ok) {
         await fetchData();
+        logUserAction('Mark Order Returned', { id: orderId });
       }
     } catch (err) {
       console.error(err);
@@ -254,6 +256,7 @@ export const DashboardProvider = ({ children }) => {
       });
       if (res.ok) {
         await fetchData();
+        logUserAction('Cancel Order', { id: orderId, reason });
         return { success: true };
       }
     } catch (err) {
@@ -270,6 +273,7 @@ export const DashboardProvider = ({ children }) => {
       });
       if (res.ok) {
         await fetchData();
+        logUserAction('Delete Order', { id: orderId, reason });
         return { success: true };
       }
     } catch (err) {
@@ -286,6 +290,7 @@ export const DashboardProvider = ({ children }) => {
       });
       if (res.ok) {
         await fetchData();
+        logUserAction('Revert Order to Inventory', { id: orderId });
         return { success: true };
       }
     } catch (err) {
@@ -317,7 +322,10 @@ export const DashboardProvider = ({ children }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderData)
       });
-      if (res.ok) await fetchData();
+      if (res.ok) {
+        await fetchData();
+        logUserAction('Receive Bosta Order', { id: orderData.id, phone: orderData.customerPhone, amount: Number(orderData.totalValue) || 0 });
+      }
     } catch (err) {
       console.error(err);
     }
@@ -330,7 +338,10 @@ export const DashboardProvider = ({ children }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: orderId, action: 'PICK_UP' })
       });
-      if (res.ok) await fetchData();
+      if (res.ok) {
+        await fetchData();
+        logUserAction('Mark Bosta Order Picked Up', { id: orderId });
+      }
     } catch (err) {
       console.error(err);
     }
@@ -343,7 +354,10 @@ export const DashboardProvider = ({ children }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: orderId, action: 'RETURN' })
       });
-      if (res.ok) await fetchData();
+      if (res.ok) {
+        await fetchData();
+        logUserAction('Mark Bosta Order Returned', { id: orderId });
+      }
     } catch (err) {
       console.error(err);
     }
@@ -358,6 +372,7 @@ export const DashboardProvider = ({ children }) => {
       });
       if (res.ok) {
         await fetchData();
+        logUserAction('Cancel Bosta Order', { id: orderId, reason });
         return { success: true };
       }
     } catch (err) {
@@ -374,6 +389,7 @@ export const DashboardProvider = ({ children }) => {
       });
       if (res.ok) {
         await fetchData();
+        logUserAction('Delete Bosta Order', { id: orderId, reason });
         return { success: true };
       }
     } catch (err) {
@@ -390,6 +406,7 @@ export const DashboardProvider = ({ children }) => {
       });
       if (res.ok) {
         await fetchData();
+        logUserAction('Revert Bosta Order to Inventory', { id: orderId });
         return { success: true };
       }
     } catch (err) {
@@ -406,6 +423,7 @@ export const DashboardProvider = ({ children }) => {
       });
       if (res.ok) {
         await fetchData();
+        logUserAction('Update Order Info', { id: orderId, ...updatedData });
         return { success: true };
       }
     } catch (err) {
@@ -422,6 +440,7 @@ export const DashboardProvider = ({ children }) => {
       });
       if (res.ok) {
         await fetchData();
+        logUserAction('Update Bosta Order Info', { id: orderId, ...updatedData });
         return { success: true };
       }
     } catch (err) {
@@ -439,6 +458,7 @@ export const DashboardProvider = ({ children }) => {
       });
       if (res.ok) {
         await fetchData();
+        logUserAction('Add Basata Transaction', { category, serviceProvider, amount, transactionId });
         return { success: true };
       }
       return { success: false, error: await res.text() };
@@ -469,6 +489,7 @@ export const DashboardProvider = ({ children }) => {
       });
       if (res.ok) {
         await fetchData();
+        logUserAction('Receive Customer Return', { id: returnData.orderId, phone: returnData.customerPhone });
         return { success: true };
       }
     } catch (err) {
@@ -483,7 +504,10 @@ export const DashboardProvider = ({ children }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id })
       });
-      if (res.ok) await fetchData();
+      if (res.ok) {
+        await fetchData();
+        logUserAction('Mark Return to Jumia', { id });
+      }
     } catch (err) {
       console.error(err);
     }
@@ -496,7 +520,10 @@ export const DashboardProvider = ({ children }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: returnId, action: 'REVERT' })
       });
-      if (res.ok) await fetchData();
+      if (res.ok) {
+        await fetchData();
+        logUserAction('Revert Customer Return', { id: returnId });
+      }
     } catch (err) {
       console.error(err);
     }

@@ -51,6 +51,15 @@ export default async function handler(req, res) {
       { expiresIn: '8h' }
     );
 
+    // Log the successful login
+    await prisma.userLog.create({
+      data: {
+        username: admin.username,
+        action: 'User Login',
+        details: JSON.stringify({ outlet: admin.outlet, role: admin.role })
+      }
+    });
+
     console.log(`[Login] Success: ${username}`);
     return res.status(200).json({
       token,

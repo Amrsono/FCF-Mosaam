@@ -22,6 +22,14 @@ export default function LogsTab() {
   const [searchAction, setSearchAction] = useState('');
   const [dateFilter, setDateFilter] = useState('');
 
+  const [newUsername, setNewUsername] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [newRole, setNewRole] = useState('staff');
+  const [newOutlet, setNewOutlet] = useState('eltalg');
+  const [isAddingUser, setIsAddingUser] = useState(false);
+  const [addUserError, setAddUserError] = useState('');
+  const [addUserSuccess, setAddUserSuccess] = useState('');
+
   useEffect(() => {
     fetchLogs();
   }, []);
@@ -42,6 +50,43 @@ export default function LogsTab() {
       setError(err.message);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleAddUser = async (e) => {
+    e.preventDefault();
+    setAddUserError('');
+    setAddUserSuccess('');
+    setIsAddingUser(true);
+
+    try {
+      const res = await fetch('/api/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('fcf_token')}`
+        },
+        body: JSON.stringify({
+          username: newUsername,
+          password: newPassword,
+          role: newRole,
+          outlet: newOutlet
+        })
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to add user');
+      }
+
+      setAddUserSuccess(language === 'ar' ? 'تم إضافة المستخدم بنجاح' : 'User added successfully');
+      setNewUsername('');
+      setNewPassword('');
+      fetchUsers(); // Refresh the list
+    } catch (err) {
+      setAddUserError(err.message);
+    } finally {
+      setIsAddingUser(false);
     }
   };
 
@@ -263,10 +308,64 @@ export default function LogsTab() {
       {/* User Management Modal */}
       {showUserModal && (
         <div className="modal-overlay">
-          <div className="modal-content glass-panel" style={{ maxWidth: '600px', padding: '2rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-              <h3 style={{ margin: 0, color: 'white' }}>{t('userBranchAssignment')}</h3>
-              <button className="btn-icon" onClick={() => setShowUserModal(false)}><X size={20} /></button>
+          <div className="modal-content" style={{ maxWidth: '800px', width: '95%' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Users size={24} />
+                {t('manageUsers')}
+              </h2>
+              <button onClick={() => setShowUserModal(false)} className="btn-icon">
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Add New User Form */}
+            <div className="glass-panel" style={{ padding: '1.5rem', marginBottom: '2rem', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
+              <h3 style={{ marginTop: 0, marginBottom: '1rem', fontSize: '1.1rem' }}>{language === 'ar' ? 'إضافة مستخدم جديد' : 'Add New User'}</h3>
+              <form onSubmit={handleAddUser} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', alignItems: 'end' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem' }}>{language === 'ar' ? 'اسم المستخدم' : 'Username'}</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={newUsername}
+                    onChange={(e) => setNewUsername(e.target.value)}
+                    required
+                    placeholder="e.g. mhesham"
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem' }}>{language === 'ar' ? 'كلمة المرور' : 'Password'}</label>
+                  <input
+                    type="password"
+                    className="form-input"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                    placeholder="••••••••"
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem' }}>{language === 'ar' ? 'الدور' : 'Role'}</label>
+                  <select className="form-input" value={newRole} onChange={(e) => setNewRole(e.target.value)}>
+                    <option value="staff">{language === 'ar' ? 'موظف' : 'Staff'}</option>
+                    <option value="admin">{language === 'ar' ? 'مدير' : 'Admin'}</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem' }}>{language === 'ar' ? 'الفرع' : 'Branch'}</label>
+                  <select className="form-input" value={newOutlet} onChange={(e) => setNewOutlet(e.target.value)}>
+                    <option value="eltalg">Eltalg</option>
+                    <option value="tegara">Tegara</option>
+                    <option value="mostashfa">Mostashfa</option>
+                  </select>
+                </div>
+                <button type="submit" className="btn btn-primary" disabled={isAddingUser} style={{ height: '42px' }}>
+                  {isAddingUser ? '...' : (language === 'ar' ? 'إضافة' : 'Add User')}
+                </button>
+              </form>
+              {addUserError && <p style={{ color: '#ef4444', fontSize: '0.85rem', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><AlertIcon size={14} /> {addUserError}</p>}
+              {addUserSuccess && <p style={{ color: '#10b981', fontSize: '0.85rem', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><CheckCircle size={14} /> {addUserSuccess}</p>}
             </div>
 
             {userUpdateStatus.message && (

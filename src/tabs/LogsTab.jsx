@@ -320,7 +320,8 @@ export default function LogsTab() {
               )}
             </div>
 
-            <div style={{ marginTop: '2rem', textAlign: 'right' }}>
+            <div style={{ marginTop: '2rem', textAlign: 'right', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+              <button className="btn btn-primary" onClick={() => setShowUserModal(false)}>{language === 'ar' ? 'تم' : 'OK'}</button>
               <button className="btn btn-outline" onClick={() => setShowUserModal(false)}>{t('cancel')}</button>
             </div>
           </div>

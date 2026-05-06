@@ -255,7 +255,7 @@ export default function AnalyticsTab() {
   const bostaProfitByOutlet = getBostaProfitByOutlet(bostaPickedUp);
 
   // --- GRAND TOTAL ---
-  const grandTotal = jumiaProfit + bostaProfit + activePenalties;
+  const grandTotal = jumiaProfit + bostaProfit + basataVolume + activePenalties;
 
   // --- CALLS LOG ANALYTICS ---
   const callsInPeriod = (callLogs || []).filter(l => isInRange(l.createdAt) && (selectedOutlet === 'All' || normalizeOutlet(l.outlet) === selectedOutlet));
@@ -371,6 +371,7 @@ export default function AnalyticsTab() {
   const revenueStreamData = [
     { name: t('jumia'), value: jumiaProfit, color: CHART_COLORS.jumia },
     { name: t('bosta'), value: bostaProfit, color: CHART_COLORS.bosta },
+    { name: t('basata'), value: basataVolume, color: CHART_COLORS.basata },
     { name: t('penalties'), value: activePenalties, color: CHART_COLORS.warning },
   ];
 
@@ -641,6 +642,7 @@ export default function AnalyticsTab() {
             {[
               { label: t('jumia'), value: jumiaProfit, color: CHART_COLORS.jumia },
               { label: t('bosta'), value: bostaProfit, color: CHART_COLORS.bosta },
+              { label: t('basata'), value: basataVolume, color: CHART_COLORS.basata },
               { label: t('penalties'), value: activePenalties, color: CHART_COLORS.warning },
             ].map(s => (
               <div key={s.label} style={{ flex: '1 1 auto', minWidth: '80px', textAlign: 'center' }}>
@@ -879,7 +881,7 @@ export default function AnalyticsTab() {
               </tr>
               <tr style={{ borderTop: '2px solid var(--border-color)', background: 'var(--bg-overlay)' }}>
                 <td style={{ color: 'var(--text-primary)', fontWeight: 800 }}>{language === 'ar' ? 'الإجمالي' : 'TOTAL'}</td>
-                <td style={{ color: 'var(--text-muted)', fontWeight: 700 }}>{(jumiaCash + bostaCash).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP</td>
+                <td style={{ color: 'var(--text-muted)', fontWeight: 700 }}>{(jumiaCash + bostaCash + basataVolume).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP</td>
                 <td style={{ color: 'var(--text-primary)', fontWeight: 800 }}>{grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP</td>
                 <td style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{jumiaPickedUp.length + bostaPickedUp.length}</td>
                 <td style={{ color: 'var(--color-danger)', fontWeight: 700 }}>{jumiaReturned.length + bostaReturned.length}</td>

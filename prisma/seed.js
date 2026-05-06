@@ -86,7 +86,8 @@ async function main() {
   const specificUsers = [
     { username: 'mhesham', password: 'Fcftegara', outlet: 'tegara' },
     { username: 'mhlal', password: 'Fcfmostashfa', outlet: 'mostashfa' },
-    { username: 'mkhafajy', password: 'Fcfkhafajy', outlet: 'eltalg' }
+    { username: 'mkhafajy', password: 'Fcfkhafajy', outlet: 'eltalg' },
+    { username: 'aabdelfattah', password: 'Fcfabdelfattah', outlet: 'tegara' }
   ];
 
   for (const user of specificUsers) {

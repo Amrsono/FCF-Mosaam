@@ -1139,19 +1139,52 @@ export default function OrdersTab() {
             <form onSubmit={async (e) => {
               e.preventDefault();
               const res = await receiveCustomerReturn(newReturn);
-              if (res.success) setShowReturnModal(false);
+              if (res.success) {
+                setShowReturnModal(false);
+                setNewReturn({
+                  orderId: '',
+                  customerPhone: '',
+                  customerName: '',
+                  description: '',
+                  reason: '',
+                  outlet: user?.outlet || 'eltalg'
+                });
+              }
             }}>
-              <div className="input-group">
-                <label className="input-label">{t('phone')}</label>
-                <input required className="input-field" value={newReturn.customerPhone} onChange={e => setNewReturn({...newReturn, customerPhone: e.target.value})} />
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <div className="input-group" style={{ flex: 1 }}>
+                  <label className="input-label">{t('orderId')}</label>
+                  <input className="input-field" value={newReturn.orderId} onChange={e => setNewReturn({...newReturn, orderId: e.target.value})} placeholder="e.g. ORD..." />
+                </div>
+                <div className="input-group" style={{ flex: 1 }}>
+                   <label className="input-label">{t('phone')}</label>
+                   <input required className="input-field" value={newReturn.customerPhone} onChange={e => setNewReturn({...newReturn, customerPhone: e.target.value})} placeholder="01..." />
+                </div>
               </div>
+              
+              <div className="input-group" style={{ marginTop: '1rem' }}>
+                <label className="input-label">{t('customer')}</label>
+                <input required className="input-field" value={newReturn.customerName} onChange={e => setNewReturn({...newReturn, customerName: e.target.value})} placeholder={t('name')} />
+              </div>
+
               <div className="input-group" style={{ marginTop: '1rem' }}>
                 <label className="input-label">{t('description')}</label>
-                <textarea className="input-field" required value={newReturn.description} onChange={e => setNewReturn({...newReturn, description: e.target.value})} rows={3} />
+                <textarea className="input-field" required value={newReturn.description} onChange={e => setNewReturn({...newReturn, description: e.target.value})} rows={3} placeholder="Items..." />
               </div>
+
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
                 <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>{t('confirm')}</button>
-                <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowReturnModal(false)}>{t('cancel')}</button>
+                <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => {
+                  setShowReturnModal(false);
+                  setNewReturn({
+                    orderId: '',
+                    customerPhone: '',
+                    customerName: '',
+                    description: '',
+                    reason: '',
+                    outlet: user?.outlet || 'eltalg'
+                  });
+                }}>{t('cancel')}</button>
               </div>
             </form>
           </div>

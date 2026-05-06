@@ -244,6 +244,16 @@ export default function AnalyticsTab() {
   };
   const basataCountByOutlet = getBasataCountByOutlet(activeBasata);
 
+  const getJumiaCountByOutlet = (list) => {
+    return list.reduce((acc, o) => {
+      const outlet = normalizeOutlet(o.outlet);
+      acc[outlet] = (acc[outlet] || 0) + 1;
+      return acc;
+    }, { eltalg: 0, tegara: 0, mostashfa: 0 });
+  };
+  const jumiaPickedUpByOutlet = getJumiaCountByOutlet(jumiaPickedUp);
+  const jumiaInventoryByOutlet = getJumiaCountByOutlet(jumiaInventory);
+
   const getJumiaProfitByOutlet = (list) => {
     return list.reduce((acc, o) => {
       const outlet = normalizeOutlet(o.outlet);
@@ -613,6 +623,12 @@ export default function AnalyticsTab() {
               data={[
                 { group: 'Overview', metric: 'Grand Total Revenue', value: `${grandTotal} EGP` },
                 { group: 'Jumia', metric: 'Cash Collected', value: `${jumiaCash} EGP` },
+                { group: 'Jumia', metric: `Picked Up (${t('eltalg')})`, value: jumiaPickedUpByOutlet.eltalg },
+                { group: 'Jumia', metric: `In Stock (${t('eltalg')})`, value: jumiaInventoryByOutlet.eltalg },
+                { group: 'Jumia', metric: `Picked Up (${t('tegara')})`, value: jumiaPickedUpByOutlet.tegara },
+                { group: 'Jumia', metric: `In Stock (${t('tegara')})`, value: jumiaInventoryByOutlet.tegara },
+                { group: 'Jumia', metric: `Picked Up (${t('mostashfa')})`, value: jumiaPickedUpByOutlet.mostashfa },
+                { group: 'Jumia', metric: `In Stock (${t('mostashfa')})`, value: jumiaInventoryByOutlet.mostashfa },
                 { group: 'Jumia', metric: t('pickedUpByCustomer'), value: jumiaPickedUp.length },
                 { group: 'Jumia', metric: t('returnedStatus'), value: jumiaReturned.length },
                 { group: 'Jumia', metric: 'Penalties Pool', value: `${activePenalties} EGP` },

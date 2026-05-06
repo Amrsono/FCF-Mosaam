@@ -52,9 +52,13 @@ export default function LogsTab() {
       const res = await fetch('/api/users', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (!res.ok) throw new Error('Failed to fetch users');
       const data = await res.json();
-      setAllUsersList(data);
+      // Filter out main admin accounts from branch rotation management
+      const manageableUsers = data.filter(u => 
+        u.username.toLowerCase() !== 'admin' && 
+        u.username.toLowerCase() !== 'ezz'
+      );
+      setAllUsersList(manageableUsers);
     } catch (err) {
       setUserUpdateStatus({ type: 'error', message: err.message });
     } finally {

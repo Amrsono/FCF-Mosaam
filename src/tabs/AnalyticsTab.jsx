@@ -831,7 +831,7 @@ export default function AnalyticsTab() {
             <thead>
               <tr>
                 <th>{t('stream')}</th>
-                <th>{language === 'ar' ? 'إجمالي التحصيل' : 'COD Collected'}</th>
+                <th>{language === 'ar' ? 'إجمالي مبلغ المعاملات' : 'Transactions Amount'}</th>
                 <th>{language === 'ar' ? 'الأرباح' : 'Profit'}</th>
                 <th>{t('pickedUpByCustomer')}</th>
                 <th>{t('returnedStatus')}</th>

@@ -53,10 +53,10 @@ export default function LogsTab() {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
-      // Filter out main admin accounts from branch rotation management
+      // Filter out admin and legacy generic accounts from branch rotation management
+      const excludedUsers = ['admin', 'ezz', 'staff', 'banha1', 'banha2', 'banha3'];
       const manageableUsers = data.filter(u => 
-        u.username.toLowerCase() !== 'admin' && 
-        u.username.toLowerCase() !== 'ezz'
+        !excludedUsers.includes(u.username.toLowerCase())
       );
       setAllUsersList(manageableUsers);
     } catch (err) {

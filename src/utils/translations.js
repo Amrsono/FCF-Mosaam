@@ -22,7 +22,13 @@ export const translations = {
     action: "Action",
     details: "Details",
     allActions: "All Actions",
-    allUsers: "All Users",
+     allUsers: "All Users",
+    manageUsers: "Manage Users",
+    userBranchAssignment: "User Branch Assignment",
+    assignBranch: "Assign Branch",
+    assignedBranch: "Assigned Branch",
+    selectBranch: "Select Branch",
+    successUpdateUser: "User branch updated successfully",
 
     // Common
     confirm: "Confirm",
@@ -207,7 +213,13 @@ export const translations = {
     action: "الإجراء",
     details: "التفاصيل",
     allActions: "جميع الإجراءات",
-    allUsers: "جميع المستخدمين",
+     allUsers: "جميع المستخدمين",
+    manageUsers: "إدارة المستخدمين",
+    userBranchAssignment: "تعيين فروع المستخدمين",
+    assignBranch: "تعيين فرع",
+    assignedBranch: "الفرع المعين",
+    selectBranch: "اختر الفرع",
+    successUpdateUser: "تم تحديث فرع المستخدم بنجاح",
 
     // Common
     confirm: "تأكيد",

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
-import { ShieldAlert, Search, Filter, Download } from 'lucide-react';
+import { ShieldAlert, Search, Filter, Download, Users, X, CheckCircle, AlertCircle as AlertIcon } from 'lucide-react';
 import { exportToExcel } from '../utils/exportUtils';
 
 export default function LogsTab() {
@@ -8,6 +8,12 @@ export default function LogsTab() {
   const [logs, setLogs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // User Management State
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [allUsersList, setAllUsersList] = useState([]);
+  const [isUsersLoading, setIsUsersLoading] = useState(false);
+  const [userUpdateStatus, setUserUpdateStatus] = useState({ type: '', message: '' });
 
   // Filters
   const [searchUser, setSearchUser] = useState('');
@@ -37,6 +43,49 @@ export default function LogsTab() {
     }
   };
 
+  const fetchUsers = async () => {
+    try {
+      setIsUsersLoading(true);
+      const token = localStorage.getItem('fcf_token');
+      const res = await fetch('/api/users', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('Failed to fetch users');
+      const data = await res.json();
+      setAllUsersList(data);
+    } catch (err) {
+      setUserUpdateStatus({ type: 'error', message: err.message });
+    } finally {
+      setIsUsersLoading(false);
+    }
+  };
+
+  const handleUpdateUserBranch = async (username, newOutlet) => {
+    try {
+      setUserUpdateStatus({ type: '', message: '' });
+      const token = localStorage.getItem('fcf_token');
+      const res = await fetch('/api/users', {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ username, outlet: newOutlet })
+      });
+      
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to update user');
+      }
+      
+      setUserUpdateStatus({ type: 'success', message: t('successUpdateUser') });
+      fetchUsers(); // Refresh list
+      fetchLogs();  // Refresh logs to show the update action
+    } catch (err) {
+      setUserUpdateStatus({ type: 'error', message: err.message });
+    }
+  };
+
   const filteredLogs = logs.filter(log => {
     const matchUser = log.username.toLowerCase().includes(searchUser.toLowerCase());
     const matchAction = log.action.toLowerCase().includes(searchAction.toLowerCase());
@@ -44,18 +93,28 @@ export default function LogsTab() {
     return matchUser && matchAction && matchDate;
   });
 
-  // Extract unique actions and users for dropdowns (optional, but requested filtering)
   const uniqueActions = [...new Set(logs.map(l => l.action))];
   const uniqueUsers = [...new Set(logs.map(l => l.username))];
 
   return (
     <div className="tab-pane" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: '100%' }}>
       <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-main)', borderBottom: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <div style={{ background: 'var(--color-primary)', padding: '0.5rem', borderRadius: 'var(--radius-md)' }}>
-            <ShieldAlert size={24} color="white" />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{ background: 'var(--color-primary)', padding: '0.5rem', borderRadius: 'var(--radius-md)' }}>
+              <ShieldAlert size={24} color="white" />
+            </div>
+            <h2 style={{ margin: 0, color: 'var(--text-primary)' }}>{t('logs')}</h2>
           </div>
-          <h2 style={{ margin: 0, color: 'var(--text-primary)' }}>{t('logs')}</h2>
+
+          <button 
+            className="btn btn-primary" 
+            onClick={() => { setShowUserModal(true); fetchUsers(); }}
+            style={{ gap: '0.5rem' }}
+          >
+            <Users size={18} />
+            {t('manageUsers')}
+          </button>
         </div>
         
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
@@ -92,7 +151,6 @@ export default function LogsTab() {
             />
           </div>
 
-          {/* Excel export — exports current filtered view */}
           <button
             className="btn btn-outline"
             style={{ color: 'var(--color-success)', borderColor: 'rgba(50,255,100,0.3)', padding: '0.5rem 1rem', fontSize: '0.85rem', alignSelf: 'flex-end', gap: '0.4rem' }}
@@ -193,6 +251,77 @@ export default function LogsTab() {
           )}
         </div>
       </div>
+
+      {/* User Management Modal */}
+      {showUserModal && (
+        <div className="modal-overlay">
+          <div className="modal-content glass-panel" style={{ maxWidth: '600px', padding: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+              <h3 style={{ margin: 0, color: 'white' }}>{t('userBranchAssignment')}</h3>
+              <button className="btn-icon" onClick={() => setShowUserModal(false)}><X size={20} /></button>
+            </div>
+
+            {userUpdateStatus.message && (
+              <div style={{ 
+                padding: '1rem', 
+                borderRadius: 'var(--radius-md)', 
+                background: userUpdateStatus.type === 'success' ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
+                color: userUpdateStatus.type === 'success' ? '#4ade80' : '#f87171',
+                marginBottom: '1.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                border: `1px solid ${userUpdateStatus.type === 'success' ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'}`
+              }}>
+                {userUpdateStatus.type === 'success' ? <CheckCircle size={18} /> : <AlertIcon size={18} />}
+                {userUpdateStatus.message}
+              </div>
+            )}
+
+            <div style={{ maxHeight: '400px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {isUsersLoading ? (
+                <div style={{ textAlign: 'center', padding: '2rem' }}>{t('loading')}</div>
+              ) : allUsersList.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '2rem' }}>{t('noData')}</div>
+              ) : (
+                allUsersList.map(u => (
+                  <div key={u.id} style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between', 
+                    padding: '1rem', 
+                    background: 'rgba(255,255,255,0.03)', 
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px solid var(--border-color)'
+                  }}>
+                    <div>
+                      <div style={{ fontWeight: 600, color: 'white' }}>{u.username}</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{u.role}</div>
+                    </div>
+                    
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                      <select 
+                        value={u.outlet}
+                        onChange={(e) => handleUpdateUserBranch(u.username, e.target.value)}
+                        className="input-field"
+                        style={{ padding: '0.4rem 0.75rem', fontSize: '0.85rem', width: 'auto', minWidth: '130px' }}
+                      >
+                        <option value="eltalg">{t('eltalg')}</option>
+                        <option value="tegara">{t('tegara')}</option>
+                        <option value="mostashfa">{t('mostashfa')}</option>
+                      </select>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div style={{ marginTop: '2rem', textAlign: 'right' }}>
+              <button className="btn btn-outline" onClick={() => setShowUserModal(false)}>{t('cancel')}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

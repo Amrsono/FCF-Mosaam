@@ -81,6 +81,31 @@ async function main() {
     });
   }
   console.log('✅ Created banha staff profiles (banha1, banha2, banha3).');
+
+  // Add specific branch staff logins
+  const specificUsers = [
+    { username: 'mhesham', password: 'Fcftegara', outlet: 'tegara' },
+    { username: 'Mhlal', password: 'Fcfmostashfa', outlet: 'mostashfa' }
+  ];
+
+  for (const user of specificUsers) {
+    const specificHash = await bcrypt.hash(user.password, 10);
+    await prisma.admin.upsert({
+      where: { username: user.username },
+      update: {
+        passwordHash: specificHash,
+        outlet: user.outlet,
+        role: 'staff'
+      },
+      create: {
+        username: user.username,
+        passwordHash: specificHash,
+        outlet: user.outlet,
+        role: 'staff'
+      }
+    });
+  }
+  console.log('✅ Created specific branch staff profiles (mhesham, Mhlal).');
 }
 
 main()

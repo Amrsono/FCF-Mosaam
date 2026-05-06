@@ -87,7 +87,7 @@ export default function OrdersTab() {
     category: 'Electronics',
     customerName: '',
     outlet: user?.outlet || 'eltalg',
-    size: 'M',
+    size: '',
     paymentMethod: 'Cash'
   });
 
@@ -254,7 +254,7 @@ export default function OrdersTab() {
 
   const handleSimulateReceive = (e) => {
     e.preventDefault();
-    if (!newOrder.id || !newOrder.customerPhone || !newOrder.customerName || !newOrder.description || !newOrder.totalValue) {
+    if (!newOrder.id || !newOrder.customerPhone || !newOrder.customerName || !newOrder.description || !newOrder.totalValue || !newOrder.size) {
       alert(language === 'ar' ? 'يرجى ملء جميع الحقول المطلوبة' : 'Please fill all required fields');
       return;
     }
@@ -273,7 +273,7 @@ export default function OrdersTab() {
     setShowSimulateModal(false);
     setNewOrder({ 
       id: '', customerPhone: '', description: '', totalValue: '', category: 'Electronics', customerName: '',
-      outlet: user?.outlet || 'eltalg', size: 'M', paymentMethod: 'Cash'
+      outlet: user?.outlet || 'eltalg', size: '', paymentMethod: 'Cash'
     });
   };
 
@@ -863,7 +863,8 @@ export default function OrdersTab() {
               </div>
               <div className="input-group">
                 <label className="input-label">{t('packageSize')}</label>
-                <select className="input-field" value={newOrder.size} onChange={e => setNewOrder({...newOrder, size: e.target.value})}>
+                <select required className="input-field" value={newOrder.size} onChange={e => setNewOrder({...newOrder, size: e.target.value})}>
+                  <option value="" disabled>{language === 'ar' ? 'اختر المقاس' : 'Select Size'}</option>
                   <option value="S">{t('small')}</option>
                   <option value="M">{t('medium')}</option>
                   <option value="L">{t('big')}</option>
@@ -993,6 +994,10 @@ export default function OrdersTab() {
                   className="btn btn-primary" 
                   style={{ flex: 1 }}
                   onClick={async () => {
+                    if (!editingOrder.id || !editingOrder.customerPhone || !editingOrder.description || !editingOrder.totalValue || !editingOrder.size) {
+                      alert(language === 'ar' ? 'يرجى ملء جميع الحقول المطلوبة' : 'Please fill all required fields');
+                      return;
+                    }
                     const res = await updateOrder(originalOrderId, {
                       newId: editingOrder.id,
                       customerPhone: editingOrder.customerPhone,

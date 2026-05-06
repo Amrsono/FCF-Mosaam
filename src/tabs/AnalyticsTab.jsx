@@ -235,6 +235,14 @@ export default function AnalyticsTab() {
     }, { eltalg: 0, tegara: 0, mostashfa: 0 });
   };
   const basataByOutlet = getBasataByOutlet(activeBasata);
+  const getBasataCountByOutlet = (list) => {
+    return list.reduce((acc, t) => {
+      const outlet = normalizeOutlet(t.outlet);
+      acc[outlet] = (acc[outlet] || 0) + 1;
+      return acc;
+    }, { eltalg: 0, tegara: 0, mostashfa: 0 });
+  };
+  const basataCountByOutlet = getBasataCountByOutlet(activeBasata);
 
   const getJumiaProfitByOutlet = (list) => {
     return list.reduce((acc, o) => {
@@ -611,8 +619,14 @@ export default function AnalyticsTab() {
                 { group: 'Bosta', metric: 'Cash Collected', value: `${bostaCash} EGP` },
                 { group: 'Bosta', metric: 'Picked Up', value: bostaPickedUp.length },
                 { group: 'Bosta', metric: 'Returned', value: bostaReturned.length },
-                { group: 'Basata', metric: 'POS Volume', value: `${basataVolume} EGP` },
-                { group: 'Basata', metric: 'Transactions', value: activeBasata.length },
+                { group: 'Basata', metric: `POS Volume (${t('eltalg')})`, value: `${basataByOutlet.eltalg} EGP` },
+                { group: 'Basata', metric: `Transactions (${t('eltalg')})`, value: basataCountByOutlet.eltalg },
+                { group: 'Basata', metric: `POS Volume (${t('tegara')})`, value: `${basataByOutlet.tegara} EGP` },
+                { group: 'Basata', metric: `Transactions (${t('tegara')})`, value: basataCountByOutlet.tegara },
+                { group: 'Basata', metric: `POS Volume (${t('mostashfa')})`, value: `${basataByOutlet.mostashfa} EGP` },
+                { group: 'Basata', metric: `Transactions (${t('mostashfa')})`, value: basataCountByOutlet.mostashfa },
+                { group: 'Basata', metric: 'Total POS Volume', value: `${basataVolume} EGP` },
+                { group: 'Basata', metric: 'Total Transactions', value: activeBasata.length },
                 { group: 'Calls Log', metric: 'Total Calls Created', value: callsInPeriod.length },
                 { group: 'Calls Log', metric: 'Calls Resolved', value: callsResolved.length },
                 { group: 'Calls Log', metric: 'Calls Closed', value: callsClosed.length },

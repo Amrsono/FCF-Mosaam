@@ -32,7 +32,7 @@ export default function OrdersTab() {
   const f = globalFilters.orders;
   const searchTerm = f.searchTerm;
   const filterCategory = f.category;
-  const filterTier = f.tier;
+  const filterSize = f.size;
   const filterStatus = f.status;
   const filterOutlet = user?.role === 'admin' ? f.outlet : (user?.outlet || 'eltalg');
   const filterDateStart = f.dateStart;
@@ -41,7 +41,7 @@ export default function OrdersTab() {
 
   const setSearchTerm = (val) => updateFilters('orders', { searchTerm: val });
   const setFilterCategory = (val) => updateFilters('orders', { category: val });
-  const setFilterTier = (val) => updateFilters('orders', { tier: val });
+  const setFilterSize = (val) => updateFilters('orders', { size: val });
   const setFilterStatus = (val) => updateFilters('orders', { status: val });
   const setFilterOutlet = (val) => updateFilters('orders', { outlet: val });
   const setFilterDateStart = (val) => updateFilters('orders', { dateStart: val });
@@ -161,13 +161,13 @@ export default function OrdersTab() {
       const matchesSearch = order.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
                             order.customerPhone.includes(searchTerm);
       const matchesCategory = filterCategory === 'All' || order.category === filterCategory;
-      const matchesTier = filterTier === 'All' || order.tier === filterTier;
+      const matchesSize = filterSize === 'All' || order.size === filterSize;
       const matchesOutlet = filterOutlet === 'All' || normalizeOutlet(order.outlet) === filterOutlet;
       const matchesPayment = filterPaymentMethod === 'All' || order.paymentMethod === filterPaymentMethod;
       
-      return matchesSearch && matchesCategory && matchesTier && matchesOutlet && matchesPayment;
+      return matchesSearch && matchesCategory && matchesSize && matchesOutlet && matchesPayment;
     });
-  }, [orders, customers, searchTerm, filterCategory, filterTier, filterOutlet, filterPaymentMethod, calculatePenalty, language]);
+  }, [orders, customers, searchTerm, filterCategory, filterSize, filterOutlet, filterPaymentMethod, calculatePenalty, language]);
 
   // Display filtering logic (including status and status-specific date logic)
   const orderList = useMemo(() => {
@@ -192,7 +192,7 @@ export default function OrdersTab() {
   // Reset to page 1 when filters change
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, filterCategory, filterTier, filterStatus, filterOutlet, filterDateStart, filterDateEnd, filterPaymentMethod, itemsPerPage]);
+  }, [searchTerm, filterCategory, filterSize, filterStatus, filterOutlet, filterDateStart, filterDateEnd, filterPaymentMethod, itemsPerPage]);
 
   // Summary by Outlet (calculated from already filtered data)
   const summaryByOutlet = useMemo(() => {
@@ -339,12 +339,11 @@ export default function OrdersTab() {
                <option value="Groceries">{language === 'ar' ? 'بقاليات' : 'Groceries'}</option>
             </select>
 
-            <select className="input-field" style={{ flex: '1 1 120px' }} value={filterTier} onChange={e => setFilterTier(e.target.value)}>
-               <option value="All">{language === 'ar' ? 'جميع المستويات' : 'All Tiers'}</option>
-               <option value="New">{t('newCustomer')}</option>
-               <option value="Bronze">Bronze</option>
-               <option value="Silver">Silver</option>
-               <option value="Gold">Gold</option>
+            <select className="input-field" style={{ flex: '1 1 120px' }} value={filterSize} onChange={e => setFilterSize(e.target.value)}>
+               <option value="All">{language === 'ar' ? 'جميع المقاسات' : 'All Sizes'}</option>
+               <option value="S">S</option>
+               <option value="M">M</option>
+               <option value="L">L</option>
             </select>
 
             <select className="input-field" style={{ flex: '1 1 120px' }} value={filterPaymentMethod} onChange={e => setFilterPaymentMethod(e.target.value)}>
@@ -376,14 +375,14 @@ export default function OrdersTab() {
                   title={language === 'ar' ? 'إلى تاريخ' : 'To Date'}
                 />
               </div>
-              {(filterDateStart || filterDateEnd || filterOutlet !== 'All' || searchTerm || filterStatus !== 'Inventory' || filterCategory !== 'All' || filterTier !== 'All' || filterPaymentMethod !== 'All') && (
+              {(filterDateStart || filterDateEnd || filterOutlet !== 'All' || searchTerm || filterStatus !== 'Inventory' || filterCategory !== 'All' || filterSize !== 'All' || filterPaymentMethod !== 'All') && (
                 <button 
                   onClick={() => updateFilters('orders', {
                     searchTerm: '',
                     status: 'Inventory',
                     outlet: 'All',
                     category: 'All',
-                    tier: 'All',
+                    size: 'All',
                     dateStart: '',
                     dateEnd: '',
                     paymentMethod: 'All'

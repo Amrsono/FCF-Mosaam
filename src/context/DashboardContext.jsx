@@ -26,7 +26,7 @@ export const DashboardProvider = ({ children }) => {
         searchTerm: '',
         status: 'Inventory',
         category: 'All',
-        tier: 'All',
+        size: 'All',
         outlet: 'All',
         dateStart: '',
         dateEnd: '',
@@ -49,6 +49,9 @@ export const DashboardProvider = ({ children }) => {
       sla: {
         outlet: 'All',
         source: 'jumia'
+      },
+      penalties: {
+        source: 'all'
       }
     };
 

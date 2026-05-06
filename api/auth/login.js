@@ -30,7 +30,8 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Username and password are required.' });
     }
 
-    const admin = await prisma.admin.findUnique({ where: { username } });
+    const normalizedUsername = username.toLowerCase();
+    const admin = await prisma.admin.findUnique({ where: { username: normalizedUsername } });
 
     if (!admin) {
       console.warn(`[Login] User not found: ${username}`);

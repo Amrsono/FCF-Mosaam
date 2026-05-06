@@ -85,27 +85,27 @@ async function main() {
   // Add specific branch staff logins
   const specificUsers = [
     { username: 'mhesham', password: 'Fcftegara', outlet: 'tegara' },
-    { username: 'Mhlal', password: 'Fcfmostashfa', outlet: 'mostashfa' }
+    { username: 'mhlal', password: 'Fcfmostashfa', outlet: 'mostashfa' }
   ];
 
   for (const user of specificUsers) {
     const specificHash = await bcrypt.hash(user.password, 10);
     await prisma.admin.upsert({
-      where: { username: user.username },
+      where: { username: user.username.toLowerCase() },
       update: {
         passwordHash: specificHash,
         outlet: user.outlet,
         role: 'staff'
       },
       create: {
-        username: user.username,
+        username: user.username.toLowerCase(),
         passwordHash: specificHash,
         outlet: user.outlet,
         role: 'staff'
       }
     });
   }
-  console.log('✅ Created specific branch staff profiles (mhesham, Mhlal).');
+  console.log('✅ Created specific branch staff profiles (mhesham, mhlal).');
 }
 
 main()

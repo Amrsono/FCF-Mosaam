@@ -180,10 +180,20 @@ export default function OrdersTab() {
   const orderList = useMemo(() => {
     return allFilteredOrders
       .filter(order => {
-        if (filterDateStart || filterDateEnd) {
+        if (!filterDateStart && !filterDateEnd) return true;
+        
+        if (filterStatus === 'Inventory') {
           return isInRange(order.receivedAt, filterDateStart, filterDateEnd);
+        } else if (filterStatus === 'Picked Up') {
+          return isInRange(order.pickedUpAt, filterDateStart, filterDateEnd);
+        } else if (filterStatus === 'Returned' || filterStatus === 'Cancelled') {
+          return isInRange(order.returnedAt, filterDateStart, filterDateEnd);
+        } else {
+          // Status === 'All'
+          return isInRange(order.receivedAt, filterDateStart, filterDateEnd) || 
+                 isInRange(order.pickedUpAt, filterDateStart, filterDateEnd) || 
+                 isInRange(order.returnedAt, filterDateStart, filterDateEnd);
         }
-        return true;
       })
       .filter(order => filterStatus === 'All' || order.status === filterStatus)
       .sort((a, b) => new Date(b.receivedAt) - new Date(a.receivedAt));

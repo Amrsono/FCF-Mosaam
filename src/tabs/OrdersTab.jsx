@@ -245,7 +245,7 @@ export default function OrdersTab() {
         html5QrCode.stop().catch(e => console.error(e));
       }
     };
-  }, [isScanning]);
+  }, [isScanning, scannerRef]);
   const paginatedOrders = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return orderList.slice(startIndex, startIndex + itemsPerPage);
@@ -907,7 +907,7 @@ export default function OrdersTab() {
 
             {isScanning && (
               <div className="glass-panel" style={{ marginBottom: '1.5rem', overflow: 'hidden', position: 'relative', background: '#000', minHeight: '200px' }}>
-                <div id="qr-reader" style={{ width: '100%' }}></div>
+                <div id="qr-reader" ref={scannerRef} style={{ width: '100%' }}></div>
                 <div style={{ position: 'absolute', top: '10px', left: '10px', color: '#fff', fontSize: '0.75rem', background: 'rgba(0,0,0,0.5)', padding: '2px 8px', borderRadius: '4px', zIndex: 10 }}>
                   {language === 'ar' ? 'ضع الكود أمام الكاميرا' : 'Point camera at QR code'}
                 </div>

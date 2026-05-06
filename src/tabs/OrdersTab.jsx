@@ -1,7 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { useDashboard, getDaysDifference } from '../context/DashboardContext';
 import { useAuth } from '../context/AuthContext';
-import { Search, Filter, Plus, UserCheck, RefreshCw, FileUp, CreditCard, Gift, AlertCircle, Flag, PackageX, RotateCcw, Check, Pencil, X, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { 
+  Search, Filter, Plus, UserCheck, RefreshCw, FileUp, CreditCard, Gift, AlertCircle, Flag, PackageX, 
+  RotateCcw, Check, Pencil, X, Trash2, ChevronLeft, ChevronRight, QrCode, Camera, XCircle 
+} from 'lucide-react';
+import { Html5Qrcode } from 'html5-qrcode';
 import ExportActions from '../components/ExportActions';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -90,6 +94,9 @@ export default function OrdersTab() {
     size: '',
     paymentMethod: 'Cash'
   });
+
+  const [isScanning, setIsScanning] = useState(false);
+  const scannerRef = useRef(null);
 
   const exportHeaders = [
     { label: t('orderId'), accessor: 'id' },
@@ -184,6 +191,51 @@ export default function OrdersTab() {
   
   // Calculate Pagination
   const totalPages = Math.ceil(orderList.length / itemsPerPage);
+
+  useEffect(() => {
+    let html5QrCode;
+    if (isScanning && scannerRef.current) {
+      html5QrCode = new Html5Qrcode("qr-reader");
+      const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+      
+      html5QrCode.start(
+        { facingMode: "environment" },
+        config,
+        (decodedText) => {
+          // Success
+          try {
+            const data = JSON.parse(decodedText);
+            setNewOrder(prev => ({
+              ...prev,
+              id: data.id || prev.id,
+              customerPhone: data.customerPhone || data.phone || prev.customerPhone,
+              customerName: data.customerName || data.name || prev.customerName,
+              description: data.description || prev.description,
+              totalValue: data.totalValue || data.value || prev.totalValue,
+              category: data.category || prev.category,
+              size: data.size || prev.size
+            }));
+          } catch (e) {
+            // Not JSON, assume it's just the ID
+            setNewOrder(prev => ({ ...prev, id: decodedText }));
+          }
+          setIsScanning(false);
+          html5QrCode.stop();
+        },
+        (errorMessage) => {
+          // parse error, ignore
+        }
+      ).catch(err => {
+        console.error("Scanner error:", err);
+      });
+    }
+
+    return () => {
+      if (html5QrCode && html5QrCode.isScanning) {
+        html5QrCode.stop().catch(e => console.error(e));
+      }
+    };
+  }, [isScanning]);
   const paginatedOrders = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return orderList.slice(startIndex, startIndex + itemsPerPage);
@@ -828,7 +880,30 @@ export default function OrdersTab() {
       {showSimulateModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '1rem' }}>
           <div className="glass-panel" style={{ width: '100%', maxWidth: '400px', background: 'var(--bg-main)' }}>
-            <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-primary)' }}>{t('receiveNewOrder')}</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h3 style={{ color: 'var(--text-primary)', margin: 0 }}>{t('receiveNewOrder')}</h3>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button 
+                  type="button"
+                  className="btn btn-outline" 
+                  style={{ padding: '0.4rem 0.8rem', display: 'flex', alignItems: 'center', gap: '0.4rem', borderColor: isScanning ? 'var(--color-danger)' : 'var(--color-primary)', color: isScanning ? 'var(--color-danger)' : 'var(--color-primary)' }}
+                  onClick={() => setIsScanning(!isScanning)}
+                >
+                  {isScanning ? <XCircle size={16} /> : <QrCode size={16} />}
+                  {isScanning ? (language === 'ar' ? 'إغلاق الماسح' : 'Close Scanner') : (language === 'ar' ? 'Scan QR' : 'Scan QR')}
+                </button>
+              </div>
+            </div>
+
+            {isScanning && (
+              <div className="glass-panel" style={{ marginBottom: '1.5rem', overflow: 'hidden', position: 'relative', background: '#000', minHeight: '200px' }}>
+                <div id="qr-reader" style={{ width: '100%' }}></div>
+                <div style={{ position: 'absolute', top: '10px', left: '10px', color: '#fff', fontSize: '0.75rem', background: 'rgba(0,0,0,0.5)', padding: '2px 8px', borderRadius: '4px', zIndex: 10 }}>
+                  {language === 'ar' ? 'ضع الكود أمام الكاميرا' : 'Point camera at QR code'}
+                </div>
+              </div>
+            )}
+
             <form onSubmit={handleSimulateReceive}>
               <div className="input-group">
                 <label className="input-label">{t('orderId')}</label>

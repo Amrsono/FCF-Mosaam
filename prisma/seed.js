@@ -85,7 +85,8 @@ async function main() {
   // Add specific branch staff logins
   const specificUsers = [
     { username: 'mhesham', password: 'Fcftegara', outlet: 'tegara' },
-    { username: 'mhlal', password: 'Fcfmostashfa', outlet: 'mostashfa' }
+    { username: 'mhlal', password: 'Fcfmostashfa', outlet: 'mostashfa' },
+    { username: 'mkhafajy', password: 'Fcfkhafajy', outlet: 'eltalg' }
   ];
 
   for (const user of specificUsers) {

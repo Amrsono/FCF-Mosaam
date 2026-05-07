@@ -278,7 +278,15 @@ export default function OrdersTab() {
       // Activity-based counts
       const receivedInRange = outletOrders.filter(o => isInRange(o.receivedAt, filterDateStart, filterDateEnd));
       const pickedUpInRange = outletOrders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt, filterDateStart, filterDateEnd));
-      const returnedInRange = outletOrders.filter(o => o.status === 'Returned' && isInRange(o.returnedAt, filterDateStart, filterDateEnd));
+      
+      const stdReturnedInRange = outletOrders.filter(o => o.status === 'Returned' && isInRange(o.returnedAt, filterDateStart, filterDateEnd));
+      const custReturnedInRange = (customerReturns || []).filter(r => 
+        r.status === 'Returned to Jumia' && 
+        isInRange(r.returnedAt, filterDateStart, filterDateEnd) && 
+        normalizeOutlet(r.outlet) === outletName
+      );
+      const returnedInRange = [...stdReturnedInRange, ...custReturnedInRange];
+      
       const cancelledInRange = outletOrders.filter(o => o.status === 'Cancelled' && isInRange(o.returnedAt, filterDateStart, filterDateEnd));
       
       // Current Inventory: items that are in 'Inventory' status and were received on or before the end date

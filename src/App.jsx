@@ -280,14 +280,14 @@ function AppContent() {
 
 export default function App() {
   return (
-    <DashboardProvider>
-      <AuthProvider>
+    <AuthProvider>
+      <DashboardProvider>
         <LanguageProvider>
           <ThemeProvider>
             <AppContent />
           </ThemeProvider>
         </LanguageProvider>
-      </AuthProvider>
-    </DashboardProvider>
+      </DashboardProvider>
+    </AuthProvider>
   );
 }

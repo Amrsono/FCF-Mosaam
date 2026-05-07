@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
 
 const DashboardContext = createContext();
 
@@ -59,13 +60,21 @@ export const DashboardProvider = ({ children }) => {
       try {
         const saved = localStorage.getItem('fcf_global_filters');
         if (saved) {
-          const parsed = JSON.parse(saved);
-          if (parsed && typeof parsed === 'object') {
-            return {
-              orders: { ...defaults.orders, ...(parsed.orders || {}) },
-              bosta: { ...defaults.bosta, ...(parsed.bosta || {}) },
-              analytics: { ...defaults.analytics, ...(parsed.analytics || {}) }
-            };
+          try {
+            const parsed = JSON.parse(saved);
+            const merged = { ...defaults };
+            if (parsed && typeof parsed === 'object') {
+              Object.keys(parsed).forEach(key => {
+                if (merged[key] && typeof merged[key] === 'object') {
+                  merged[key] = { ...merged[key], ...parsed[key] };
+                } else {
+                  merged[key] = parsed[key];
+                }
+              });
+              return merged;
+            }
+          } catch (jsonErr) {
+            console.warn("Malformed JSON in localStorage", jsonErr);
           }
         }
       } catch (e) {
@@ -126,9 +135,22 @@ export const DashboardProvider = ({ children }) => {
     }
   };
 
+  const { user } = useAuth();
+
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (user) {
+      fetchData();
+    } else {
+      // Clear data on logout
+      setOrders([]);
+      setBostaOrders([]);
+      setCustomers([]);
+      setBasataTransactions([]);
+      setCustomerReturns([]);
+      setCallLogs([]);
+      setIsLoading(true);
+    }
+  }, [user?.username]);
 
   const logUserAction = async (action, details = null) => {
     const token = localStorage.getItem('fcf_token');

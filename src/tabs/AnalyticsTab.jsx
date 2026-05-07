@@ -645,13 +645,13 @@ export default function AnalyticsTab() {
           <ResponsiveContainer width="100%" height={260}>
             <PieChart>
               <Pie
-                data={revenueStreamData}
+                data={revenueStreamData || []}
                 cx="50%" cy="50%"
                 innerRadius={60} outerRadius={100}
                 paddingAngle={4}
                 dataKey="value"
               >
-                {revenueStreamData.map((entry, i) => (
+                {(revenueStreamData || []).map((entry, i) => (
                   <Cell key={i} fill={entry.color} stroke="transparent" />
                 ))}
               </Pie>
@@ -703,12 +703,12 @@ export default function AnalyticsTab() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 350px), 1fr))', gap: '1rem' }}>
         <ChartCard title={language === 'ar' ? 'توزيع حالة الطلبات الكاملة' : 'Full Orders Status Distribution'} icon={<PackageCheck size={16} color={CHART_COLORS.success} />}>
           <ResponsiveContainer width="100%" height={240}>
-            <BarChart data={ordersStatusData} layout="vertical">
+            <BarChart data={ordersStatusData || []} layout="vertical">
               <XAxis type="number" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis type="category" dataKey="name" orientation={language === 'ar' ? 'right' : 'left'} tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 11 }} axisLine={false} tickLine={false} width={140} />
               <Tooltip content={<CustomTooltip language={language} />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
               <Bar dataKey="value" radius={language === 'ar' ? [6, 0, 0, 6] : [0, 6, 6, 0]}>
-                {ordersStatusData.map((entry, i) => (
+                {(ordersStatusData || []).map((entry, i) => (
                   <Cell key={i} fill={entry.color} />
                 ))}
               </Bar>

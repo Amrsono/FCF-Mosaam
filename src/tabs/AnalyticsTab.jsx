@@ -10,7 +10,8 @@ import {
 import ExportActions from '../components/ExportActions';
 import {
   BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, Tooltip, Legend, ResponsiveContainer
+  XAxis, YAxis, Tooltip, Legend, ResponsiveContainer,
+  CartesianGrid
 } from 'recharts';
 import { useLanguage } from '../context/LanguageContext';
 import { exportToPPTX } from '../utils/exportUtils';

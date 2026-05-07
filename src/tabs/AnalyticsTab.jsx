@@ -254,6 +254,12 @@ export default function AnalyticsTab() {
       amount: basataCategories[cat],
     }));
 
+    const ordersReceivedKey = language === 'ar' ? 'طلبات مستلمة' : 'Orders Received';
+    const callsMadeKey      = language === 'ar' ? 'مكالمات' : 'Calls Made';
+    const callsVsOrdersData = [
+      { name: language === 'ar' ? 'الكل' : 'Total', [ordersReceivedKey]: urgentInPeriod.length, [callsMadeKey]: callsMade.length }
+    ];
+
     const resolutionCounts = {};
     callsResolved.forEach(l => { resolutionCounts[l.resolution] = (resolutionCounts[l.resolution] || 0) + 1; });
     const RESOLUTION_DISPLAY = {
@@ -321,7 +327,7 @@ export default function AnalyticsTab() {
       jumiaPickedUpByOutlet, jumiaInventoryByOutlet, jumiaProfitByOutlet, bostaProfitByOutlet,
       grandTotal, callsInPeriod, callsMade, callsResolved, callsClosed, coveragePct,
       basataCatData, resolutionPieData, revenueStreamData, ordersStatusData, basataByOutletData, jumiaProfitByOutletData, comparisonData,
-      basataProviderData,
+      basataProviderData, callsVsOrdersData, ordersReceivedKey, callsMadeKey,
       dailyCount: isAdminAccount ? getTransactionCount(86400000) : 0,
       weeklyCount: isAdminAccount ? getTransactionCount(86400000 * 7) : 0,
       monthlyCount: isAdminAccount ? getTransactionCount(86400000 * 30) : 0
@@ -337,7 +343,7 @@ export default function AnalyticsTab() {
     jumiaPickedUpByOutlet, jumiaInventoryByOutlet, jumiaProfitByOutlet, bostaProfitByOutlet,
     grandTotal, callsInPeriod, callsMade, callsResolved, callsClosed, coveragePct,
     basataCatData, resolutionPieData, revenueStreamData, ordersStatusData, basataByOutletData, jumiaProfitByOutletData, comparisonData,
-    basataProviderData,
+    basataProviderData, callsVsOrdersData, ordersReceivedKey, callsMadeKey,
     dailyCount, weeklyCount, monthlyCount
   } = stats;
 

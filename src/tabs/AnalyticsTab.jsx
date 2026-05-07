@@ -210,6 +210,10 @@ export default function AnalyticsTab() {
       acc[t.serviceProvider] = (acc[t.serviceProvider] || 0) + 1;
       return acc;
     }, {});
+    const basataProviderData = Object.keys(basataProviders).map(p => ({
+      name: p,
+      count: basataProviders[p]
+    })).sort((a, b) => b.count - a.count);
 
     const getByOutlet = (list, key = 'amount') => {
       return list.reduce((acc, item) => {
@@ -317,6 +321,7 @@ export default function AnalyticsTab() {
       jumiaPickedUpByOutlet, jumiaInventoryByOutlet, jumiaProfitByOutlet, bostaProfitByOutlet,
       grandTotal, callsInPeriod, callsMade, callsResolved, callsClosed, coveragePct,
       basataCatData, resolutionPieData, revenueStreamData, ordersStatusData, basataByOutletData, jumiaProfitByOutletData, comparisonData,
+      basataProviderData,
       dailyCount: isAdminAccount ? getTransactionCount(86400000) : 0,
       weeklyCount: isAdminAccount ? getTransactionCount(86400000 * 7) : 0,
       monthlyCount: isAdminAccount ? getTransactionCount(86400000 * 30) : 0
@@ -332,6 +337,7 @@ export default function AnalyticsTab() {
     jumiaPickedUpByOutlet, jumiaInventoryByOutlet, jumiaProfitByOutlet, bostaProfitByOutlet,
     grandTotal, callsInPeriod, callsMade, callsResolved, callsClosed, coveragePct,
     basataCatData, resolutionPieData, revenueStreamData, ordersStatusData, basataByOutletData, jumiaProfitByOutletData, comparisonData,
+    basataProviderData,
     dailyCount, weeklyCount, monthlyCount
   } = stats;
 

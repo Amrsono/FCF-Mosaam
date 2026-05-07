@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { DashboardProvider } from './context/DashboardContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { Package, Users, Clock, AlertTriangle, BarChart3, LayoutDashboard, Zap, LogOut, Shield, Menu, X, Phone } from 'lucide-react';
+import { Package, Users, Clock, AlertTriangle, BarChart2, LayoutDashboard, Zap, LogOut, Shield, Menu, X, Phone } from 'lucide-react';
 import OrdersTab from './tabs/OrdersTab';
 import CustomersTab from './tabs/CustomersTab';
 import SLATab from './tabs/SLATab';
@@ -49,7 +49,7 @@ function AppContent() {
     { id: 'bosta',     label: t('bosta'),     icon: <Package size={20} />, service: 'bosta' },
     { id: 'calls',     label: t('callsLog'),  icon: <Phone size={20} />, service: 'admin' },
     ...(user?.role === 'admin' ? [
-      { id: 'analytics', label: t('analytics'), icon: <BarChart3 size={20} />, service: 'admin' },
+      { id: 'analytics', label: t('analytics'), icon: <BarChart2 size={20} />, service: 'admin' },
       { id: 'logs', label: t('logs'), icon: <Shield size={20} />, service: 'admin' }
     ] : []),
   ];

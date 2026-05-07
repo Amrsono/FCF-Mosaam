@@ -1,5 +1,5 @@
 import React from 'react';
-import { Package, Zap, BarChart3, Shield, Phone, ArrowRight, Truck, LayoutDashboard } from 'lucide-react';
+import { Package, Zap, BarChart2, Shield, Phone, ArrowRight, Truck, LayoutDashboard } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 
@@ -51,7 +51,7 @@ export default function LandingPage({ onSelectService }) {
         id: 'analytics',
         title: t('analytics'),
         desc: t('analyticsDesc'),
-        icon: <BarChart3 size={24} />,
+        icon: <BarChart2 size={24} color="#f59e0b" />,
         gradient: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
         tab: 'analytics'
       },

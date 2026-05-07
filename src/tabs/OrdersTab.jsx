@@ -38,7 +38,8 @@ export default function OrdersTab() {
   const filterCategory = f.category;
   const filterSize = f.size;
   const filterStatus = f.status;
-  const filterOutlet = user?.role === 'admin' ? f.outlet : (user?.outlet || 'eltalg');
+  const filterStatus = f.status;
+  const filterOutlet = user?.role === 'admin' ? f.outlet : normalizeOutlet(user?.outlet || 'eltalg');
   const filterDateStart = f.dateStart;
   const filterDateEnd = f.dateEnd;
   const filterPaymentMethod = f.paymentMethod;
@@ -131,23 +132,23 @@ export default function OrdersTab() {
     return val;
   };
 
+  const parseEgyptDate = (str, setToEnd) => {
+    if (!str) return null;
+    const [y, m, day] = str.split('-').map(Number);
+    const date = new Date(y, m - 1, day);
+    if (setToEnd) {
+      date.setHours(23, 59, 59, 999);
+    } else {
+      date.setHours(0, 0, 0, 0);
+    }
+    return date;
+  };
+
   const isInRange = (dateStr, start, end) => {
     if (!start && !end) return true;
     if (!dateStr) return false;
     
     const d = new Date(dateStr);
-    
-    const parseEgyptDate = (str, setToEnd) => {
-      const [y, m, day] = str.split('-').map(Number);
-      const date = new Date(y, m - 1, day);
-      if (setToEnd) {
-        date.setHours(23, 59, 59, 999);
-      } else {
-        date.setHours(0, 0, 0, 0);
-      }
-      return date;
-    };
-
     const sLimit = start ? parseEgyptDate(start, false) : null;
     const eLimit = end ? parseEgyptDate(end, true) : null;
     
@@ -183,7 +184,10 @@ export default function OrdersTab() {
         if (!filterDateStart && !filterDateEnd) return true;
         
         if (filterStatus === 'Inventory') {
-          return isInRange(order.receivedAt, filterDateStart, filterDateEnd);
+          // For Inventory, show everything currently in stock, 
+          // but respect the end date as an upper bound of when it was received.
+          const eLimit = parseEgyptDate(filterDateEnd, true);
+          return !eLimit || new Date(order.receivedAt) <= eLimit;
         } else if (filterStatus === 'Picked Up') {
           return isInRange(order.pickedUpAt, filterDateStart, filterDateEnd);
         } else if (filterStatus === 'Returned' || filterStatus === 'Cancelled') {
@@ -258,10 +262,7 @@ export default function OrdersTab() {
 
   // Summary by Outlet (calculated from already filtered data)
   const summaryByOutlet = useMemo(() => {
-    // Dynamically identify all unique normalized outlets present in the current filtered set
     const outletsInList = [...new Set(allFilteredOrders.map(o => normalizeOutlet(o.outlet)))].filter(Boolean);
-    
-    // Define display buckets: always include the main 3, then any others found
     const mainOutlets = ['eltalg', 'tegara', 'mostashfa'];
     let displayOutlets = [...mainOutlets];
     
@@ -275,30 +276,39 @@ export default function OrdersTab() {
     return displayOutlets.map(outletName => {
       const outletOrders = allFilteredOrders.filter(o => normalizeOutlet(o.outlet) === outletName);
       
-      const receivedSet = outletOrders.filter(o => isInRange(o.receivedAt, filterDateStart, filterDateEnd));
+      // Activity-based counts
+      const receivedInRange = outletOrders.filter(o => isInRange(o.receivedAt, filterDateStart, filterDateEnd));
+      const pickedUpInRange = outletOrders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt, filterDateStart, filterDateEnd));
+      const returnedInRange = outletOrders.filter(o => o.status === 'Returned' && isInRange(o.returnedAt, filterDateStart, filterDateEnd));
+      const cancelledInRange = outletOrders.filter(o => o.status === 'Cancelled' && isInRange(o.returnedAt, filterDateStart, filterDateEnd));
       
-      const received = receivedSet.length;
-      const delivered = receivedSet.filter(o => o.status === 'Picked Up').length;
-      const returned = receivedSet.filter(o => o.status === 'Returned').length;
-      const cancelled = receivedSet.filter(o => o.status === 'Cancelled').length;
-      const available = receivedSet.filter(o => o.status === 'Inventory').length;
+      // Current Inventory: items that are in 'Inventory' status and were received on or before the end date
+      const eLimit = parseEgyptDate(filterDateEnd, true);
+      const inventoryCurrent = outletOrders.filter(o => o.status === 'Inventory' && (!eLimit || new Date(o.receivedAt) <= eLimit));
+
+      const received = receivedInRange.length;
+      const pickedUp = pickedUpInRange.length;
+      const returned = returnedInRange.length;
+      const cancelled = cancelledInRange.length;
+      const available = inventoryCurrent.length;
       
-      const totalMoney = receivedSet.filter(o => o.status === 'Picked Up').reduce((sum, o) => sum + o.totalValue, 0);
+      // Total money collected in period (from pick ups)
+      const totalMoney = pickedUpInRange.reduce((sum, o) => sum + (o.totalValue || 0), 0);
       const paid = totalMoney; 
       
-      const jumiaPay = receivedSet.filter(o => o.status === 'Picked Up' && o.paymentMethod?.toLowerCase().includes('jumia')).reduce((sum, o) => sum + o.totalValue, 0);
-      const creditCard = receivedSet.filter(o => o.status === 'Picked Up' && (o.paymentMethod?.toLowerCase().includes('card') || o.paymentMethod?.toLowerCase().includes('visa'))).reduce((sum, o) => sum + o.totalValue, 0);
+      const jumiaPay = pickedUpInRange.filter(o => o.paymentMethod?.toLowerCase().includes('jumia')).reduce((sum, o) => sum + (o.totalValue || 0), 0);
+      const creditCard = pickedUpInRange.filter(o => (o.paymentMethod?.toLowerCase().includes('card') || o.paymentMethod?.toLowerCase().includes('visa'))).reduce((sum, o) => sum + (o.totalValue || 0), 0);
 
-      const sCount = receivedSet.filter(o => o.status === 'Inventory' && o.size === 'S').length;
-      const mCount = receivedSet.filter(o => o.status === 'Inventory' && o.size === 'M').length;
-      const lCount = receivedSet.filter(o => o.status === 'Inventory' && o.size === 'L').length;
+      const sCount = inventoryCurrent.filter(o => o.size === 'S').length;
+      const mCount = inventoryCurrent.filter(o => o.size === 'M').length;
+      const lCount = inventoryCurrent.filter(o => o.size === 'L').length;
 
-      const storageFees = receivedSet.filter(o => o.status === 'Inventory').reduce((sum, o) => sum + (o.penalty || 0), 0);
+      const storageFees = inventoryCurrent.reduce((sum, o) => sum + (o.penalty || 0), 0);
 
       return {
         outlet: outletName,
         received,
-        delivered,
+        pickedUp,
         returned,
         cancelled,
         available,
@@ -499,7 +509,7 @@ export default function OrdersTab() {
                   <tr key={i}>
                     <td style={{ fontWeight: 700 }}>{getOutletLabel(row.outlet)}</td>
                     <td>{row.received}</td>
-                    <td style={{ color: 'var(--color-success)' }}>{row.delivered}</td>
+                    <td style={{ color: 'var(--color-success)' }}>{row.pickedUp}</td>
                     <td style={{ color: 'var(--color-warning)' }}>{row.cancelled}</td>
                     <td style={{ color: 'var(--color-danger)' }}>{row.returned}</td>
                     <td style={{ fontWeight: 600 }}>{row.available}</td>
@@ -515,7 +525,7 @@ export default function OrdersTab() {
                 <tr style={{ background: 'rgba(var(--hue-primary), 80%, 65%, 0.1)', borderTop: '2px solid var(--color-primary)' }}>
                   <td style={{ fontWeight: 800, color: 'var(--color-primary)' }}>{language === 'ar' ? 'الإجمالي' : 'GRAND TOTAL'}</td>
                   <td style={{ fontWeight: 700 }}>{summaryByOutlet.reduce((sum, r) => sum + r.received, 0)}</td>
-                  <td style={{ fontWeight: 700, color: 'var(--color-success)' }}>{summaryByOutlet.reduce((sum, r) => sum + r.delivered, 0)}</td>
+                  <td style={{ fontWeight: 700, color: 'var(--color-success)' }}>{summaryByOutlet.reduce((sum, r) => sum + r.pickedUp, 0)}</td>
                   <td style={{ fontWeight: 700, color: 'var(--color-warning)' }}>{summaryByOutlet.reduce((sum, r) => sum + r.cancelled, 0)}</td>
                   <td style={{ fontWeight: 700, color: 'var(--color-danger)' }}>{summaryByOutlet.reduce((sum, r) => sum + r.returned, 0)}</td>
                   <td style={{ fontWeight: 700 }}>{summaryByOutlet.reduce((sum, r) => sum + r.available, 0)}</td>

@@ -107,11 +107,8 @@ export default function AnalyticsTab() {
   // Time boundary
   // Time boundary - Parse YYYY-MM-DD as Egypt Local
   const parseEgyptDate = (dateStr, setToEnd) => {
+    if (!dateStr) return setToEnd ? new Date(2100, 0, 1) : new Date(2000, 0, 1);
     const [y, m, d] = dateStr.split('-').map(Number);
-    // Create date in a way that allows us to set it to 00:00 or 23:59 in Egypt time
-    // For simplicity, we create it and then adjust if needed, but the most robust way
-    // is to use the parts constructor which uses local time, assuming local is Egypt.
-    // If local is NOT Egypt, we need to be more careful.
     const date = new Date(y, m - 1, d);
     if (setToEnd) {
       date.setHours(23, 59, 59, 999);
@@ -665,12 +662,12 @@ export default function AnalyticsTab() {
 
         <ChartCard title={language === 'ar' ? 'أرباح جوميا حسب المنفذ' : 'Jumia Profit by Outlet'} icon={<BarChart2 size={16} color={CHART_COLORS.jumia} />}>
           <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={jumiaProfitByOutletData} barGap={4}>
+            <BarChart data={jumiaProfitByOutletData || []} barGap={4}>
               <XAxis dataKey="name" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} axisLine={false} tickLine={false} />
               <YAxis orientation={language === 'ar' ? 'right' : 'left'} tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} axisLine={false} tickLine={false} />
               <Tooltip content={<CustomTooltip language={language} />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} formatter={(v) => `${v.toLocaleString()} EGP`} />
               <Bar dataKey="amount" name={language === 'ar' ? 'الأرباح' : 'Profit'} fill={CHART_COLORS.jumia} radius={[6, 6, 0, 0]}>
-                {jumiaProfitByOutletData.map((entry, index) => (
+                {(jumiaProfitByOutletData || []).map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Bar>
@@ -682,13 +679,13 @@ export default function AnalyticsTab() {
           <ResponsiveContainer width="100%" height={260}>
             <PieChart>
               <Pie
-                data={jumiaPaymentData}
+                data={jumiaPaymentData || []}
                 cx="50%" cy="50%"
                 innerRadius={60} outerRadius={100}
                 paddingAngle={4}
                 dataKey="value"
               >
-                {jumiaPaymentData.map((entry, i) => (
+                {(jumiaPaymentData || []).map((entry, i) => (
                   <Cell key={i} fill={entry.color} stroke="transparent" />
                 ))}
               </Pie>

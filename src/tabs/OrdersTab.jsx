@@ -38,7 +38,6 @@ export default function OrdersTab() {
   const filterCategory = f.category;
   const filterSize = f.size;
   const filterStatus = f.status;
-  const filterStatus = f.status;
   const filterOutlet = user?.role === 'admin' ? f.outlet : normalizeOutlet(user?.outlet || 'eltalg');
   const filterDateStart = f.dateStart;
   const filterDateEnd = f.dateEnd;

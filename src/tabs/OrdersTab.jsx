@@ -122,14 +122,14 @@ export default function OrdersTab() {
     return val;
   };
 
-  const normalizeOutlet = (val) => {
+  const normalizeOutlet = useMemo(() => (val) => {
     if (!val) return 'eltalg';
     const v = String(val).toLowerCase().trim();
     if (v === 'eltalg' || v.includes('banha 1') || v.includes('banha1') || v.includes('ثلج') || v.includes('تلج')) return 'eltalg';
     if (v === 'tegara' || v.includes('banha 2') || v.includes('banha2') || v.includes('تجارة') || v.includes('تجاره')) return 'tegara';
     if (v === 'mostashfa' || v.includes('banha 3') || v.includes('banha3') || v.includes('مستشفى') || v.includes('مستشفي')) return 'mostashfa';
     return val;
-  };
+  }, []);
 
   const parseEgyptDate = (str, setToEnd) => {
     if (!str) return null;
@@ -154,9 +154,15 @@ export default function OrdersTab() {
     return (!sLimit || d >= sLimit) && (!eLimit || d <= eLimit);
   };
 
+  const customerMap = useMemo(() => {
+    const map = new Map();
+    customers.forEach(c => map.set(c.phone, c));
+    return map;
+  }, [customers]);
+
   const allFilteredOrders = useMemo(() => {
     return orders.map(order => {
-      const cust = customers.find(c => c.phone === order.customerPhone);
+      const cust = customerMap.get(order.customerPhone);
       return {
         ...order,
         customerName: cust?.name || (language === 'ar' ? 'غير معروف' : 'Unknown'),
@@ -174,7 +180,7 @@ export default function OrdersTab() {
       
       return matchesSearch && matchesCategory && matchesSize && matchesOutlet && matchesPayment;
     });
-  }, [orders, customers, searchTerm, filterCategory, filterSize, filterOutlet, filterPaymentMethod, calculatePenalty, language]);
+  }, [orders, customerMap, searchTerm, filterCategory, filterSize, filterOutlet, filterPaymentMethod, calculatePenalty, language, normalizeOutlet]);
 
   // Display filtering logic (including status and status-specific date logic)
   const orderList = useMemo(() => {

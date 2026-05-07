@@ -55,17 +55,21 @@ export const DashboardProvider = ({ children }) => {
       }
     };
 
-    const saved = localStorage.getItem('fcf_global_filters');
-    if (saved) {
+    if (typeof window !== 'undefined') {
       try {
-        const parsed = JSON.parse(saved);
-        return {
-          orders: { ...defaults.orders, ...(parsed.orders || {}) },
-          bosta: { ...defaults.bosta, ...(parsed.bosta || {}) },
-          analytics: { ...defaults.analytics, ...(parsed.analytics || {}) }
-        };
+        const saved = localStorage.getItem('fcf_global_filters');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && typeof parsed === 'object') {
+            return {
+              orders: { ...defaults.orders, ...(parsed.orders || {}) },
+              bosta: { ...defaults.bosta, ...(parsed.bosta || {}) },
+              analytics: { ...defaults.analytics, ...(parsed.analytics || {}) }
+            };
+          }
+        }
       } catch (e) {
-        console.warn("Failed to parse saved filters", e);
+        console.error("Failed to parse global filters from localStorage", e);
       }
     }
     return defaults;
@@ -88,21 +92,30 @@ export const DashboardProvider = ({ children }) => {
   };
 
   const fetchData = async () => {
+    // Note: We don't set global isLoading=true here if already loaded to avoid flickers
     try {
-      setIsLoading(true);
-      const [oRes, bostaRes, cRes, bRes, crRes, clRes] = await Promise.all([
-        fetch('/api/orders'),
-        fetch('/api/bosta'),
-        fetch('/api/customers'),
-        fetch('/api/basata'),
-        fetch('/api/customer-returns'),
-        fetch('/api/call-logs?all=true')
+      // 1. Fetch critical data first
+      const [oRes, bostaRes, cRes, bRes] = await Promise.all([
+        fetch('/api/orders').catch(e => ({ error: e })),
+        fetch('/api/bosta').catch(e => ({ error: e })),
+        fetch('/api/customers').catch(e => ({ error: e })),
+        fetch('/api/basata').catch(e => ({ error: e }))
       ]);
 
       if (oRes.ok) setOrders(await oRes.json());
       if (bostaRes.ok) setBostaOrders(await bostaRes.json());
       if (cRes.ok) setCustomers(await cRes.json());
       if (bRes.ok) setBasataTransactions(await bRes.json());
+
+      // Set loading to false as soon as critical data is here
+      setIsLoading(false);
+
+      // 2. Fetch non-critical data in background
+      const [crRes, clRes] = await Promise.all([
+        fetch('/api/customer-returns').catch(e => ({ error: e })),
+        fetch('/api/call-logs?all=true').catch(e => ({ error: e }))
+      ]);
+
       if (crRes.ok) setCustomerReturns(await crRes.json());
       if (clRes.ok) setCallLogs(await clRes.json());
 

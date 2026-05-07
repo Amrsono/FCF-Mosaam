@@ -19,40 +19,41 @@ export default function ReturnedTab() {
     { label: t('daysInInv'), accessor: 'daysParkedFinal' }
   ];
 
-  // Filter for returned orders
-  const standardReturns = orders
-    .filter(o => o.status === 'Returned')
-    .map(o => {
-      const cust = customers.find(c => c.phone === o.customerPhone);
-      return {
-        ...o,
-        customerName: cust?.name || (language === 'ar' ? 'غير معروف' : 'Unknown'),
-        type: 'Warehouse',
-        daysParkedFinal: o.returnedAt 
-          ? Math.floor(Math.abs(new Date(o.returnedAt) - new Date(o.receivedAt)) / (1000 * 60 * 60 * 24))
-          : getDaysDifference(o.receivedAt)
-      };
-    });
+  const returnedOrders = useMemo(() => {
+    // Filter for returned orders
+    const std = orders
+      .filter(o => o.status === 'Returned')
+      .map(o => {
+        const cust = customers.find(c => c.phone === o.customerPhone);
+        return {
+          ...o,
+          customerName: cust?.name || (language === 'ar' ? 'غير معروف' : 'Unknown'),
+          type: 'Warehouse',
+          daysParkedFinal: o.returnedAt 
+            ? Math.floor(Math.abs(new Date(o.returnedAt) - new Date(o.receivedAt)) / (1000 * 60 * 60 * 24))
+            : getDaysDifference(o.receivedAt)
+        };
+      });
 
-  // Filter for customer returns that have been sent back to Jumia
-  const cReturnsSentBack = (customerReturns || [])
-    .filter(r => r.status === 'Returned to Jumia')
-    .map(r => ({
-      id: r.orderId || (language === 'ar' ? 'مرتجع عميل' : 'Cust Return'),
-      customerPhone: r.customerPhone,
-      customerName: r.customerName,
-      totalValue: 0, // Customer returns don't have a value tracked in the applet
-      outlet: r.outlet,
-      receivedAt: r.receivedAt,
-      returnedAt: r.returnedAt,
-      type: 'Customer',
-      daysParkedFinal: r.returnedAt 
-        ? Math.floor(Math.abs(new Date(r.returnedAt) - new Date(r.receivedAt)) / (1000 * 60 * 60 * 24))
-        : getDaysDifference(r.receivedAt)
-    }));
+    // Filter for customer returns that have been sent back to Jumia
+    const cRet = (customerReturns || [])
+      .filter(r => r.status === 'Returned to Jumia')
+      .map(r => ({
+        id: r.orderId || (language === 'ar' ? 'مرتجع عميل' : 'Cust Return'),
+        customerPhone: r.customerPhone,
+        customerName: r.customerName,
+        totalValue: 0, 
+        outlet: r.outlet,
+        receivedAt: r.receivedAt,
+        returnedAt: r.returnedAt,
+        type: 'Customer',
+        daysParkedFinal: r.returnedAt 
+          ? Math.floor(Math.abs(new Date(r.returnedAt) - new Date(r.receivedAt)) / (1000 * 60 * 60 * 24))
+          : getDaysDifference(r.receivedAt)
+      }));
 
-  const returnedOrders = [...standardReturns, ...cReturnsSentBack]
-    .sort((a, b) => new Date(b.returnedAt) - new Date(a.returnedAt));
+    return [...std, ...cRet].sort((a, b) => new Date(b.returnedAt) - new Date(a.returnedAt));
+  }, [orders, customers, customerReturns, language]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: '100%' }}>

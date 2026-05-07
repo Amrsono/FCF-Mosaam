@@ -103,10 +103,16 @@ export default function BostaTab() {
     return true;
   };
 
+  const customerMap = useMemo(() => {
+    const map = new Map();
+    customers.forEach(c => map.set(c.phone, c));
+    return map;
+  }, [customers]);
+
   // Stage 1: Filter by everything EXCEPT status
   const baseFilteredOrders = useMemo(() => {
     return bostaOrders.map(order => {
-      const cust = customers.find(c => c.phone === order.customerPhone);
+      const cust = customerMap.get(order.customerPhone);
       const daysParked = order.status === 'Inventory' ? getDaysDifference(order.receivedAt) : 0;
       return {
         ...order,
@@ -139,7 +145,7 @@ export default function BostaTab() {
 
       return matchesSearch && matchesCategory && matchesOutlet && matchesDate;
     });
-  }, [bostaOrders, customers, searchTerm, filterCategory, filterOutlet, filterDateStart, filterDateEnd, language, filterStatus]);
+  }, [bostaOrders, customerMap, searchTerm, filterCategory, filterOutlet, filterDateStart, filterDateEnd, language, filterStatus]);
 
   // Stage 2: Final list for display (filtered by status)
   const orderList = useMemo(() => {

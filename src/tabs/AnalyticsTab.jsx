@@ -127,22 +127,7 @@ export default function AnalyticsTab() {
   const isInRange = (dateStr) => {
     if (!dateStr) return false;
     const d = new Date(dateStr);
-    
-    const parseEgyptDateLocally = (str, setToEnd) => {
-      const [y, m, day] = str.split('-').map(Number);
-      const date = new Date(y, m - 1, day);
-      if (setToEnd) {
-        date.setHours(23, 59, 59, 999);
-      } else {
-        date.setHours(0, 0, 0, 0);
-      }
-      return date;
-    };
-
-    const sLimit = parseEgyptDateLocally(startDate, false);
-    const eLimit = parseEgyptDateLocally(endDate, true);
-    
-    return d >= sLimit && d <= eLimit;
+    return d >= startLimit && d <= endLimit;
   };
 
   const matchesOutlet = (o) => {
@@ -150,167 +135,207 @@ export default function AnalyticsTab() {
     return normalizeOutlet(o.outlet) === selectedOutlet;
   };
 
-  // --- JUMIA ---
-  const jumiaPickedUp = orders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt) && matchesOutlet(o));
-  const jumiaInventory = orders.filter(o => o.status === 'Inventory' && isInRange(o.receivedAt) && matchesOutlet(o));
-  const jumiaReceived = orders.filter(o => isInRange(o.receivedAt) && matchesOutlet(o));
-  
-  const stdReturned = orders.filter(o => o.status === 'Returned' && isInRange(o.returnedAt) && matchesOutlet(o));
-  const custReturned = (customerReturns || []).filter(r => r.status === 'Returned to Jumia' && isInRange(r.returnedAt) && (selectedOutlet === 'All' || normalizeOutlet(r.outlet) === selectedOutlet));
-  const jumiaReturned = [...stdReturned, ...custReturned];
-  const jumiaCancelled = orders.filter(o => o.status === 'Cancelled' && isInRange(o.returnedAt) && matchesOutlet(o));
-  
-  const jumiaCash = jumiaPickedUp.reduce((s, o) => s + o.totalValue, 0);
-  const jumiaReturnedAmt = stdReturned.reduce((s, o) => s + o.totalValue, 0); // Customer returns don't have a value in our system
+  const stats = useMemo(() => {
+    // --- JUMIA ---
+    const jumiaPickedUp = orders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt) && matchesOutlet(o));
+    const jumiaInventory = orders.filter(o => o.status === 'Inventory' && isInRange(o.receivedAt) && matchesOutlet(o));
+    const jumiaReceived = orders.filter(o => isInRange(o.receivedAt) && matchesOutlet(o));
+    
+    const stdReturned = orders.filter(o => o.status === 'Returned' && isInRange(o.returnedAt) && matchesOutlet(o));
+    const custReturned = (customerReturns || []).filter(r => r.status === 'Returned to Jumia' && isInRange(r.returnedAt) && (selectedOutlet === 'All' || normalizeOutlet(r.outlet) === selectedOutlet));
+    const jumiaReturned = [...stdReturned, ...custReturned];
+    const jumiaCancelled = orders.filter(o => o.status === 'Cancelled' && isInRange(o.returnedAt) && matchesOutlet(o));
+    
+    const jumiaCash = jumiaPickedUp.reduce((s, o) => s + o.totalValue, 0);
+    const jumiaReturnedAmt = stdReturned.reduce((s, o) => s + o.totalValue, 0);
 
-  const getJumiaCharge = (size) => {
-    const s = (size || 'M').toUpperCase();
-    if (s === 'S') return 18;
-    if (s === 'L') return 45;
-    return 30;
-  };
-  const jumiaProfit = jumiaPickedUp.reduce((s, o) => s + getJumiaCharge(o.size), 0);
-  // --- BOSTA ---
-  const bostaInventory = bostaOrders.filter(o => o.status === 'Inventory' && isInRange(o.receivedAt) && matchesOutlet(o));
+    const getJumiaCharge = (size) => {
+      const s = (size || 'M').toUpperCase();
+      if (s === 'S') return 18;
+      if (s === 'L') return 45;
+      return 30;
+    };
+    const jumiaProfit = jumiaPickedUp.reduce((s, o) => s + getJumiaCharge(o.size), 0);
 
-  const activePenalties = [...jumiaInventory, ...bostaInventory].reduce((s, o) => {
-    return s + (calculatePenalty ? calculatePenalty(o) : 0);
-  }, 0);
-  const jumiaSlaCritical = jumiaInventory.filter(o => {
-    const d = Math.floor(Math.abs(new Date() - new Date(o.receivedAt)) / 86400000);
-    return d >= 5;
-  }).length;
-  const jumiaSlaNear = jumiaInventory.filter(o => {
-    const d = Math.floor(Math.abs(new Date() - new Date(o.receivedAt)) / 86400000);
-    return d >= 3 && d < 5;
-  }).length;
-  
-  // Payment Methods Breakdown for Jumia
-  const jumiaPayTotal = jumiaPickedUp.filter(o => o.paymentMethod?.toLowerCase().includes('jumia')).reduce((s, o) => s + o.totalValue, 0);
-  const jumiaCardTotal = jumiaPickedUp.filter(o => o.paymentMethod?.toLowerCase().includes('card') || o.paymentMethod?.toLowerCase().includes('visa')).reduce((s, o) => s + o.totalValue, 0);
-  const jumiaCashTotal = jumiaPickedUp.filter(o => !o.paymentMethod || o.paymentMethod?.toLowerCase() === 'cash').reduce((s, o) => s + o.totalValue, 0);
-  
-  const jumiaPaymentData = [
-    { name: t('cash'), value: jumiaCashTotal, color: '#f97316' },
-    { name: t('creditCard'), value: jumiaCardTotal, color: '#22c55e' },
-    { name: t('jumiaPay'), value: jumiaPayTotal, color: '#6366f1' },
-  ].filter(d => d.value > 0);
+    // --- BOSTA ---
+    const bostaInventory = bostaOrders.filter(o => o.status === 'Inventory' && isInRange(o.receivedAt) && matchesOutlet(o));
+    const activePenalties = [...jumiaInventory, ...bostaInventory].reduce((s, o) => {
+      return s + (calculatePenalty ? calculatePenalty(o) : 0);
+    }, 0);
+    const jumiaSlaCritical = jumiaInventory.filter(o => {
+      const d = Math.floor(Math.abs(new Date() - new Date(o.receivedAt)) / 86400000);
+      return d >= 5;
+    }).length;
+    const jumiaSlaNear = jumiaInventory.filter(o => {
+      const d = Math.floor(Math.abs(new Date() - new Date(o.receivedAt)) / 86400000);
+      return d >= 3 && d < 5;
+    }).length;
+    
+    const jumiaPayTotal = jumiaPickedUp.filter(o => o.paymentMethod?.toLowerCase().includes('jumia')).reduce((s, o) => s + o.totalValue, 0);
+    const jumiaCardTotal = jumiaPickedUp.filter(o => o.paymentMethod?.toLowerCase().includes('card') || o.paymentMethod?.toLowerCase().includes('visa')).reduce((s, o) => s + o.totalValue, 0);
+    const jumiaCashTotal = jumiaPickedUp.filter(o => !o.paymentMethod || o.paymentMethod?.toLowerCase() === 'cash').reduce((s, o) => s + o.totalValue, 0);
+    
+    const jumiaPaymentData = [
+      { name: t('cash'), value: jumiaCashTotal, color: '#f97316' },
+      { name: t('creditCard'), value: jumiaCardTotal, color: '#22c55e' },
+      { name: t('jumiaPay'), value: jumiaPayTotal, color: '#6366f1' },
+    ].filter(d => d.value > 0);
 
-  // --- BOSTA ---
-  // --- BOSTA ---
-  const bostaPickedUp = bostaOrders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt) && matchesOutlet(o));
-  const bostaReceived = bostaOrders.filter(o => isInRange(o.receivedAt) && matchesOutlet(o));
-  const bostaReturned = bostaOrders.filter(o => o.status === 'Returned' && isInRange(o.returnedAt) && matchesOutlet(o));
-  const bostaCancelled = bostaOrders.filter(o => o.status === 'Cancelled' && isInRange(o.returnedAt) && matchesOutlet(o));
-  const bostaCash = bostaPickedUp.reduce((s, o) => s + o.totalValue, 0);
-  const bostaReturnedAmt = bostaReturned.reduce((s, o) => s + o.totalValue, 0);
-  const bostaProfit = bostaPickedUp.length * 10;
+    const bostaPickedUp = bostaOrders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt) && matchesOutlet(o));
+    const bostaReceived = bostaOrders.filter(o => isInRange(o.receivedAt) && matchesOutlet(o));
+    const bostaReturned = bostaOrders.filter(o => o.status === 'Returned' && isInRange(o.returnedAt) && matchesOutlet(o));
+    const bostaCancelled = bostaOrders.filter(o => o.status === 'Cancelled' && isInRange(o.returnedAt) && matchesOutlet(o));
+    const bostaCash = bostaPickedUp.reduce((s, o) => s + o.totalValue, 0);
+    const bostaReturnedAmt = bostaReturned.reduce((s, o) => s + o.totalValue, 0);
+    const bostaProfit = bostaPickedUp.length * 10;
 
-  // Sizes breakdown for PowerPoint
-  const getSizes = (list) => {
-    return list.reduce((acc, o) => {
-      const s = (o.size || 'M').toUpperCase();
-      acc[s] = (acc[s] || 0) + 1;
+    const getSizes = (list) => {
+      return list.reduce((acc, o) => {
+        const s = (o.size || 'M').toUpperCase();
+        acc[s] = (acc[s] || 0) + 1;
+        return acc;
+      }, { S: 0, M: 0, L: 0 });
+    };
+    const jumiaSizes = getSizes(jumiaPickedUp);
+    const jumiaInventorySizes = getSizes(jumiaInventory);
+    const bostaSizes = getSizes(bostaPickedUp);
+    const bostaInventorySizes = getSizes(bostaInventory);
+
+    // --- BASATA ---
+    const activeBasata = basataTransactions.filter(t => isInRange(t.performedAt) && matchesOutlet(t));
+    const basataVolume = activeBasata.reduce((s, t) => s + t.amount, 0);
+    const basataCategories = activeBasata.reduce((acc, t) => {
+      acc[t.category] = (acc[t.category] || 0) + t.amount;
       return acc;
-    }, { S: 0, M: 0, L: 0 });
-  };
-  const jumiaSizes = getSizes(jumiaPickedUp);
-  const jumiaInventorySizes = getSizes(jumiaInventory);
-  const bostaSizes = getSizes(bostaPickedUp);
-  const bostaInventorySizes = getSizes(bostaInventory);
-
-  // --- BASATA ---
-  const activeBasata = basataTransactions.filter(t => isInRange(t.performedAt) && matchesOutlet(t));
-  const basataVolume = activeBasata.reduce((s, t) => s + t.amount, 0);
-  const basataCategories = activeBasata.reduce((acc, t) => {
-    acc[t.category] = (acc[t.category] || 0) + t.amount;
-    return acc;
-  }, {});
-  const basataProviders = activeBasata.reduce((acc, t) => {
-    acc[t.serviceProvider] = (acc[t.serviceProvider] || 0) + 1;
-    return acc;
-  }, {});
-
-  const getBasataByOutlet = (list) => {
-    return list.reduce((acc, t) => {
-      const outlet = normalizeOutlet(t.outlet);
-      acc[outlet] = (acc[outlet] || 0) + t.amount;
+    }, {});
+    const basataProviders = activeBasata.reduce((acc, t) => {
+      acc[t.serviceProvider] = (acc[t.serviceProvider] || 0) + 1;
       return acc;
-    }, { eltalg: 0, tegara: 0, mostashfa: 0 });
-  };
-  const basataByOutlet = getBasataByOutlet(activeBasata);
-  const getBasataCountByOutlet = (list) => {
-    return list.reduce((acc, t) => {
-      const outlet = normalizeOutlet(t.outlet);
-      acc[outlet] = (acc[outlet] || 0) + 1;
-      return acc;
-    }, { eltalg: 0, tegara: 0, mostashfa: 0 });
-  };
-  const basataCountByOutlet = getBasataCountByOutlet(activeBasata);
+    }, {});
 
-  const getJumiaCountByOutlet = (list) => {
-    return list.reduce((acc, o) => {
-      const outlet = normalizeOutlet(o.outlet);
-      acc[outlet] = (acc[outlet] || 0) + 1;
-      return acc;
-    }, { eltalg: 0, tegara: 0, mostashfa: 0 });
-  };
-  const jumiaPickedUpByOutlet = getJumiaCountByOutlet(jumiaPickedUp);
-  const jumiaInventoryByOutlet = getJumiaCountByOutlet(jumiaInventory);
+    const getByOutlet = (list, key = 'amount') => {
+      return list.reduce((acc, item) => {
+        const outlet = normalizeOutlet(item.outlet);
+        if (typeof key === 'function') acc[outlet] = (acc[outlet] || 0) + key(item);
+        else acc[outlet] = (acc[outlet] || 0) + (item[key] || 0);
+        return acc;
+      }, { eltalg: 0, tegara: 0, mostashfa: 0 });
+    };
 
-  const getJumiaProfitByOutlet = (list) => {
-    return list.reduce((acc, o) => {
-      const outlet = normalizeOutlet(o.outlet);
-      acc[outlet] = (acc[outlet] || 0) + getJumiaCharge(o.size);
-      return acc;
-    }, { eltalg: 0, tegara: 0, mostashfa: 0 });
-  };
-  const jumiaProfitByOutlet = getJumiaProfitByOutlet(jumiaPickedUp);
+    const basataByOutlet = getByOutlet(activeBasata, 'amount');
+    const basataCountByOutlet = getByOutlet(activeBasata, () => 1);
+    const jumiaPickedUpByOutlet = getByOutlet(jumiaPickedUp, () => 1);
+    const jumiaInventoryByOutlet = getByOutlet(jumiaInventory, () => 1);
+    const jumiaProfitByOutlet = getByOutlet(jumiaPickedUp, (o) => getJumiaCharge(o.size));
+    const bostaProfitByOutlet = getByOutlet(bostaPickedUp, () => 10);
 
-  const getBostaProfitByOutlet = (list) => {
-    return list.reduce((acc, o) => {
-      const outlet = normalizeOutlet(o.outlet);
-      acc[outlet] = (acc[outlet] || 0) + 10;
-      return acc;
-    }, { eltalg: 0, tegara: 0, mostashfa: 0 });
-  };
-  const bostaProfitByOutlet = getBostaProfitByOutlet(bostaPickedUp);
+    const grandTotal = jumiaProfit + bostaProfit + basataVolume + activePenalties;
 
-  // --- GRAND TOTAL ---
-  const grandTotal = jumiaProfit + bostaProfit + basataVolume + activePenalties;
+    // --- CALLS LOG ANALYTICS ---
+    const callsInPeriod = (callLogs || []).filter(l => isInRange(l.createdAt) && (selectedOutlet === 'All' || normalizeOutlet(l.outlet) === selectedOutlet));
+    const callsMade   = callsInPeriod.filter(l => l.agentName);
+    const callsResolved= callsInPeriod.filter(l => l.resolution);
+    const callsClosed  = callsInPeriod.filter(l => l.isClosed);
 
-  // --- CALLS LOG ANALYTICS ---
-  const callsInPeriod = (callLogs || []).filter(l => isInRange(l.createdAt) && (selectedOutlet === 'All' || normalizeOutlet(l.outlet) === selectedOutlet));
-  const callsMade   = callsInPeriod.filter(l => l.agentName);
-  const callsResolved= callsInPeriod.filter(l => l.resolution);
-  const callsClosed  = callsInPeriod.filter(l => l.isClosed);
+    const allOrdersInPeriod = [
+      ...orders.filter(o => isInRange(o.receivedAt) && matchesOutlet(o)),
+      ...bostaOrders.filter(o => isInRange(o.receivedAt) && matchesOutlet(o))
+    ];
+    const urgentInPeriod = allOrdersInPeriod.filter(o => {
+      const d = Math.floor(Math.abs(new Date() - new Date(o.receivedAt)) / 86400000);
+      return o.status === 'Inventory' && d >= 3 && d < 5;
+    });
+    const coveragePct = urgentInPeriod.length > 0 ? Math.round((callsMade.length / urgentInPeriod.length) * 100) : 100;
 
-  // Urgent orders in period (2–3 days) — total received within period from both sources
-  const allOrdersInPeriod = [
-    ...orders.filter(o => isInRange(o.receivedAt) && matchesOutlet(o)),
-    ...bostaOrders.filter(o => isInRange(o.receivedAt) && matchesOutlet(o))
-  ];
-  const urgentInPeriod = allOrdersInPeriod.filter(o => {
-    const d = Math.floor(Math.abs(new Date() - new Date(o.receivedAt)) / 86400000);
-    return o.status === 'Inventory' && d >= 3 && d < 5;
-  });
-  const coveragePct = urgentInPeriod.length > 0
-    ? Math.round((callsMade.length / urgentInPeriod.length) * 100)
-    : 100;
+    const basataCatData = Object.keys(basataCategories).map(cat => ({
+      name: cat,
+      amount: basataCategories[cat],
+    }));
 
-  // Calls vs Orders received bar data
-  const callsVsOrdersData = [
-    {
-      name: language === 'ar' ? 'جوميا' : 'Jumia',
-      [language === 'ar' ? 'طلبات مستلمة' : 'Orders Received']: orders.filter(o => isInRange(o.receivedAt) && matchesOutlet(o)).length,
-      [language === 'ar' ? 'مكالمات' : 'Calls Made']: callsInPeriod.filter(l => l.orderSource !== 'bosta').length,
-    },
-    {
-      name: language === 'ar' ? 'بوسطة' : 'Bosta',
-      [language === 'ar' ? 'طلبات مستلمة' : 'Orders Received']: bostaOrders.filter(o => isInRange(o.receivedAt) && matchesOutlet(o)).length,
-      [language === 'ar' ? 'مكالمات' : 'Calls Made']: callsInPeriod.filter(l => l.orderSource === 'bosta').length,
-    },
-  ];
+    const resolutionCounts = {};
+    callsResolved.forEach(l => { resolutionCounts[l.resolution] = (resolutionCounts[l.resolution] || 0) + 1; });
+    const RESOLUTION_DISPLAY = {
+      coming_pickup: language === 'ar' ? '✅ سيأتي للاستلام' : '✅ Coming to pick up',
+      will_cancel: language === 'ar' ? '❌ سيلغي' : '❌ Will cancel',
+      no_answer: language === 'ar' ? '📵 لا رد' : '📵 No answer',
+      declined: language === 'ar' ? '❓ رفض' : '❓ Declined',
+      no_longer_wants: language === 'ar' ? '🚫 لا يريد' : '🚫 No longer wants',
+    };
+    const RES_COLORS = ['#22c55e','#ef4444','#f59e0b','#a855f7','#f97316'];
+    const resolutionPieData = Object.keys(resolutionCounts).map((key, i) => ({
+      name: RESOLUTION_DISPLAY[key] || key,
+      value: resolutionCounts[key],
+      color: RES_COLORS[i % RES_COLORS.length]
+    }));
+
+    const revenueStreamData = [
+      { name: t('jumia'), value: jumiaProfit, color: CHART_COLORS.jumia },
+      { name: t('bosta'), value: bostaProfit, color: CHART_COLORS.bosta },
+      { name: t('basata'), value: basataVolume, color: CHART_COLORS.basata },
+      { name: t('penalties'), value: activePenalties, color: CHART_COLORS.warning },
+    ];
+
+    const ordersStatusData = [
+      { name: t('pickedFromJumia'), value: jumiaInventory.length, color: CHART_COLORS.warning },
+      { name: t('pickedUpByCustomer'), value: jumiaPickedUp.length, color: CHART_COLORS.success },
+      { name: `${t('jumia')} ${t('returnedStatus')}`, value: jumiaReturned.length, color: CHART_COLORS.danger },
+      { name: `${t('bosta')} ${t('pickedUpStatus')}`, value: bostaPickedUp.length, color: CHART_COLORS.bosta },
+      { name: `${t('bosta')} ${t('inventoryStatus')}`, value: bostaInventory.length, color: '#a5b4fc' },
+      { name: `${t('bosta')} ${t('returnedStatus')}`, value: bostaReturned.length, color: '#f87171' },
+    ].filter(d => d.value > 0);
+
+    const basataByOutletData = [
+      { name: t('eltalg'), amount: basataByOutlet.eltalg, color: CHART_COLORS.basata },
+      { name: t('tegara'), amount: basataByOutlet.tegara, color: '#06b6d4' },
+      { name: t('mostashfa'), amount: basataByOutlet.mostashfa, color: '#0891b2' },
+    ].filter(d => d.amount > 0);
+
+    const jumiaProfitByOutletData = [
+      { name: t('eltalg'), amount: jumiaProfitByOutlet.eltalg, color: CHART_COLORS.jumia },
+      { name: t('tegara'), amount: jumiaProfitByOutlet.tegara, color: '#fb923c' },
+      { name: t('mostashfa'), amount: jumiaProfitByOutlet.mostashfa, color: '#ea580c' },
+    ].filter(d => d.amount > 0);
+
+    const comparisonData = [
+      { name: language === 'ar' ? 'المدخلات' : 'Inventory', jumia: jumiaInventory.length, bosta: bostaInventory.length },
+      { name: t('pickedUpByCustomer'), jumia: jumiaPickedUp.length, bosta: bostaPickedUp.length },
+      { name: t('returnedStatus'), jumia: jumiaReturned.length, bosta: bostaReturned.length },
+    ];
+
+    const getTransactionCount = (periodMs) => {
+      const limit = new Date(Date.now() - periodMs);
+      const jTrx = orders.filter(o => (o.status === 'Picked Up' && o.pickedUpAt && new Date(o.pickedUpAt) >= limit) || (o.status === 'Returned' && o.returnedAt && new Date(o.returnedAt) >= limit)).length;
+      const bTrx = bostaOrders.filter(o => (o.status === 'Picked Up' && o.pickedUpAt && new Date(o.pickedUpAt) >= limit) || (o.status === 'Returned' && o.returnedAt && new Date(o.returnedAt) >= limit)).length;
+      const basataTrx = basataTransactions.filter(t => t.performedAt && new Date(t.performedAt) >= limit).length;
+      return jTrx + bTrx + basataTrx;
+    };
+
+    return {
+      jumiaPickedUp, jumiaInventory, jumiaReceived, stdReturned, jumiaReturned, jumiaCancelled, jumiaCash, jumiaReturnedAmt, jumiaProfit,
+      bostaInventory, activePenalties, jumiaSlaCritical, jumiaSlaNear, jumiaPayTotal, jumiaCardTotal, jumiaCashTotal, jumiaPaymentData,
+      bostaPickedUp, bostaReceived, bostaReturned, bostaCancelled, bostaCash, bostaReturnedAmt, bostaProfit,
+      jumiaSizes, jumiaInventorySizes, bostaSizes, bostaInventorySizes,
+      activeBasata, basataVolume, basataCategories, basataProviders, basataByOutlet, basataCountByOutlet,
+      jumiaPickedUpByOutlet, jumiaInventoryByOutlet, jumiaProfitByOutlet, bostaProfitByOutlet,
+      grandTotal, callsInPeriod, callsMade, callsResolved, callsClosed, coveragePct,
+      basataCatData, resolutionPieData, revenueStreamData, ordersStatusData, basataByOutletData, jumiaProfitByOutletData, comparisonData,
+      dailyCount: isAdminAccount ? getTransactionCount(86400000) : 0,
+      weeklyCount: isAdminAccount ? getTransactionCount(86400000 * 7) : 0,
+      monthlyCount: isAdminAccount ? getTransactionCount(86400000 * 30) : 0
+    };
+  }, [orders, bostaOrders, basataTransactions, callLogs, customerReturns, selectedOutlet, startDate, endDate, isAdminAccount, language, calculatePenalty]);
+
+  const {
+    jumiaPickedUp, jumiaInventory, jumiaReceived, stdReturned, jumiaReturned, jumiaCancelled, jumiaCash, jumiaReturnedAmt, jumiaProfit,
+    bostaInventory, activePenalties, jumiaSlaCritical, jumiaSlaNear, jumiaPayTotal, jumiaCardTotal, jumiaCashTotal, jumiaPaymentData,
+    bostaPickedUp, bostaReceived, bostaReturned, bostaCancelled, bostaCash, bostaReturnedAmt, bostaProfit,
+    jumiaSizes, jumiaInventorySizes, bostaSizes, bostaInventorySizes,
+    activeBasata, basataVolume, basataCategories, basataProviders, basataByOutlet, basataCountByOutlet,
+    jumiaPickedUpByOutlet, jumiaInventoryByOutlet, jumiaProfitByOutlet, bostaProfitByOutlet,
+    grandTotal, callsInPeriod, callsMade, callsResolved, callsClosed, coveragePct,
+    basataCatData, resolutionPieData, revenueStreamData, ordersStatusData, basataByOutletData, jumiaProfitByOutletData, comparisonData,
+    dailyCount, weeklyCount, monthlyCount
+  } = stats;
 
   const getCashByOutlet = (list) => {
     return list.reduce((acc, o) => {
@@ -319,8 +344,6 @@ export default function AnalyticsTab() {
       return acc;
     }, { eltalg: 0, tegara: 0, mostashfa: 0 });
   };
-  const ordersReceivedKey = language === 'ar' ? 'طلبات مستلمة' : 'Orders Received';
-  const callsMadeKey      = language === 'ar' ? 'مكالمات'       : 'Calls Made';
 
   const handleExportPPTX = () => {
     const analytics = {
@@ -371,68 +394,6 @@ export default function AnalyticsTab() {
       : `FCF_Master_Report_${timeframe}_${startDate}`;
     exportToPPTX(analytics, filename, language);
   };
-
-  // Resolution breakdown pie
-  const resolutionCounts = {};
-  callsResolved.forEach(l => { resolutionCounts[l.resolution] = (resolutionCounts[l.resolution] || 0) + 1; });
-  const RESOLUTION_DISPLAY = {
-    coming_pickup:   language === 'ar' ? '✅ سيأتي للاستلام' : '✅ Coming to pick up',
-    will_cancel:     language === 'ar' ? '❌ سيلغي' : '❌ Will cancel',
-    no_answer:       language === 'ar' ? '📵 لا رد' : '📵 No answer',
-    declined:        language === 'ar' ? '❓ رفض' : '❓ Declined',
-    no_longer_wants: language === 'ar' ? '🚫 لا يريد' : '🚫 No longer wants',
-  };
-  const RES_COLORS = ['#22c55e','#ef4444','#f59e0b','#a855f7','#f97316'];
-  const resolutionPieData = Object.keys(resolutionCounts).map((key, i) => ({
-    name: RESOLUTION_DISPLAY[key] || key,
-    value: resolutionCounts[key],
-    color: RES_COLORS[i % RES_COLORS.length]
-  }));
-
-  // --- CHART DATA ---
-  const revenueStreamData = [
-    { name: t('jumia'), value: jumiaProfit, color: CHART_COLORS.jumia },
-    { name: t('bosta'), value: bostaProfit, color: CHART_COLORS.bosta },
-    { name: t('basata'), value: basataVolume, color: CHART_COLORS.basata },
-    { name: t('penalties'), value: activePenalties, color: CHART_COLORS.warning },
-  ];
-
-  const ordersStatusData = [
-    { name: t('pickedFromJumia'), value: jumiaInventory.length, color: CHART_COLORS.warning },
-    { name: t('pickedUpByCustomer'), value: jumiaPickedUp.length, color: CHART_COLORS.success },
-    { name: `${t('jumia')} ${t('returnedStatus')}`, value: jumiaReturned.length, color: CHART_COLORS.danger },
-    { name: `${t('bosta')} ${t('pickedUpStatus')}`, value: bostaPickedUp.length, color: CHART_COLORS.bosta },
-    { name: `${t('bosta')} ${t('inventoryStatus')}`, value: bostaInventory.length, color: '#a5b4fc' },
-    { name: `${t('bosta')} ${t('returnedStatus')}`, value: bostaReturned.length, color: '#f87171' },
-  ].filter(d => d.value > 0);
-
-  const basataCatData = Object.keys(basataCategories).map(cat => ({
-    name: cat,
-    amount: basataCategories[cat],
-  }));
-
-  const basataByOutletData = [
-    { name: t('eltalg'), amount: basataByOutlet.eltalg, color: CHART_COLORS.basata },
-    { name: t('tegara'), amount: basataByOutlet.tegara, color: '#06b6d4' },
-    { name: t('mostashfa'), amount: basataByOutlet.mostashfa, color: '#0891b2' },
-  ].filter(d => d.amount > 0);
-
-  const basataProviderData = Object.keys(basataProviders)
-    .sort((a, b) => basataProviders[b] - basataProviders[a])
-    .slice(0, 6)
-    .map(p => ({ name: p, count: basataProviders[p] }));
-
-  const jumiaProfitByOutletData = [
-    { name: t('eltalg'), amount: jumiaProfitByOutlet.eltalg, color: CHART_COLORS.jumia },
-    { name: t('tegara'), amount: jumiaProfitByOutlet.tegara, color: '#fb923c' },
-    { name: t('mostashfa'), amount: jumiaProfitByOutlet.mostashfa, color: '#ea580c' },
-  ].filter(d => d.amount > 0);
-
-  const comparisonData = [
-    { name: language === 'ar' ? 'المدخلات' : 'Inventory', jumia: jumiaInventory.length, bosta: bostaInventory.length },
-    { name: t('pickedUpByCustomer'), jumia: jumiaPickedUp.length, bosta: bostaPickedUp.length },
-    { name: t('returnedStatus'), jumia: jumiaReturned.length, bosta: bostaReturned.length },
-  ];
 
   // Metric Card
   const MetricCard = ({ title, value, sub, icon, color, trend, trendDir }) => (

@@ -46,41 +46,10 @@ async function main() {
     }
   });
 
-  const staffHash = await bcrypt.hash('FCFStaff@2024', 10);
-  await prisma.admin.upsert({
-    where: { username: 'staff' },
-    update: {},
-    create: {
-      username: 'staff',
-      passwordHash: staffHash,
-      role: 'staff'
-    }
-  });
-
   console.log('✅ Seed complete. Admin accounts created:');
   console.log('   👤 username: admin   | password: FCFAdmin@2024 | role: admin');
-  console.log('   👤 username: staff   | password: FCFStaff@2024 | role: staff');
   console.log('\n⚠️  IMPORTANT: Change these passwords after first login!');
 
-  // Create additional staff profiles
-  const users = ['banha1', 'banha2', 'banha3'];
-  const banhaPassword = 'fcfuser';
-  const banhaHash = await bcrypt.hash(banhaPassword, 10);
-  for (const username of users) {
-    await prisma.admin.upsert({
-      where: { username },
-      update: {
-        passwordHash: banhaHash,
-        role: 'staff'
-      },
-      create: {
-        username,
-        passwordHash: banhaHash,
-        role: 'staff'
-      }
-    });
-  }
-  console.log('✅ Created banha staff profiles (banha1, banha2, banha3).');
 
   // Add specific branch staff logins
   const specificUsers = [

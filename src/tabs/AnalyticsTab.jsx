@@ -422,31 +422,6 @@ export default function AnalyticsTab() {
   );
 
   // Admin Transaction Counters Logic
-  const getTransactionCount = (periodMs) => {
-    const limit = new Date(Date.now() - periodMs);
-    
-    const jTrx = orders.filter(o => 
-      (o.status === 'Picked Up' && o.pickedUpAt && new Date(o.pickedUpAt) >= limit) ||
-      (o.status === 'Returned' && o.returnedAt && new Date(o.returnedAt) >= limit)
-    ).length;
-    
-    const bTrx = bostaOrders.filter(o => 
-      (o.status === 'Picked Up' && o.pickedUpAt && new Date(o.pickedUpAt) >= limit) ||
-      (o.status === 'Returned' && o.returnedAt && new Date(o.returnedAt) >= limit)
-    ).length;
-    
-    const basataTrx = basataTransactions.filter(t => t.performedAt && new Date(t.performedAt) >= limit).length;
-    
-    const custRetTrx = (customerReturns || []).filter(r => 
-      r.status === 'Returned to Jumia' && r.returnedAt && new Date(r.returnedAt) >= limit
-    ).length;
-
-    return jTrx + bTrx + custRetTrx;
-  };
-
-  const dailyCount = isAdminAccount ? getTransactionCount(86400000) : 0;
-  const weeklyCount = isAdminAccount ? getTransactionCount(86400000 * 7) : 0;
-  const monthlyCount = isAdminAccount ? getTransactionCount(86400000 * 30) : 0;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: '100%', overflowY: 'auto', [language === 'ar' ? 'paddingLeft' : 'paddingRight']: '0.5rem' }}>

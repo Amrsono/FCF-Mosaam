@@ -32,6 +32,8 @@ export default function OrdersTab() {
     receiveCustomerReturn, 
     markReturnedToJumia,
     revertCustomerReturn,
+    updateCustomerReturn,
+    deleteCustomerReturn,
     updateOrder,
     cancelOrder,
     deleteOrder,
@@ -86,6 +88,9 @@ export default function OrdersTab() {
     reason: '',
     outlet: user?.outlet || 'eltalg'
   });
+  const [editingReturn, setEditingReturn] = useState(null);
+  const [showDeleteReturnModal, setShowDeleteReturnModal] = useState(false);
+  const [targetReturn, setTargetReturn] = useState(null);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -873,26 +878,48 @@ export default function OrdersTab() {
                     </span>
                   </td>
                   <td>
-                    {ret.status === 'At Station' && (
+                    <div style={{ display: 'flex', gap: '0.4rem' }}>
+                      {(ret.status === 'At Station' || user?.role === 'admin') && (
+                        <button 
+                          className="btn btn-outline" 
+                          style={{ padding: '0.4rem', color: 'var(--color-primary)' }} 
+                          title={language === 'ar' ? 'تعديل' : 'Edit'}
+                          onClick={() => setEditingReturn({ ...ret })}
+                        >
+                          <Pencil size={14} />
+                        </button>
+                      )}
+                      
+                      {ret.status === 'At Station' && (
+                        <button 
+                          className="btn btn-outline" 
+                          style={{ padding: '0.4rem 0.8rem', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }} 
+                          onClick={() => markReturnedToJumia(ret.id)}
+                        >
+                          <Check size={14} />
+                          <span style={{ fontSize: '0.75rem' }}>{t('markReturnedToJumia')}</span>
+                        </button>
+                      )}
+                      {ret.status === 'Returned to Jumia' && (
+                        <button 
+                          className="btn btn-outline" 
+                          style={{ padding: '0.4rem 0.8rem', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }} 
+                          onClick={() => revertCustomerReturn(ret.id)}
+                        >
+                          <RotateCcw size={16} />
+                          <span style={{ fontSize: '0.75rem' }}>{language === 'ar' ? 'إلغاء الإرجاع' : 'Undo Return'}</span>
+                        </button>
+                      )}
+
                       <button 
                         className="btn btn-outline" 
-                        style={{ padding: '0.4rem 0.8rem', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }} 
-                        onClick={() => markReturnedToJumia(ret.id)}
+                        style={{ padding: '0.4rem', color: 'var(--color-danger)' }} 
+                        title={language === 'ar' ? 'حذف' : 'Delete'}
+                        onClick={() => { setTargetReturn(ret); setShowDeleteReturnModal(true); }}
                       >
-                        <Check size={14} />
-                        <span style={{ fontSize: '0.75rem' }}>{t('markReturnedToJumia')}</span>
+                        <Trash2 size={14} />
                       </button>
-                    )}
-                    {ret.status === 'Returned to Jumia' && (
-                      <button 
-                        className="btn btn-outline" 
-                        style={{ padding: '0.4rem 0.8rem', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }} 
-                        onClick={() => revertCustomerReturn(ret.id)}
-                      >
-                        <RotateCcw size={16} />
-                        <span style={{ fontSize: '0.75rem' }}>{language === 'ar' ? 'إلغاء الإرجاع' : 'Undo Return'}</span>
-                      </button>
-                    )}
+                    </div>
                   </td>
                 </tr>
               )) : (
@@ -1278,6 +1305,93 @@ export default function OrdersTab() {
                 {t('confirm')}
               </button>
               <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowDeleteModal(false)}>{t('cancel')}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Return Modal */}
+      {editingReturn && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '450px', background: 'var(--bg-panel)' }}>
+            <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Pencil size={20} color="var(--color-primary)" />
+              {language === 'ar' ? 'تعديل بيانات المرتجع' : 'Edit Return Details'}
+            </h3>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="input-group">
+                <label className="input-label">{t('orderId')}</label>
+                <input className="input-field" value={editingReturn.orderId || ''} onChange={e => setEditingReturn({...editingReturn, orderId: e.target.value})} placeholder="ORD..." />
+              </div>
+              <div className="input-group">
+                <label className="input-label">{t('phone')}</label>
+                <input required className="input-field" value={editingReturn.customerPhone} onChange={e => setEditingReturn({...editingReturn, customerPhone: e.target.value})} />
+              </div>
+              <div className="input-group">
+                <label className="input-label">{t('customer')}</label>
+                <input required className="input-field" value={editingReturn.customerName} onChange={e => setEditingReturn({...editingReturn, customerName: e.target.value})} />
+              </div>
+              <div className="input-group">
+                <label className="input-label">{t('description')}</label>
+                <textarea className="input-field" required value={editingReturn.description} onChange={e => setEditingReturn({...editingReturn, description: e.target.value})} rows={3} />
+              </div>
+              <div className="input-group">
+                <label className="input-label">{language === 'ar' ? 'المنفذ' : 'Outlet'}</label>
+                <select className="input-field" value={editingReturn.outlet} onChange={e => setEditingReturn({...editingReturn, outlet: e.target.value})}>
+                  <option value="eltalg">{t('eltalg')}</option>
+                  <option value="tegara">{t('tegara')}</option>
+                  <option value="mostashfa">{t('mostashfa')}</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                <button 
+                  className="btn btn-primary" 
+                  style={{ flex: 1 }}
+                  onClick={async () => {
+                    const res = await updateCustomerReturn(editingReturn.id, {
+                      orderId: editingReturn.orderId,
+                      customerPhone: editingReturn.customerPhone,
+                      customerName: editingReturn.customerName,
+                      description: editingReturn.description,
+                      outlet: editingReturn.outlet
+                    });
+                    if (res.success) setEditingReturn(null);
+                  }}
+                >
+                  {t('confirm')}
+                </button>
+                <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => setEditingReturn(null)}>{t('cancel')}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Return Modal */}
+      {showDeleteReturnModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 110, padding: '1rem' }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '400px', background: 'var(--bg-main)' }}>
+            <h3 style={{ marginBottom: '1rem', color: 'var(--color-danger)' }}>{language === 'ar' ? 'حذف سجل المرتجع' : 'Delete Return Record'}</h3>
+            <p style={{ marginBottom: '1.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+              {language === 'ar' ? `هل أنت متأكد من حذف سجل المرتجع للعميل ${targetReturn?.customerName}؟ سيتم حذف السجل نهائياً.` : `Are you sure you want to delete the return record for ${targetReturn?.customerName}? This action is permanent.`}
+            </p>
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+              <button 
+                className="btn btn-primary" 
+                style={{ flex: 1, background: 'var(--color-danger)' }}
+                onClick={async () => {
+                  const res = await deleteCustomerReturn(targetReturn.id);
+                  if (res.success) {
+                    setShowDeleteReturnModal(false);
+                    setTargetReturn(null);
+                  }
+                }}
+              >
+                {t('confirm')}
+              </button>
+              <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowDeleteReturnModal(false)}>{t('cancel')}</button>
             </div>
           </div>
         </div>

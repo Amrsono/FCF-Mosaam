@@ -564,6 +564,40 @@ export const DashboardProvider = ({ children }) => {
     }
   };
 
+  const updateCustomerReturn = async (id, updatedData) => {
+    try {
+      const res = await fetch('/api/customer-returns', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, action: 'UPDATE_INFO', ...updatedData })
+      });
+      if (res.ok) {
+        await fetchData();
+        logUserAction('Update Customer Return', { id, ...updatedData });
+        return { success: true };
+      }
+      return { success: false };
+    } catch (err) {
+      return { success: false };
+    }
+  };
+
+  const deleteCustomerReturn = async (id) => {
+    try {
+      const res = await fetch(`/api/customer-returns?id=${id}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        await fetchData();
+        logUserAction('Delete Customer Return', { id });
+        return { success: true };
+      }
+      return { success: false };
+    } catch (err) {
+      return { success: false };
+    }
+  };
+
   const createOrGetCallLog = async (orderId, orderSource, customerPhone, outlet) => {
     try {
       const res = await fetch('/api/call-logs', {
@@ -640,7 +674,8 @@ export const DashboardProvider = ({ children }) => {
       markReturnedToJumia, revertCustomerReturn, createOrGetCallLog,
       takeCallOwnership, resolveCall, closeCallLog, reopenCallLog,
       updateOrder, updateBostaOrder, cancelOrder, deleteOrder,
-      cancelBostaOrder, deleteBostaOrder, revertOrderToInventory, revertBostaOrderToInventory
+      cancelBostaOrder, deleteBostaOrder, revertOrderToInventory, revertBostaOrderToInventory,
+      updateCustomerReturn, deleteCustomerReturn
     }}>
       {children}
     </DashboardContext.Provider>

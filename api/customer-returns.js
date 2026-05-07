@@ -28,7 +28,7 @@ export default async function handler(req, res) {
       return res.status(201).json(newReturn);
     }
 
-    // PATCH: Update status (Mark as Returned to Jumia or REVERT)
+    // PATCH: Update status or INFO
     if (req.method === 'PATCH') {
       const { id, action } = req.body;
 
@@ -51,6 +51,22 @@ export default async function handler(req, res) {
         return res.status(200).json(updated);
       }
 
+      if (action === 'UPDATE_INFO') {
+        const { orderId, customerPhone, customerName, description, reason, outlet } = req.body;
+        const updated = await prisma.customerReturn.update({
+          where: { id },
+          data: {
+            orderId: orderId || null,
+            customerPhone: customerPhone || '',
+            customerName: customerName || 'Unknown',
+            description: description || '',
+            reason: reason || null,
+            outlet: outlet || 'eltalg'
+          }
+        });
+        return res.status(200).json(updated);
+      }
+
       // Default: Mark as Returned to Jumia
       const updated = await prisma.customerReturn.update({
         where: { id },
@@ -58,6 +74,17 @@ export default async function handler(req, res) {
       });
 
       return res.status(200).json(updated);
+    }
+
+    // DELETE: Remove a return record
+    if (req.method === 'DELETE') {
+      const { id } = req.query;
+      if (!id) return res.status(400).json({ error: 'Missing ID' });
+
+      await prisma.customerReturn.delete({
+        where: { id }
+      });
+      return res.status(200).json({ success: true });
     }
 
     return res.status(405).json({ error: 'Method Not Allowed' });

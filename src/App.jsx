@@ -14,6 +14,7 @@ import LogsTab from './tabs/LogsTab';
 import CallsLogTab from './tabs/CallsLogTab';
 import LoginPage from './pages/LoginPage';
 import LandingPage from './pages/LandingPage';
+import ErrorBoundary from './components/ErrorBoundary';
 
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
@@ -281,13 +282,15 @@ function AppContent() {
 export default function App() {
   return (
     <AuthProvider>
-      <DashboardProvider>
-        <LanguageProvider>
-          <ThemeProvider>
-            <AppContent />
-          </ThemeProvider>
-        </LanguageProvider>
-      </DashboardProvider>
+      <ErrorBoundary>
+        <DashboardProvider>
+          <LanguageProvider>
+            <ThemeProvider>
+              <AppContent />
+            </ThemeProvider>
+          </LanguageProvider>
+        </DashboardProvider>
+      </ErrorBoundary>
     </AuthProvider>
   );
 }

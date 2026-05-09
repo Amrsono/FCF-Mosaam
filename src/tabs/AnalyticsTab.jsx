@@ -958,6 +958,7 @@ export default function AnalyticsTab() {
           )}
         </ChartCard>
       </div>
+    </div>
 
       {/* Row 5: Financial Summary Table */}
       <ChartCard title={language === 'ar' ? 'الملخص المالي الكامل' : 'Full Financial Summary'} icon={<DollarSign size={16} color="var(--color-success)" />}>

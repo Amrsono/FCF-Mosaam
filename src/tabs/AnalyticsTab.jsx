@@ -433,7 +433,9 @@ export default function AnalyticsTab() {
         resolved: callsResolved.length,
         coverage: coveragePct
       },
-      grandTotal: grandTotal
+      grandTotal: grandTotal,
+      topProducts: topProductsData,
+      topCategories: topCategoriesData
     };
 
     const filename = timeframe === 'custom' 

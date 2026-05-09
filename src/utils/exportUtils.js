@@ -154,6 +154,28 @@ export const exportToPPTX = async (analytics, filename, language = 'en') => {
     ];
     slide6.addTable(fStats, { x: 0.5, y: 1.2, w: 9, border: { pt: 1, color: "CBD5E0" }, fill: "F7FAFC", fontSize: 16, bold: true });
 
+    // 7. TOP PRODUCTS
+    if (analytics.topProducts && analytics.topProducts.length > 0) {
+      let slide7 = pptx.addSlide();
+      slide7.addText(language === 'ar' ? "المنتجات الأكثر مبيعاً" : "Top Selling Products", { x: 0.5, y: 0.5, fontSize: 24, bold: true, color: "7864ff" });
+      const productRows = [[language === 'ar' ? 'المنتج' : 'Product', language === 'ar' ? 'الكمية' : 'Quantity', language === 'ar' ? 'القيمة' : 'Value']];
+      analytics.topProducts.forEach(p => {
+        productRows.push([p.name, String(p.count), `${(p.value || 0).toLocaleString()} EGP`]);
+      });
+      slide7.addTable(productRows, { x: 0.5, y: 1.2, w: 9, border: { pt: 1, color: "CBD5E0" }, fill: "F7FAFC", fontSize: 12 });
+    }
+
+    // 8. TOP CATEGORIES
+    if (analytics.topCategories && analytics.topCategories.length > 0) {
+      let slide8 = pptx.addSlide();
+      slide8.addText(language === 'ar' ? "الفئات الأكثر مبيعاً" : "Top Selling Categories", { x: 0.5, y: 0.5, fontSize: 24, bold: true, color: "6366f1" });
+      const categoryRows = [[language === 'ar' ? 'الفئة' : 'Category', language === 'ar' ? 'الكمية' : 'Quantity', language === 'ar' ? 'القيمة' : 'Value']];
+      analytics.topCategories.forEach(c => {
+        categoryRows.push([c.name, String(c.count), `${(c.value || 0).toLocaleString()} EGP`]);
+      });
+      slide8.addTable(categoryRows, { x: 0.5, y: 1.2, w: 9, border: { pt: 1, color: "CBD5E0" }, fill: "F7FAFC", fontSize: 14 });
+    }
+
     // Save
     await pptx.writeFile({ fileName: `${filename}.pptx` });
   } catch (error) {

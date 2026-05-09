@@ -35,6 +35,8 @@ const CHART_COLORS = {
   warning: '#f59e0b',
 };
 
+const INSIGHTS_COLORS = ['#8b5cf6', '#ec4899', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#6366f1', '#06b6d4'];
+
 const CustomTooltip = ({ active, payload, label, language }) => {
   if (active && payload && payload.length) {
     return (
@@ -318,6 +320,32 @@ export default function AnalyticsTab() {
       return jTrx + bTrx + basataTrx;
     };
 
+    // --- SALES INSIGHTS ---
+    const allPickedUp = [...jumiaPickedUp, ...bostaPickedUp];
+    
+    const productMap = allPickedUp.reduce((acc, o) => {
+      const name = (o.description || (language === 'ar' ? 'غير معروف' : 'Unknown')).trim();
+      if (!acc[name]) acc[name] = { count: 0, value: 0 };
+      acc[name].count += 1;
+      acc[name].value += (Number(o.totalValue) || 0);
+      return acc;
+    }, {});
+    const topProductsData = Object.entries(productMap)
+      .map(([name, stats]) => ({ name, count: stats.count, value: stats.value }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+
+    const categoryMap = allPickedUp.reduce((acc, o) => {
+      const cat = (o.category || (language === 'ar' ? 'عام' : 'General')).trim();
+      if (!acc[cat]) acc[cat] = { count: 0, value: 0 };
+      acc[cat].count += 1;
+      acc[cat].value += (Number(o.totalValue) || 0);
+      return acc;
+    }, {});
+    const topCategoriesData = Object.entries(categoryMap)
+      .map(([name, stats]) => ({ name, count: stats.count, value: stats.value }))
+      .sort((a, b) => b.count - a.count);
+
     return {
       jumiaPickedUp, jumiaInventory, jumiaReceived, stdReturned, jumiaReturned, jumiaCancelled, jumiaCash, jumiaReturnedAmt, jumiaProfit,
       bostaInventory, activePenalties, jumiaSlaCritical, jumiaSlaNear, jumiaPayTotal, jumiaCardTotal, jumiaCashTotal, jumiaPaymentData,
@@ -328,6 +356,7 @@ export default function AnalyticsTab() {
       grandTotal, callsInPeriod, callsMade, callsResolved, callsClosed, coveragePct,
       basataCatData, resolutionPieData, revenueStreamData, ordersStatusData, basataByOutletData, jumiaProfitByOutletData, comparisonData,
       basataProviderData, callsVsOrdersData, ordersReceivedKey, callsMadeKey,
+      topProductsData, topCategoriesData,
       dailyCount: isAdminAccount ? getTransactionCount(86400000) : 0,
       weeklyCount: isAdminAccount ? getTransactionCount(86400000 * 7) : 0,
       monthlyCount: isAdminAccount ? getTransactionCount(86400000 * 30) : 0
@@ -344,6 +373,7 @@ export default function AnalyticsTab() {
     grandTotal, callsInPeriod, callsMade, callsResolved, callsClosed, coveragePct,
     basataCatData, resolutionPieData, revenueStreamData, ordersStatusData, basataByOutletData, jumiaProfitByOutletData, comparisonData,
     basataProviderData, callsVsOrdersData, ordersReceivedKey, callsMadeKey,
+    topProductsData, topCategoriesData,
     dailyCount, weeklyCount, monthlyCount
   } = stats;
 
@@ -804,6 +834,83 @@ export default function AnalyticsTab() {
             </div>
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '180px', color: 'var(--text-muted)' }}>{t('noData')}</div>
+          )}
+        </ChartCard>
+      </div>
+
+      {/* Sales Insights: Top Products & Categories */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 450px), 1fr))', gap: '1rem' }}>
+        <ChartCard title={language === 'ar' ? 'المنتجات الأكثر مبيعاً (بالكمية)' : 'Most Sellable Products (by Qty)'} icon={<PackageCheck size={16} color="var(--color-primary)" />}>
+          {topProductsData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={320}>
+              <BarChart data={topProductsData} layout="vertical" margin={{ left: 30, right: 30 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
+                <XAxis type="number" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis 
+                  type="category" 
+                  dataKey="name" 
+                  orientation={language === 'ar' ? 'right' : 'left'} 
+                  tick={{ fill: 'rgba(255,255,255,0.8)', fontSize: 10 }} 
+                  axisLine={false} 
+                  tickLine={false} 
+                  width={100}
+                  tickFormatter={(val) => val.length > 15 ? val.substring(0, 15) + '...' : val}
+                />
+                <Tooltip 
+                  content={<CustomTooltip language={language} />} 
+                  cursor={{ fill: 'rgba(255,255,255,0.03)' }}
+                />
+                <Bar dataKey="count" name={language === 'ar' ? 'الكمية' : 'Quantity'} radius={[0, 4, 4, 0]}>
+                  {topProductsData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={`url(#colorBar${index % 5})`} />
+                  ))}
+                </Bar>
+                <defs>
+                  <linearGradient id="colorBar0" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.3}/>
+                  </linearGradient>
+                  <linearGradient id="colorBar1" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="5%" stopColor="#ec4899" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#ec4899" stopOpacity={0.3}/>
+                  </linearGradient>
+                  <linearGradient id="colorBar2" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                  </linearGradient>
+                  <linearGradient id="colorBar3" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.3}/>
+                  </linearGradient>
+                  <linearGradient id="colorBar4" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.3}/>
+                  </linearGradient>
+                </defs>
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '300px', color: 'var(--text-muted)' }}>{t('noData')}</div>
+          )}
+        </ChartCard>
+
+        <ChartCard title={language === 'ar' ? 'الفئات الأكثر مبيعاً' : 'Most Sellable Categories'} icon={<BarChart2 size={16} color="var(--color-primary)" />}>
+          {topCategoriesData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={320}>
+              <BarChart data={topCategoriesData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                <XAxis dataKey="name" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis orientation={language === 'ar' ? 'right' : 'left'} tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <Tooltip content={<CustomTooltip language={language} />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+                <Bar dataKey="count" name={language === 'ar' ? 'الكمية' : 'Quantity'} radius={[4, 4, 0, 0]}>
+                  {topCategoriesData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={INSIGHTS_COLORS[index % INSIGHTS_COLORS.length]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '300px', color: 'var(--text-muted)' }}>{t('noData')}</div>
           )}
         </ChartCard>
       </div>

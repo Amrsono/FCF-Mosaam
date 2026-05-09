@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useDashboard } from '../context/DashboardContext';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -78,9 +78,10 @@ export default function AnalyticsTab() {
   const timeframe = f.timeframe;
 
   const setStartDate = (val) => updateFilters('analytics', { dateStart: val });
-  const setEndDate = (val) => updateFilters('analytics', { dateEnd: val });
-  const setSelectedOutlet = (val) => updateFilters('analytics', { outlet: val });
   const setTimeframe = (val) => updateFilters('analytics', { timeframe: val });
+
+  const [insightsOutlet, setInsightsOutlet] = useState('All');
+  const [insightsSource, setInsightsSource] = useState('All');
 
   const handleTimeframeChange = (tf) => {
     setTimeframe(tf);
@@ -321,9 +322,15 @@ export default function AnalyticsTab() {
     };
 
     // --- SALES INSIGHTS ---
-    const allPickedUp = [...jumiaPickedUp, ...bostaPickedUp];
+    const insightsJumia = orders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt) && (insightsOutlet === 'All' || normalizeOutlet(o.outlet) === insightsOutlet));
+    const insightsBosta = bostaOrders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt) && (insightsOutlet === 'All' || normalizeOutlet(o.outlet) === insightsOutlet));
     
-    const productMap = allPickedUp.reduce((acc, o) => {
+    let allPickedUpInsights = [];
+    if (insightsSource === 'All') allPickedUpInsights = [...insightsJumia, ...insightsBosta];
+    else if (insightsSource === 'Jumia') allPickedUpInsights = insightsJumia;
+    else if (insightsSource === 'Bosta') allPickedUpInsights = insightsBosta;
+    
+    const productMap = allPickedUpInsights.reduce((acc, o) => {
       const name = (o.description || (language === 'ar' ? 'غير معروف' : 'Unknown')).trim();
       if (!acc[name]) acc[name] = { count: 0, value: 0 };
       acc[name].count += 1;
@@ -335,7 +342,7 @@ export default function AnalyticsTab() {
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);
 
-    const categoryMap = allPickedUp.reduce((acc, o) => {
+    const categoryMap = allPickedUpInsights.reduce((acc, o) => {
       const cat = (o.category || (language === 'ar' ? 'عام' : 'General')).trim();
       if (!acc[cat]) acc[cat] = { count: 0, value: 0 };
       acc[cat].count += 1;
@@ -361,7 +368,7 @@ export default function AnalyticsTab() {
       weeklyCount: isAdminAccount ? getTransactionCount(86400000 * 7) : 0,
       monthlyCount: isAdminAccount ? getTransactionCount(86400000 * 30) : 0
     };
-  }, [orders, bostaOrders, basataTransactions, callLogs, customerReturns, selectedOutlet, startDate, endDate, isAdminAccount, language, calculatePenalty]);
+  }, [orders, bostaOrders, basataTransactions, callLogs, customerReturns, selectedOutlet, startDate, endDate, isAdminAccount, language, calculatePenalty, insightsOutlet, insightsSource]);
 
   const {
     jumiaPickedUp, jumiaInventory, jumiaReceived, stdReturned, jumiaReturned, jumiaCancelled, jumiaCash, jumiaReturnedAmt, jumiaProfit,
@@ -839,9 +846,46 @@ export default function AnalyticsTab() {
       </div>
 
       {/* Sales Insights: Top Products & Categories */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 450px), 1fr))', gap: '1rem' }}>
-        <ChartCard title={language === 'ar' ? 'المنتجات الأكثر مبيعاً (بالكمية)' : 'Most Sellable Products (by Qty)'} icon={<PackageCheck size={16} color="var(--color-primary)" />}>
-          {topProductsData.length > 0 ? (
+      <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', background: 'rgba(99,102,241,0.05)', border: '1px solid rgba(99,102,241,0.1)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', paddingBottom: '0.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+          <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-primary)', margin: 0, fontSize: '1.1rem' }}>
+            <TrendingUp size={20} color="var(--color-primary)" />
+            {language === 'ar' ? 'رؤى المبيعات والمنتجات' : 'Sales & Product Insights'}
+          </h3>
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{language === 'ar' ? 'المصدر' : 'Source'}</span>
+              <select 
+                value={insightsSource} 
+                onChange={(e) => setInsightsSource(e.target.value)}
+                className="date-input-premium"
+                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.8rem', padding: '0.3rem 0.5rem', outline: 'none', cursor: 'pointer' }}
+              >
+                <option value="All">{language === 'ar' ? 'الكل' : 'All Sources'}</option>
+                <option value="Jumia">{t('jumia')}</option>
+                <option value="Bosta">{t('bosta')}</option>
+              </select>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{language === 'ar' ? 'المنفذ' : 'Outlet'}</span>
+              <select 
+                value={insightsOutlet} 
+                onChange={(e) => setInsightsOutlet(e.target.value)}
+                className="date-input-premium"
+                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.8rem', padding: '0.3rem 0.5rem', outline: 'none', cursor: 'pointer' }}
+              >
+                <option value="All">{language === 'ar' ? 'جميع المنافذ' : 'All Outlets'}</option>
+                <option value="eltalg">{t('eltalg')}</option>
+                <option value="tegara">{t('tegara')}</option>
+                <option value="mostashfa">{t('mostashfa')}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 450px), 1fr))', gap: '1rem' }}>
+          <ChartCard title={language === 'ar' ? 'المنتجات الأكثر مبيعاً (بالكمية)' : 'Most Sellable Products (by Qty)'} icon={<PackageCheck size={16} color="var(--color-primary)" />} style={{ background: 'transparent', border: 'none', padding: 0 }}>
+            {topProductsData.length > 0 ? (
             <ResponsiveContainer width="100%" height={320}>
               <BarChart data={topProductsData} layout="vertical" margin={{ left: 30, right: 30 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />

@@ -78,6 +78,8 @@ export default function AnalyticsTab() {
   const timeframe = f.timeframe;
 
   const setStartDate = (val) => updateFilters('analytics', { dateStart: val });
+  const setEndDate = (val) => updateFilters('analytics', { dateEnd: val });
+  const setSelectedOutlet = (val) => updateFilters('analytics', { outlet: val });
   const setTimeframe = (val) => updateFilters('analytics', { timeframe: val });
 
   const [insightsOutlet, setInsightsOutlet] = useState('All');

@@ -45,8 +45,10 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'Invalid username or password.' });
     }
 
+    const userOutlet = admin.role === 'admin' ? 'All' : admin.outlet;
+
     const token = jwt.sign(
-      { id: admin.id, username: admin.username, role: admin.role, outlet: admin.outlet },
+      { id: admin.id, username: admin.username, role: admin.role, outlet: userOutlet },
       JWT_SECRET,
       { expiresIn: '8h' }
     );
@@ -56,14 +58,14 @@ export default async function handler(req, res) {
       data: {
         username: admin.username,
         action: 'User Login',
-        details: JSON.stringify({ outlet: admin.outlet, role: admin.role })
+        details: JSON.stringify({ outlet: userOutlet, role: admin.role })
       }
     });
 
     console.log(`[Login] Success: ${username}`);
     return res.status(200).json({
       token,
-      user: { id: admin.id, username: admin.username, role: admin.role, outlet: admin.outlet }
+      user: { id: admin.id, username: admin.username, role: admin.role, outlet: userOutlet }
     });
 
   } catch (error) {

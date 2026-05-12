@@ -40,23 +40,34 @@ export default async function handler(req, res) {
       return res.status(200).json(users);
     }
 
-    // PUT: Update user outlet
+    // PUT: Update user outlet or password
     if (req.method === 'PUT') {
-      const { username, outlet } = req.body;
+      const { username, outlet, password } = req.body;
 
-      if (!username || !outlet) {
-        return res.status(400).json({ error: 'Username and outlet are required.' });
+      if (!username) {
+        return res.status(400).json({ error: 'Username is required.' });
       }
 
-      // Verify outlet is valid
-      const validOutlets = ['eltalg', 'tegara', 'mostashfa'];
-      if (!validOutlets.includes(outlet)) {
-        return res.status(400).json({ error: `Invalid outlet. Must be one of: ${validOutlets.join(', ')}` });
+      const updateData = {};
+      if (outlet) {
+        const validOutlets = ['eltalg', 'tegara', 'mostashfa'];
+        if (!validOutlets.includes(outlet)) {
+          return res.status(400).json({ error: `Invalid outlet.` });
+        }
+        updateData.outlet = outlet;
+      }
+
+      if (password) {
+        updateData.passwordHash = await bcrypt.hash(password, 10);
+      }
+
+      if (Object.keys(updateData).length === 0) {
+        return res.status(400).json({ error: 'Nothing to update.' });
       }
 
       const updatedUser = await prisma.admin.update({
         where: { username },
-        data: { outlet },
+        data: updateData,
         select: {
           id: true,
           username: true,
@@ -69,8 +80,8 @@ export default async function handler(req, res) {
       await prisma.userLog.create({
         data: {
           username: decoded.username,
-          action: 'Update User Branch',
-          details: JSON.stringify({ targetUser: username, newOutlet: outlet })
+          action: password ? 'Update User Password' : 'Update User Branch',
+          details: JSON.stringify({ targetUser: username, updatedFields: Object.keys(updateData) })
         }
       });
 

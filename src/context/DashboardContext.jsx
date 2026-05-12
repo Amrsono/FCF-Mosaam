@@ -18,6 +18,7 @@ export const DashboardProvider = ({ children }) => {
   const [basataTransactions, setBasataTransactions] = useState([]);
   const [customerReturns, setCustomerReturns] = useState([]);
   const [callLogs, setCallLogs] = useState([]);
+  const [discountCodes, setDiscountCodes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Global Filters Persistence
@@ -104,11 +105,12 @@ export const DashboardProvider = ({ children }) => {
     // Note: We don't set global isLoading=true here if already loaded to avoid flickers
     try {
       // 1. Fetch critical data first
+      const now = Date.now();
       const [oRes, bostaRes, cRes, bRes] = await Promise.all([
-        fetch('/api/orders').catch(e => ({ error: e })),
-        fetch('/api/bosta').catch(e => ({ error: e })),
-        fetch('/api/customers').catch(e => ({ error: e })),
-        fetch('/api/basata').catch(e => ({ error: e }))
+        fetch(`/api/orders?t=${now}`).catch(e => ({ error: e })),
+        fetch(`/api/bosta?t=${now}`).catch(e => ({ error: e })),
+        fetch(`/api/customers?t=${now}`).catch(e => ({ error: e })),
+        fetch(`/api/basata?t=${now}`).catch(e => ({ error: e }))
       ]);
 
       if (oRes.ok) setOrders(await oRes.json());
@@ -121,12 +123,15 @@ export const DashboardProvider = ({ children }) => {
 
       // 2. Fetch non-critical data in background
       const [crRes, clRes] = await Promise.all([
-        fetch('/api/customer-returns').catch(e => ({ error: e })),
-        fetch('/api/call-logs?all=true').catch(e => ({ error: e }))
+        fetch(`/api/customer-returns?t=${now}`).catch(e => ({ error: e })),
+        fetch(`/api/call-logs?all=true&t=${now}`).catch(e => ({ error: e }))
       ]);
 
       if (crRes.ok) setCustomerReturns(await crRes.json());
       if (clRes.ok) setCallLogs(await clRes.json());
+
+      const dRes = await fetch(`/api/discounts?t=${now}`).catch(e => ({ error: e }));
+      if (dRes.ok) setDiscountCodes(await dRes.json());
 
     } catch (error) {
       console.warn("Could not fetch from database.", error);
@@ -663,9 +668,81 @@ export const DashboardProvider = ({ children }) => {
     }
   };
 
+  const validateDiscount = async (code, phone, amount, excludeOrderId = null) => {
+    try {
+      let url = `/api/discounts?code=${encodeURIComponent(code)}&phone=${encodeURIComponent(phone)}&amount=${encodeURIComponent(amount)}`;
+      if (excludeOrderId) url += `&excludeOrderId=${encodeURIComponent(excludeOrderId)}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if (res.ok) return { success: true, discount: data };
+      return { success: false, error: data.error };
+    } catch (err) {
+      return { success: false, error: 'Connection error' };
+    }
+  };
+
+  const addDiscountCode = async (discountData) => {
+    try {
+      const res = await fetch('/api/discounts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(discountData)
+      });
+      const data = await res.json();
+      if (res.ok) {
+        await fetchData();
+        logUserAction('Add Discount Code', { code: discountData.code });
+        return { success: true };
+      }
+      return { success: false, error: data.error || 'Failed to add' };
+    } catch (err) {
+      return { success: false, error: "Network Error" };
+    }
+  };
+
+  const toggleDiscountActive = async (id, isActive) => {
+    try {
+      const res = await fetch('/api/discounts', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, isActive })
+      });
+      if (res.ok) await fetchData();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const updateDiscountCode = async (id, updates) => {
+    try {
+      const res = await fetch('/api/discounts', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, ...updates })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        await fetchData();
+        return { success: true };
+      }
+      return { success: false, error: data.error || 'Failed to update' };
+    } catch (err) {
+      return { success: false, error: 'Network Error' };
+    }
+  };
+
+  const deleteDiscountCode = async (id) => {
+    try {
+      const res = await fetch(`/api/discounts?id=${id}`, { method: 'DELETE' });
+      if (res.ok) await fetchData();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
     <DashboardContext.Provider value={{ 
-      orders, bostaOrders, customers, basataTransactions, customerReturns, callLogs, isLoading,
+      orders, bostaOrders, customers, basataTransactions, customerReturns, callLogs, discountCodes, isLoading,
       globalFilters, updateFilters,
       receiveOrder, bulkReceiveOrders, markOrderPickedUp, returnOrder,
       receiveBostaOrder, markBostaOrderPickedUp, returnBostaOrder,
@@ -675,7 +752,8 @@ export const DashboardProvider = ({ children }) => {
       takeCallOwnership, resolveCall, closeCallLog, reopenCallLog,
       updateOrder, updateBostaOrder, cancelOrder, deleteOrder,
       cancelBostaOrder, deleteBostaOrder, revertOrderToInventory, revertBostaOrderToInventory,
-      updateCustomerReturn, deleteCustomerReturn
+      updateCustomerReturn, deleteCustomerReturn,
+      validateDiscount, addDiscountCode, toggleDiscountActive, deleteDiscountCode, updateDiscountCode
     }}>
       {children}
     </DashboardContext.Provider>

@@ -16,35 +16,48 @@ export default async function handler(req, res) {
       const { 
         id, customerPhone, customerName, description, totalValue, category, 
         email, address, tier,
-        outlet, size, paymentMethod, orderCost 
+        outlet, size, paymentMethod, orderCost,
+        discountCode, discountAmount
       } = req.body;
       
-      // Upsert Customer logic: match by phone
-      await prisma.customer.upsert({
-        where: { phone: customerPhone },
-        update: {},
-        create: {
-          phone: customerPhone,
-          name: customerName || 'Unknown',
-          email: email || null,
-          address: address || null,
-          tier: tier || 'New'
-        }
-      });
+      const newOrder = await prisma.$transaction(async (tx) => {
+        // Upsert Customer logic: match by phone
+        await tx.customer.upsert({
+          where: { phone: customerPhone },
+          update: {},
+          create: {
+            phone: customerPhone,
+            name: customerName || 'Unknown',
+            email: email || null,
+            address: address || null,
+            tier: tier || 'New'
+          }
+        });
 
-      // Create Bosta Order
-      const newOrder = await prisma.bostaOrder.create({
-        data: {
-          id,
-          customerPhone,
-          description,
-          totalValue: parseFloat(totalValue),
-          category,
-          outlet: outlet || "eltalg",
-          size: size || "M",
-          paymentMethod: paymentMethod || "Cash",
-          orderCost: parseFloat(orderCost || 0)
+        const order = await tx.bostaOrder.create({
+          data: {
+            id,
+            customerPhone,
+            description,
+            totalValue: parseFloat(totalValue),
+            category,
+            outlet: outlet || "eltalg",
+            size: size || "M",
+            paymentMethod: paymentMethod || "Cash",
+            orderCost: parseFloat(orderCost || 0),
+            discountCode: discountCode || null,
+            discountAmount: parseFloat(discountAmount || 0)
+          }
+        });
+
+        if (discountCode) {
+          await tx.discountCode.update({
+            where: { code: discountCode.toUpperCase() },
+            data: { usedCount: { increment: 1 } }
+          }).catch(() => {});
         }
+
+        return order;
       });
 
       return res.status(201).json(newOrder);
@@ -82,6 +95,8 @@ export default async function handler(req, res) {
 
       if (action === 'CANCEL') {
         const { reason } = req.body;
+        const existingOrder = await prisma.bostaOrder.findUnique({ where: { id } });
+
         const order = await prisma.bostaOrder.update({
           where: { id },
           data: { 
@@ -90,11 +105,21 @@ export default async function handler(req, res) {
             returnedAt: new Date()
           }
         });
+
+        if (existingOrder?.discountCode) {
+          await prisma.discountCode.update({
+            where: { code: existingOrder.discountCode.toUpperCase() },
+            data: { usedCount: { decrement: 1 } }
+          }).catch(() => {});
+        }
+
         return res.status(200).json(order);
       }
 
       if (action === 'DELETE') {
         const { reason } = req.body;
+        const existingOrder = await prisma.bostaOrder.findUnique({ where: { id } });
+
         const order = await prisma.bostaOrder.update({
           where: { id },
           data: { 
@@ -102,6 +127,14 @@ export default async function handler(req, res) {
             deletionReason: reason
           }
         });
+
+        if (existingOrder?.discountCode) {
+          await prisma.discountCode.update({
+            where: { code: existingOrder.discountCode.toUpperCase() },
+            data: { usedCount: { decrement: 1 } }
+          }).catch(() => {});
+        }
+
         return res.status(200).json(order);
       }
 
@@ -121,6 +154,8 @@ export default async function handler(req, res) {
           });
         }
 
+        const existingOrder = await prisma.bostaOrder.findUnique({ where: { id } });
+
         const updated = await prisma.bostaOrder.update({
           where: { id },
           data: {
@@ -132,9 +167,18 @@ export default async function handler(req, res) {
             outlet,
             size,
             paymentMethod,
-            orderCost: orderCost !== undefined ? parseFloat(orderCost) : undefined
+            orderCost: orderCost !== undefined ? parseFloat(orderCost) : undefined,
+            discountCode: discountCode !== undefined ? (discountCode || null) : undefined,
+            discountAmount: discountAmount !== undefined ? parseFloat(discountAmount) : undefined
           }
         });
+
+        if (discountCode && discountCode !== existingOrder?.discountCode) {
+          await prisma.discountCode.update({
+            where: { code: discountCode.toUpperCase() },
+            data: { usedCount: { increment: 1 } }
+          }).catch(() => {});
+        }
 
         // Also update any linked CallLogs if ID changed
         if (newId && newId !== id) {

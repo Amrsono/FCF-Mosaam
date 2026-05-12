@@ -15,6 +15,7 @@ model Customer {
   tier            String       @default("New")
   deliveries      Int          @default(0) // Jumia deliveries
   bostaDeliveries Int          @default(0) // Bosta deliveries
+  gender          String       @default("Unknown")
   createdAt       DateTime     @default(now())
 
   orders          Order[]
@@ -37,6 +38,10 @@ model Order {
   size               String    @default("M")
   paymentMethod      String    @default("Cash")
   orderCost          Float     @default(0)
+
+  // Discounts
+  discountCode       String?
+  discountAmount     Float     @default(0)
 
   // Cancellation and Deletion tracking
   cancellationReason String?
@@ -76,12 +81,30 @@ model BostaOrder {
   paymentMethod      String    @default("Cash")
   orderCost          Float     @default(0)
 
+  // Discounts
+  discountCode       String?
+  discountAmount     Float     @default(0)
+
   // Cancellation and Deletion tracking
   cancellationReason String?
   isDeleted          Boolean   @default(false)
   deletionReason     String?
 
   customer           Customer  @relation(fields: [customerPhone], references: [phone])
+}
+
+model DiscountCode {
+  id              String   @id @default(uuid())
+  code            String   @unique
+  type            String   // "FIXED" | "PERCENT"
+  value           Float
+  minSpend        Float    @default(0)
+  maxUses         Int?     // null means unlimited
+  usedCount       Int      @default(0)
+  isFirstTimeOnly    Boolean  @default(false)
+  maxUsesPerCustomer Int?     @default(1)
+  isActive           Boolean  @default(true)
+  createdAt          DateTime @default(now())
 }
 
 model Admin {

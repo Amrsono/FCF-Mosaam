@@ -7,20 +7,32 @@ import { useLanguage } from '../context/LanguageContext';
 export default function CustomersTab() {
   const { customers, orders, bostaOrders, updateCustomer, addCustomer } = useDashboard();
   const { t, language } = useLanguage();
+
+  const normalizePhone = (phone) => {
+    if (!phone) return '';
+    const cleaned = String(phone).replace(/\D/g, '').replace(/^0+/, ''); 
+    return cleaned.length >= 10 ? cleaned.slice(-10) : cleaned;
+  };
   
   const [editingPhone, setEditingPhone] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [showAddModal, setShowAddModal] = useState(false);
   const [newCustomer, setNewCustomer] = useState({
-    phone: '', name: '', email: '', address: '', tier: 'New'
+    phone: '', name: '', email: '', address: '', tier: 'New', gender: 'Unknown'
   });
   const [error, setError] = useState('');
+
+  // Filters
+  const [searchTerm, setSearchTerm] = useState('');
+  const [genderFilter, setGenderFilter] = useState('All');
+  const [tierFilter, setTierFilter] = useState('All');
 
   const exportHeaders = [
     { label: t('phone'), accessor: 'phone' },
     { label: t('name'), accessor: 'name' },
     { label: t('email'), accessor: 'email' },
     { label: t('address'), accessor: 'address' },
+    { label: language === 'ar' ? 'النوع' : 'Gender', accessor: 'gender' },
     { label: t('tier'), accessor: 'tier' },
     { label: t('deliveries'), accessor: c => orders.filter(o => o.customerPhone === c.phone).length },
     { label: t('bostaDeliveries'), accessor: c => bostaOrders.filter(o => o.customerPhone === c.phone).length },
@@ -51,18 +63,61 @@ export default function CustomersTab() {
       setError(res.error || (language === 'ar' ? 'فشل إضافة العميل' : 'Failed to add customer'));
     }
   };
+  const filteredCustomers = customers.filter(c => {
+    const search = searchTerm.toLowerCase();
+    const matchesSearch = 
+      c.phone.includes(search) || 
+      c.name.toLowerCase().includes(search) || 
+      (c.email || '').toLowerCase().includes(search) || 
+      (c.address || '').toLowerCase().includes(search);
+    
+    const matchesGender = genderFilter === 'All' || c.gender === genderFilter;
+    const matchesTier = tierFilter === 'All' || c.tier === tierFilter;
+    
+    return matchesSearch && matchesGender && matchesTier;
+  });
 
   return (
     <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: '100%' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <h3 style={{ color: 'var(--text-primary)', margin: 0, flex: '1 1 100%' }}>{t('customerDirectory')}</h3>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', width: '100%', justifyContent: 'space-between' }}>
-          <div className="badge badge-primary">{t('total')}: {customers.length}</div>
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-            <button className="btn btn-primary" onClick={() => { setShowAddModal(true); setError(''); }} style={{ flex: '1 1 auto' }}>
-              <UserPlus size={18} /> {t('addCustomer')}
-            </button>
-            <ExportActions data={customers} headers={exportHeaders} filename="Customers_Export" title={t('customerDirectory')} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+            <div className="badge badge-primary">{t('total')}: {filteredCustomers.length} / {customers.length}</div>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <button className="btn btn-primary" onClick={() => { setShowAddModal(true); setError(''); }}>
+                <UserPlus size={18} /> {t('addCustomer')}
+              </button>
+              <ExportActions data={filteredCustomers} headers={exportHeaders} filename="Customers_Export" title={t('customerDirectory')} />
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+            <div className="input-group" style={{ flex: '1 1 300px' }}>
+              <input 
+                className="input-field" 
+                placeholder={language === 'ar' ? 'البحث بالهاتف، الاسم، الإيميل...' : 'Search by phone, name, email...'} 
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+              />
+            </div>
+            
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <select className="input-field" style={{ width: 'auto' }} value={genderFilter} onChange={e => setGenderFilter(e.target.value)}>
+                <option value="All">{language === 'ar' ? 'كل الأنواع' : 'All Genders'}</option>
+                <option value="Male">{language === 'ar' ? 'ذكر' : 'Male'}</option>
+                <option value="Female">{language === 'ar' ? 'أنثى' : 'Female'}</option>
+                <option value="Unknown">{language === 'ar' ? 'غير معروف' : 'Unknown'}</option>
+              </select>
+
+              <select className="input-field" style={{ width: 'auto' }} value={tierFilter} onChange={e => setTierFilter(e.target.value)}>
+                <option value="All">{language === 'ar' ? 'كل الفئات' : 'All Tiers'}</option>
+                <option value="New">{t('newCustomer')}</option>
+                <option value="Bronze">Bronze</option>
+                <option value="Silver">Silver</option>
+                <option value="Gold">Gold</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
@@ -75,6 +130,7 @@ export default function CustomersTab() {
               <th>{t('name')}</th>
               <th>{t('email')}</th>
               <th>{t('address')}</th>
+              <th>{language === 'ar' ? 'النوع' : 'Gender'}</th>
               <th>{t('tier')}</th>
               <th>{t('deliveries')}</th>
               <th>{t('bostaDeliveries')}</th>
@@ -82,7 +138,7 @@ export default function CustomersTab() {
             </tr>
           </thead>
           <tbody>
-            {customers.length > 0 ? customers.map(customer => {
+            {filteredCustomers.length > 0 ? filteredCustomers.map(customer => {
               const isEditing = editingPhone === customer.phone;
               return (
                 <tr key={customer.phone}>
@@ -108,6 +164,19 @@ export default function CustomersTab() {
                   </td>
                   <td>
                     {isEditing ? (
+                      <select className="input-field" style={{ padding: '0.4rem' }} value={editForm.gender} onChange={e => setEditForm({ ...editForm, gender: e.target.value })}>
+                        <option value="Unknown">{language === 'ar' ? 'غير معروف' : 'Unknown'}</option>
+                        <option value="Male">{language === 'ar' ? 'ذكر' : 'Male'}</option>
+                        <option value="Female">{language === 'ar' ? 'أنثى' : 'Female'}</option>
+                      </select>
+                    ) : (
+                      <span className="badge" style={{ background: customer.gender === 'Male' ? 'rgba(59,130,246,0.1)' : customer.gender === 'Female' ? 'rgba(236,72,153,0.1)' : 'rgba(255,255,255,0.05)', color: customer.gender === 'Male' ? '#3b82f6' : customer.gender === 'Female' ? '#ec4899' : 'var(--text-muted)' }}>
+                        {customer.gender === 'Male' ? (language === 'ar' ? 'ذكر' : 'Male') : customer.gender === 'Female' ? (language === 'ar' ? 'أنثى' : 'Female') : (language === 'ar' ? 'غير معروف' : 'Unknown')}
+                      </span>
+                    )}
+                  </td>
+                  <td>
+                    {isEditing ? (
                       <select className="input-field" style={{ padding: '0.4rem' }} value={editForm.tier} onChange={e => setEditForm({ ...editForm, tier: e.target.value })}>
                         <option value="New">{t('newCustomer')}</option>
                         <option value="Bronze">Bronze</option>
@@ -121,7 +190,7 @@ export default function CustomersTab() {
                   <td>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                       <span style={{ fontWeight: 700, color: 'var(--color-primary)' }}>
-                        {orders.filter(o => o.customerPhone === customer.phone).length}
+                        {orders.filter(o => normalizePhone(o.customerPhone) === normalizePhone(customer.phone)).length}
                       </span>
                       <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{language === 'ar' ? 'جوميا' : 'Jumia'}</span>
                     </div>
@@ -129,7 +198,7 @@ export default function CustomersTab() {
                   <td>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                       <span style={{ fontWeight: 700, color: '#6366f1' }}>
-                        {bostaOrders.filter(o => o.customerPhone === customer.phone).length}
+                        {bostaOrders.filter(o => normalizePhone(o.customerPhone) === normalizePhone(customer.phone)).length}
                       </span>
                       <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{language === 'ar' ? 'بوسطة' : 'Bosta'}</span>
                     </div>
@@ -189,6 +258,15 @@ export default function CustomersTab() {
               <div className="input-group">
                 <label className="input-label">{t('address')}</label>
                 <input className="input-field" value={newCustomer.address} onChange={e => setNewCustomer({...newCustomer, address: e.target.value})} placeholder="Area, Street, Building..." />
+              </div>
+
+              <div className="input-group">
+                <label className="input-label">{language === 'ar' ? 'النوع' : 'Gender'}</label>
+                <select className="input-field" value={newCustomer.gender} onChange={e => setNewCustomer({...newCustomer, gender: e.target.value})}>
+                  <option value="Unknown">{language === 'ar' ? 'غير معروف' : 'Unknown'}</option>
+                  <option value="Male">{language === 'ar' ? 'ذكر' : 'Male'}</option>
+                  <option value="Female">{language === 'ar' ? 'أنثى' : 'Female'}</option>
+                </select>
               </div>
 
               <div className="input-group">

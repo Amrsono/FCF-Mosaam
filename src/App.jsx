@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { DashboardProvider } from './context/DashboardContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { Package, Users, Clock, AlertTriangle, BarChart2, LayoutDashboard, Zap, LogOut, Shield, Menu, X, Phone } from 'lucide-react';
+import { Package, Users, Clock, AlertTriangle, BarChart2, LayoutDashboard, Zap, LogOut, Shield, Menu, X, Phone, Gift } from 'lucide-react';
 import OrdersTab from './tabs/OrdersTab';
 import CustomersTab from './tabs/CustomersTab';
 import SLATab from './tabs/SLATab';
@@ -12,6 +12,7 @@ import BasataTab from './tabs/BasataTab';
 import BostaTab from './tabs/BostaTab';
 import LogsTab from './tabs/LogsTab';
 import CallsLogTab from './tabs/CallsLogTab';
+import DiscountsTab from './tabs/DiscountsTab';
 import LoginPage from './pages/LoginPage';
 import LandingPage from './pages/LandingPage';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -51,6 +52,7 @@ function AppContent() {
     { id: 'calls',     label: t('callsLog'),  icon: <Phone size={20} />, service: 'admin' },
     ...(user?.role === 'admin' ? [
       { id: 'analytics', label: t('analytics'), icon: <BarChart2 size={20} />, service: 'admin' },
+      { id: 'discounts', label: language === 'ar' ? 'أكواد الخصم' : 'Discounts', icon: <Gift size={20} />, service: 'admin' },
       { id: 'logs', label: t('logs'), icon: <Shield size={20} />, service: 'admin' }
     ] : []),
   ];
@@ -89,6 +91,7 @@ function AppContent() {
               {activeTab === 'returned'  && <ReturnedTab />}
               {activeTab === 'calls'     && <CallsLogTab />}
               {activeTab === 'analytics' && user?.role === 'admin' && <AnalyticsTab />}
+              {activeTab === 'discounts' && user?.role === 'admin' && <DiscountsTab />}
               {activeTab === 'logs'      && user?.role === 'admin' && <LogsTab />}
             </>
           )}

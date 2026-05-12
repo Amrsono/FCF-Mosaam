@@ -16,6 +16,7 @@ export default function LogsTab() {
   const [allUsersList, setAllUsersList] = useState([]);
   const [isUsersLoading, setIsUsersLoading] = useState(false);
   const [userUpdateStatus, setUserUpdateStatus] = useState({ type: '', message: '' });
+  const [passwordChangeMap, setPasswordChangeMap] = useState({});
 
   // Filters
   const [searchUser, setSearchUser] = useState('');
@@ -98,12 +99,7 @@ export default function LogsTab() {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
-      // Filter out admin and legacy generic accounts from branch rotation management
-      const excludedUsers = ['admin', 'ezz', 'staff', 'banha1', 'banha2', 'banha3'];
-      const manageableUsers = data.filter(u => 
-        !excludedUsers.includes(u.username.toLowerCase())
-      );
-      setAllUsersList(manageableUsers);
+      setAllUsersList(data);
     } catch (err) {
       setUserUpdateStatus({ type: 'error', message: err.message });
     } finally {
@@ -111,7 +107,7 @@ export default function LogsTab() {
     }
   };
 
-  const handleUpdateUserBranch = async (username, newOutlet) => {
+  const handleUpdateUser = async (username, payload) => {
     try {
       setUserUpdateStatus({ type: '', message: '' });
       const token = localStorage.getItem('fcf_token');
@@ -121,7 +117,7 @@ export default function LogsTab() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ username, outlet: newOutlet })
+        body: JSON.stringify({ username, ...payload })
       });
       
       if (!res.ok) {
@@ -129,9 +125,12 @@ export default function LogsTab() {
         throw new Error(errData.error || 'Failed to update user');
       }
       
-      setUserUpdateStatus({ type: 'success', message: t('successUpdateUser') });
+      setUserUpdateStatus({ type: 'success', message: t('successUpdateUser') || 'User updated successfully' });
+      if (payload.password) {
+        setPasswordChangeMap(prev => ({ ...prev, [username]: '' }));
+      }
       fetchUsers(); // Refresh list
-      fetchLogs();  // Refresh logs to show the update action
+      fetchLogs();  // Refresh logs
     } catch (err) {
       setUserUpdateStatus({ type: 'error', message: err.message });
     }
@@ -436,10 +435,29 @@ export default function LogsTab() {
                       <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{u.role}</div>
                     </div>
                     
-                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', gap: '0.25rem' }}>
+                        <input 
+                          type="password"
+                          className="input-field"
+                          placeholder={language === 'ar' ? 'كلمة سر جديدة' : 'New Pass'}
+                          style={{ padding: '0.4rem 0.75rem', fontSize: '0.85rem', width: '110px' }}
+                          value={passwordChangeMap[u.username] || ''}
+                          onChange={(e) => setPasswordChangeMap(prev => ({ ...prev, [u.username]: e.target.value }))}
+                        />
+                        <button 
+                          onClick={() => handleUpdateUser(u.username, { password: passwordChangeMap[u.username] })}
+                          className="btn btn-primary"
+                          style={{ padding: '0.4rem 0.75rem', fontSize: '0.8rem' }}
+                          disabled={!passwordChangeMap[u.username]}
+                        >
+                          <CheckCircle size={14} />
+                        </button>
+                      </div>
+
                       <select 
                         value={u.outlet}
-                        onChange={(e) => handleUpdateUserBranch(u.username, e.target.value)}
+                        onChange={(e) => handleUpdateUser(u.username, { outlet: e.target.value })}
                         className="input-field"
                         style={{ padding: '0.4rem 0.75rem', fontSize: '0.85rem', width: 'auto', minWidth: '130px' }}
                       >
@@ -459,11 +477,8 @@ export default function LogsTab() {
                           border: '1px solid rgba(239, 68, 68, 0.2)',
                           display: 'flex',
                           alignItems: 'center',
-                          justifyContent: 'center',
-                          transition: 'all 0.2s ease'
+                          justifyContent: 'center'
                         }}
-                        onMouseOver={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'}
-                        onMouseOut={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
                         title={language === 'ar' ? 'حذف' : 'Delete'}
                       >
                         <Trash2 size={16} />

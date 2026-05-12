@@ -12,7 +12,7 @@ export default async function handler(req, res) {
 
     // POST: Manually create a new customer
     if (req.method === 'POST') {
-      const { phone, name, email, address, tier } = req.body;
+      const { phone, name, email, address, tier, gender } = req.body;
 
       if (!phone || !name) {
         return res.status(400).json({ error: 'Phone and Name are required.' });
@@ -30,7 +30,8 @@ export default async function handler(req, res) {
           name,
           email: email || null,
           address: address || null,
-          tier: tier || 'New'
+          tier: tier || 'New',
+          gender: gender || 'Unknown'
         }
       });
 
@@ -58,13 +59,12 @@ export default async function handler(req, res) {
           // 2. Create new customer with new phone
           const next = await tx.customer.create({
             data: {
-              ...current,
-              id: undefined, // Let it generate a new UUID or we can reuse current.id if we manually handle it, but phone is the unique ref
               phone: data.phone,
               name: data.name || current.name,
               email: data.email !== undefined ? data.email : current.email,
               address: data.address !== undefined ? data.address : current.address,
               tier: data.tier || current.tier,
+              gender: data.gender || current.gender,
               deliveries: current.deliveries,
               bostaDeliveries: current.bostaDeliveries
             }
@@ -86,9 +86,16 @@ export default async function handler(req, res) {
       }
 
       // Normal update (no phone change)
+      const { name, email, address, tier, gender } = data;
       const updatedCustomer = await prisma.customer.update({
         where: { phone },
-        data // object containing name, email, tier, address, etc.
+        data: {
+          name,
+          email: email !== undefined ? email : undefined,
+          address: address !== undefined ? address : undefined,
+          tier,
+          gender
+        }
       });
 
       return res.status(200).json(updatedCustomer);

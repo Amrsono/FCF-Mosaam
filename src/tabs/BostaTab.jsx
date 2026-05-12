@@ -18,7 +18,8 @@ export default function BostaTab() {
     deleteBostaOrder,
     revertBostaOrderToInventory,
     globalFilters,
-    updateFilters
+    updateFilters,
+    validateDiscount
   } = useDashboard();
   const { user } = useAuth();
   const { t, language } = useLanguage();
@@ -53,8 +54,19 @@ export default function BostaTab() {
   const [targetOrder, setTargetOrder] = useState(null);
   const [originalOrderId, setOriginalOrderId] = useState(null);
 
+  const [sortConfig, setSortConfig] = useState({ key: 'receivedAt', direction: 'desc' });
+
   const [newOrder, setNewOrder] = useState({
-    id: '', customerPhone: '', customerName: '', description: '', totalValue: '', category: 'Electronics', outlet: user?.outlet || 'eltalg', size: 'M'
+    id: '', 
+    customerPhone: '', 
+    customerName: '', 
+    description: '', 
+    totalValue: '', 
+    category: 'Electronics', 
+    outlet: user?.outlet || 'eltalg', 
+    size: 'M',
+    discountCode: '',
+    discountAmount: 0
   });
 
   const exportHeaders = [
@@ -151,8 +163,51 @@ export default function BostaTab() {
   const orderList = useMemo(() => {
     return baseFilteredOrders
       .filter(o => filterStatus === 'All' || o.status === filterStatus)
-      .sort((a, b) => new Date(b.receivedAt) - new Date(a.receivedAt));
-  }, [baseFilteredOrders, filterStatus]);
+      .sort((a, b) => {
+        let aVal = a[sortConfig.key];
+        let bVal = b[sortConfig.key];
+
+        if (sortConfig.key === 'customer') {
+          aVal = String(a.customerName || '').toLowerCase();
+          bVal = String(b.customerName || '').toLowerCase();
+        } else if (sortConfig.key === 'receivedAt') {
+          aVal = new Date(aVal || 0).getTime();
+          bVal = new Date(bVal || 0).getTime();
+        } else if (sortConfig.key === 'daysParked') {
+          // Bosta uses elapsed time logic, we can just sort by receivedAt for 'daysParked'
+          aVal = new Date(a.receivedAt || 0).getTime();
+          bVal = new Date(b.receivedAt || 0).getTime();
+          // reverse logic for days parked vs received at
+          if (sortConfig.direction === 'desc') return aVal - bVal;
+          return bVal - aVal;
+        } else {
+          aVal = String(aVal || '').toLowerCase();
+          bVal = String(bVal || '').toLowerCase();
+        }
+
+        if (sortConfig.key !== 'daysParked') {
+          if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+          if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+  }, [baseFilteredOrders, filterStatus, sortConfig]);
+
+  const handleSort = (key) => {
+    if (sortConfig.key === key) {
+      if (sortConfig.direction === 'asc') {
+        setSortConfig({ key, direction: 'desc' });
+      } else {
+        if (key !== 'receivedAt') {
+          setSortConfig({ key: 'receivedAt', direction: 'desc' });
+        } else {
+          setSortConfig({ key, direction: 'asc' });
+        }
+      }
+    } else {
+      setSortConfig({ key, direction: 'asc' });
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -168,10 +223,15 @@ export default function BostaTab() {
       totalValue: Number(newOrder.totalValue),
       category: newOrder.category,
       outlet: newOrder.outlet,
-      size: newOrder.size
+      size: newOrder.size,
+      discountCode: newOrder.discountCode,
+      discountAmount: Number(newOrder.discountAmount)
     });
     setShowModal(false);
-    setNewOrder({ id: '', customerPhone: '', customerName: '', description: '', totalValue: '', category: 'Electronics', outlet: user?.outlet || 'eltalg', size: '' });
+    setNewOrder({ 
+      id: '', customerPhone: '', customerName: '', description: '', totalValue: '', category: 'Electronics', 
+      outlet: user?.outlet || 'eltalg', size: '', discountCode: '', discountAmount: 0 
+    });
   };
 
   const getSlaColor = (days) => {
@@ -352,18 +412,31 @@ export default function BostaTab() {
         <table className="data-table">
           <thead>
             <tr>
-              <th>{language === 'ar' ? 'رقم طلب بوسطة' : 'Bosta Order ID'}</th>
-              <th>{t('customer')}</th>
-              <th>{t('description')}</th>
-              <th>{language === 'ar' ? 'المنفذ' : 'Outlet'}</th>
-              <th>
+              <th onClick={() => handleSort('id')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                {language === 'ar' ? 'رقم طلب بوسطة' : 'Bosta Order ID'} {sortConfig.key === 'id' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+              </th>
+              <th onClick={() => handleSort('customer')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                {t('customer')} {sortConfig.key === 'customer' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+              </th>
+              <th onClick={() => handleSort('description')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                {t('description')} {sortConfig.key === 'description' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+              </th>
+              <th onClick={() => handleSort('outlet')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                {language === 'ar' ? 'المنفذ' : 'Outlet'} {sortConfig.key === 'outlet' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+              </th>
+              <th onClick={() => handleSort('receivedAt')} style={{ cursor: 'pointer', userSelect: 'none' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                   <CalendarClock size={14} color="#6366f1" />
                   {language === 'ar' ? 'تاريخ ووقت الاستلام' : 'Date Received'}
+                  <span style={{ marginLeft: '4px' }}>{sortConfig.key === 'receivedAt' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</span>
                 </div>
               </th>
-              <th>{t('status')}</th>
-              <th>{language === 'ar' ? 'معلومات SLA' : 'SLA / Days Parked'}</th>
+              <th onClick={() => handleSort('status')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                {t('status')} {sortConfig.key === 'status' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+              </th>
+              <th onClick={() => handleSort('daysParked')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                {language === 'ar' ? 'معلومات SLA' : 'SLA / Days Parked'} {sortConfig.key === 'daysParked' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+              </th>
               <th>{t('actions')}</th>
             </tr>
           </thead>
@@ -386,7 +459,14 @@ export default function BostaTab() {
                 <td>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
                     <span>{order.description}</span>
-                    <span style={{ fontSize: '0.85rem', color: '#6366f1', fontWeight: 600 }}>{order.totalValue?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP</span>
+                    <span style={{ fontSize: '0.85rem', color: '#6366f1', fontWeight: 600 }}>
+                      {(order.totalValue - (order.discountAmount || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP
+                      {order.discountAmount > 0 && (
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', [language === 'ar' ? 'marginRight' : 'marginLeft']: '0.4rem', textDecoration: 'line-through', fontWeight: 400 }}>
+                          {order.totalValue.toLocaleString()}
+                        </span>
+                      )}
+                    </span>
                     <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{order.category}</span>
                   </div>
                 </td>
@@ -614,6 +694,48 @@ export default function BostaTab() {
                   <option value="mostashfa">{t('mostashfa')}</option>
                 </select>
               </div>
+
+              <div className="input-group">
+                <label className="input-label">{language === 'ar' ? 'كود الخصم (اختياري)' : 'Discount Code (Optional)'}</label>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <input 
+                    className="input-field" 
+                    value={newOrder.discountCode} 
+                    onChange={e => setNewOrder({...newOrder, discountCode: e.target.value.toUpperCase()})} 
+                    placeholder="PROMO10"
+                    style={{ flex: 1 }}
+                  />
+                  <button 
+                    type="button" 
+                    className="btn btn-outline" 
+                    style={{ whiteSpace: 'nowrap', padding: '0.4rem 0.8rem' }}
+                    onClick={async () => {
+                      if (!newOrder.discountCode || newOrder.discountCode.trim() === '') {
+                        setNewOrder({...newOrder, discountAmount: 0, discountCode: null});
+                        alert(language === 'ar' ? 'تم إزالة الخصم' : 'Discount removed');
+                        return;
+                      }
+                      const res = await validateDiscount(newOrder.discountCode, newOrder.customerPhone, newOrder.totalValue);
+                      if (res.success) {
+                        const amt = res.discount.type === 'PERCENT' 
+                          ? (parseFloat(newOrder.totalValue) * res.discount.value / 100) 
+                          : res.discount.value;
+                        setNewOrder({...newOrder, discountAmount: amt});
+                        alert(language === 'ar' ? `تم تطبيق خصم بقيمة ${amt} EGP` : `Discount of ${amt} EGP applied!`);
+                      } else {
+                        alert(res.error);
+                      }
+                    }}
+                  >
+                    {language === 'ar' ? 'تفعيل' : 'Verify'}
+                  </button>
+                </div>
+                {newOrder.discountAmount > 0 && (
+                  <div style={{ fontSize: '0.75rem', color: 'var(--color-success)', marginTop: '0.25rem', fontWeight: 600 }}>
+                    {language === 'ar' ? `خصم مفعل: -${newOrder.discountAmount} EGP` : `Active Discount: -${newOrder.discountAmount} EGP`}
+                  </div>
+                )}
+              </div>
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
                 <button type="submit" className="btn btn-primary" style={{ flex: 1, background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>{t('confirm')}</button>
                 <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowModal(false)}>{t('cancel')}</button>
@@ -732,6 +854,55 @@ export default function BostaTab() {
                 </select>
               </div>
 
+              <div className="form-group">
+                <label className="label">{language === 'ar' ? 'كود الخصم (اختياري)' : 'Discount Code (Optional)'}</label>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <input 
+                    type="text" 
+                    className="input-field" 
+                    value={editingOrder.discountCode || ''} 
+                    onChange={e => setEditingOrder({...editingOrder, discountCode: e.target.value.toUpperCase()})}
+                    placeholder="PROMO10"
+                    style={{ flex: 1 }}
+                  />
+                  <button 
+                    type="button" 
+                    className="btn btn-outline" 
+                    style={{ whiteSpace: 'nowrap', padding: '0.4rem 0.8rem' }}
+                    onClick={async () => {
+                      if (!editingOrder.discountCode || editingOrder.discountCode.trim() === '') {
+                        setEditingOrder({...editingOrder, discountAmount: 0, discountCode: null});
+                        alert(language === 'ar' ? 'تم إزالة الخصم' : 'Discount removed');
+                        return;
+                      }
+                      const res = await validateDiscount(editingOrder.discountCode, editingOrder.customerPhone, editingOrder.totalValue, editingOrder.id);
+                      if (res.success) {
+                        const amt = res.discount.type === 'PERCENT' 
+                          ? (parseFloat(editingOrder.totalValue) * res.discount.value / 100) 
+                          : res.discount.value;
+                        setEditingOrder({...editingOrder, discountAmount: amt});
+                        alert(language === 'ar' ? `تم تطبيق خصم بقيمة ${amt} EGP` : `Discount of ${amt} EGP applied!`);
+                      } else {
+                        alert(res.error);
+                      }
+                    }}
+                  >
+                    {language === 'ar' ? 'تفعيل' : 'Verify'}
+                  </button>
+                </div>
+                {editingOrder.discountAmount > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--color-success)', fontWeight: 600 }}>
+                      {language === 'ar' ? `خصم مفعل: -${editingOrder.discountAmount} EGP` : `Active Discount: -${editingOrder.discountAmount} EGP`}
+                    </div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                      {language === 'ar' ? 'الإجمالي الصافي: ' : 'Net Total: '}
+                      {(parseFloat(editingOrder.totalValue || 0) - editingOrder.discountAmount).toLocaleString()} EGP
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
                 <button 
                   className="btn btn-primary" 
@@ -748,7 +919,9 @@ export default function BostaTab() {
                       totalValue: editingOrder.totalValue,
                       category: editingOrder.category,
                       outlet: editingOrder.outlet,
-                      size: editingOrder.size
+                      size: editingOrder.size,
+                      discountCode: editingOrder.discountCode,
+                      discountAmount: editingOrder.discountAmount
                     });
                     if (res.success) {
                       setEditingOrder(null);

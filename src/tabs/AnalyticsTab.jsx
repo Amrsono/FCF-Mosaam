@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import ExportActions from '../components/ExportActions';
 import {
-  BarChart, Bar, PieChart, Pie, Cell,
+  BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, Tooltip, Legend, ResponsiveContainer,
   CartesianGrid
 } from 'recharts';
@@ -26,6 +26,12 @@ const normalizeOutlet = (val) => {
   return val;
 };
 
+const normalizePhone = (phone) => {
+  if (!phone) return '';
+  const cleaned = String(phone).trim().replace(/\D/g, '').replace(/^0+/, ''); 
+  return cleaned.length >= 10 ? cleaned.slice(-10) : cleaned;
+};
+
 const CHART_COLORS = {
   jumia: '#f97316',
   bosta: '#6366f1',
@@ -33,6 +39,12 @@ const CHART_COLORS = {
   success: '#22c55e',
   danger: '#ef4444',
   warning: '#f59e0b',
+};
+
+const OUTLET_COLORS = {
+  eltalg: '#8b5cf6',      // Purple
+  tegara: '#f97316',      // Orange
+  mostashfa: '#0ea5e9'    // Sky Blue
 };
 
 const INSIGHTS_COLORS = ['#8b5cf6', '#ec4899', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#6366f1', '#06b6d4'];
@@ -82,7 +94,6 @@ export default function AnalyticsTab() {
   const setSelectedOutlet = (val) => updateFilters('analytics', { outlet: val });
   const setTimeframe = (val) => updateFilters('analytics', { timeframe: val });
 
-  const [insightsOutlet, setInsightsOutlet] = useState('All');
   const [insightsSource, setInsightsSource] = useState('All');
 
   const handleTimeframeChange = (tf) => {
@@ -100,6 +111,29 @@ export default function AnalyticsTab() {
     
     setStartDate(formatDate(start));
     setEndDate(formatDate(now));
+  };
+
+  const handleMonthSelect = (monthStr) => {
+    if (!monthStr) return;
+    const [year, month] = monthStr.split('-').map(Number);
+    const start = new Date(year, month - 1, 1);
+    const end = new Date(year, month, 0);
+    
+    setStartDate(formatDate(start));
+    setEndDate(formatDate(end));
+    setTimeframe('custom');
+  };
+
+  const getMonthOptions = () => {
+    const options = [];
+    const now = new Date();
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const label = d.toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US', { month: 'long', year: 'numeric' });
+      options.push({ val, label });
+    }
+    return options;
   };
 
   const isAdminAccount = user?.username === 'admin';
@@ -238,6 +272,8 @@ export default function AnalyticsTab() {
 
     const grandTotal = jumiaProfit + bostaProfit + basataVolume + activePenalties;
 
+    const allPickedUp = [...jumiaPickedUp, ...bostaPickedUp];
+
     // --- CALLS LOG ANALYTICS ---
     const callsInPeriod = (callLogs || []).filter(l => isInRange(l.createdAt) && (selectedOutlet === 'All' || normalizeOutlet(l.outlet) === selectedOutlet));
     const callsMade   = callsInPeriod.filter(l => l.agentName);
@@ -298,15 +334,15 @@ export default function AnalyticsTab() {
     ].filter(d => d.value > 0);
 
     const basataByOutletData = [
-      { name: t('eltalg'), amount: basataByOutlet.eltalg, color: CHART_COLORS.basata },
-      { name: t('tegara'), amount: basataByOutlet.tegara, color: '#06b6d4' },
-      { name: t('mostashfa'), amount: basataByOutlet.mostashfa, color: '#0891b2' },
+      { name: t('eltalg'), amount: basataByOutlet.eltalg, color: OUTLET_COLORS.eltalg },
+      { name: t('tegara'), amount: basataByOutlet.tegara, color: OUTLET_COLORS.tegara },
+      { name: t('mostashfa'), amount: basataByOutlet.mostashfa, color: OUTLET_COLORS.mostashfa },
     ].filter(d => d.amount > 0);
 
     const jumiaProfitByOutletData = [
-      { name: t('eltalg'), amount: jumiaProfitByOutlet.eltalg, color: CHART_COLORS.jumia },
-      { name: t('tegara'), amount: jumiaProfitByOutlet.tegara, color: '#fb923c' },
-      { name: t('mostashfa'), amount: jumiaProfitByOutlet.mostashfa, color: '#ea580c' },
+      { name: t('eltalg'), amount: jumiaProfitByOutlet.eltalg, color: OUTLET_COLORS.eltalg },
+      { name: t('tegara'), amount: jumiaProfitByOutlet.tegara, color: OUTLET_COLORS.tegara },
+      { name: t('mostashfa'), amount: jumiaProfitByOutlet.mostashfa, color: OUTLET_COLORS.mostashfa },
     ].filter(d => d.amount > 0);
 
     const comparisonData = [
@@ -323,9 +359,86 @@ export default function AnalyticsTab() {
       return jTrx + bTrx + basataTrx;
     };
 
+    // --- MONTHLY TRENDS & BASKET SIZE (Always 6 Months Back) ---
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    sixMonthsAgo.setHours(0,0,0,0);
+
+    const allPickedUp6Months = [...orders, ...bostaOrders].filter(o => 
+      o.status === 'Picked Up' && o.pickedUpAt && new Date(o.pickedUpAt) >= sixMonthsAgo && matchesOutlet(o)
+    );
+    
+    const monthlyGroups = allPickedUp6Months.reduce((acc, o) => {
+      const date = new Date(o.pickedUpAt);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      if (!acc[monthKey]) {
+        acc[monthKey] = { 
+          orders: 0, value: 0,
+          eltalg: { o: 0, v: 0 },
+          tegara: { o: 0, v: 0 },
+          mostashfa: { o: 0, v: 0 }
+        };
+      }
+      acc[monthKey].orders += 1;
+      acc[monthKey].value += (o.totalValue || 0);
+      
+      const outlet = normalizeOutlet(o.outlet);
+      if (acc[monthKey][outlet]) {
+        acc[monthKey][outlet].o += 1;
+        acc[monthKey][outlet].v += (o.totalValue || 0);
+      }
+      return acc;
+    }, {});
+
+    const monthlyTrendsData = Object.entries(monthlyGroups)
+      .map(([month, data]) => ({
+        month,
+        orders: data.orders,
+        orders_eltalg: data.eltalg.o,
+        orders_tegara: data.tegara.o,
+        orders_mostashfa: data.mostashfa.o,
+        avgBasket: data.orders > 0 ? Math.round(data.value / data.orders) : 0,
+        avgBasket_eltalg: data.eltalg.o > 0 ? Math.round(data.eltalg.v / data.eltalg.o) : 0,
+        avgBasket_tegara: data.tegara.o > 0 ? Math.round(data.tegara.v / data.tegara.o) : 0,
+        avgBasket_mostashfa: data.mostashfa.o > 0 ? Math.round(data.mostashfa.v / data.mostashfa.o) : 0,
+      }))
+      .sort((a, b) => a.month.localeCompare(b.month));
+
+    // --- GENDER & DEMOGRAPHIC ANALYSIS (Includes ALL orders in range) ---
+    const allOrdersInRange = [...orders, ...bostaOrders].filter(o => {
+      const dateToCheck = o.status === 'Picked Up' ? o.pickedUpAt : o.receivedAt;
+      return isInRange(dateToCheck) && matchesOutlet(o);
+    });
+
+    const customerGenderMap = (customers || []).reduce((acc, c) => {
+      acc[normalizePhone(c.phone)] = c.gender;
+      return acc;
+    }, {});
+
+    let matchedPhonesCount = 0;
+    const genderMap = allOrdersInRange.reduce((acc, o) => {
+      const phone = normalizePhone(o.customerPhone);
+      const genderRaw = customerGenderMap[phone];
+      
+      if (genderRaw) {
+        matchedPhonesCount++;
+        const gender = (String(genderRaw).trim().charAt(0).toUpperCase() + String(genderRaw).trim().slice(1).toLowerCase()) || 'Unknown';
+        acc[gender] = (acc[gender] || 0) + 1;
+      } else {
+        acc['Unknown'] = (acc['Unknown'] || 0) + 1;
+      }
+      return acc;
+    }, {});
+
+    const genderData = [
+      { name: language === 'ar' ? 'ذكر' : 'Male', value: genderMap['Male'] || 0, color: '#3b82f6' },
+      { name: language === 'ar' ? 'أنثى' : 'Female', value: genderMap['Female'] || 0, color: '#ec4899' },
+      { name: language === 'ar' ? 'غير معروف' : 'Unknown', value: genderMap['Unknown'] || 0, color: '#94a3b8' }
+    ].filter(d => d.value > 0);
+
     // --- SALES INSIGHTS ---
-    const insightsJumia = orders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt) && (insightsOutlet === 'All' || normalizeOutlet(o.outlet) === insightsOutlet));
-    const insightsBosta = bostaOrders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt) && (insightsOutlet === 'All' || normalizeOutlet(o.outlet) === insightsOutlet));
+    const insightsJumia = orders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt) && (selectedOutlet === 'All' || normalizeOutlet(o.outlet) === selectedOutlet));
+    const insightsBosta = bostaOrders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt) && (selectedOutlet === 'All' || normalizeOutlet(o.outlet) === selectedOutlet));
     
     let allPickedUpInsights = [];
     if (insightsSource === 'All') allPickedUpInsights = [...insightsJumia, ...insightsBosta];
@@ -342,7 +455,7 @@ export default function AnalyticsTab() {
     const topProductsData = Object.entries(productMap)
       .map(([name, stats]) => ({ name, count: stats.count, value: stats.value }))
       .sort((a, b) => b.count - a.count)
-      .slice(0, 10);
+      .slice(0, 20);
 
     const categoryMap = allPickedUpInsights.reduce((acc, o) => {
       const cat = (o.category || (language === 'ar' ? 'عام' : 'General')).trim();
@@ -365,12 +478,13 @@ export default function AnalyticsTab() {
       grandTotal, callsInPeriod, callsMade, callsResolved, callsClosed, coveragePct,
       basataCatData, resolutionPieData, revenueStreamData, ordersStatusData, basataByOutletData, jumiaProfitByOutletData, comparisonData,
       basataProviderData, callsVsOrdersData, ordersReceivedKey, callsMadeKey,
-      topProductsData, topCategoriesData,
+      topProductsData, topCategoriesData, allPickedUp, allOrdersInRange,
+      monthlyTrendsData, genderData, genderMap, matchedPhonesCount,
       dailyCount: isAdminAccount ? getTransactionCount(86400000) : 0,
       weeklyCount: isAdminAccount ? getTransactionCount(86400000 * 7) : 0,
       monthlyCount: isAdminAccount ? getTransactionCount(86400000 * 30) : 0
     };
-  }, [orders, bostaOrders, basataTransactions, callLogs, customerReturns, selectedOutlet, startDate, endDate, isAdminAccount, language, calculatePenalty, insightsOutlet, insightsSource]);
+  }, [orders, bostaOrders, basataTransactions, callLogs, customerReturns, selectedOutlet, startDate, endDate, isAdminAccount, language, calculatePenalty, insightsSource, customers]);
 
   const {
     jumiaPickedUp, jumiaInventory, jumiaReceived, stdReturned, jumiaReturned, jumiaCancelled, jumiaCash, jumiaReturnedAmt, jumiaProfit,
@@ -382,7 +496,8 @@ export default function AnalyticsTab() {
     grandTotal, callsInPeriod, callsMade, callsResolved, callsClosed, coveragePct,
     basataCatData, resolutionPieData, revenueStreamData, ordersStatusData, basataByOutletData, jumiaProfitByOutletData, comparisonData,
     basataProviderData, callsVsOrdersData, ordersReceivedKey, callsMadeKey,
-    topProductsData, topCategoriesData,
+    topProductsData, topCategoriesData, allPickedUp, allOrdersInRange,
+    monthlyTrendsData, genderData, genderMap, matchedPhonesCount,
     dailyCount, weeklyCount, monthlyCount
   } = stats;
 
@@ -437,7 +552,9 @@ export default function AnalyticsTab() {
       },
       grandTotal: grandTotal,
       topProducts: topProductsData,
-      topCategories: topCategoriesData
+      topCategories: topCategoriesData,
+      monthlyTrends: monthlyTrendsData,
+      genderData: genderData
     };
 
     const filename = timeframe === 'custom' 
@@ -494,6 +611,27 @@ export default function AnalyticsTab() {
                 {t('custom')}
               </button>
             )}
+          </div>
+
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '0.4rem',
+            [language === 'ar' ? 'paddingRight' : 'paddingLeft']: '0.75rem', 
+            [language === 'ar' ? 'borderRight' : 'borderLeft']: '1px solid var(--border-color)'
+          }}>
+            <Calendar size={14} color="var(--text-muted)" />
+            <select 
+              className="date-input-premium"
+              style={{ background: 'transparent', border: 'none', fontSize: '0.85rem', color: 'var(--text-primary)', cursor: 'pointer' }}
+              onChange={(e) => handleMonthSelect(e.target.value)}
+              value=""
+            >
+              <option value="" disabled>{language === 'ar' ? 'اختر شهراً...' : 'Select Month...'}</option>
+              {getMonthOptions().map(opt => (
+                <option key={opt.val} value={opt.val}>{opt.label}</option>
+              ))}
+            </select>
           </div>
           <div style={{ 
             display: 'flex', 
@@ -870,19 +1008,10 @@ export default function AnalyticsTab() {
                 <option value="Bosta">{t('bosta')}</option>
               </select>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{language === 'ar' ? 'المنفذ' : 'Outlet'}</span>
-              <select 
-                value={insightsOutlet} 
-                onChange={(e) => setInsightsOutlet(e.target.value)}
-                className="date-input-premium"
-                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', borderRadius: '6px', color: 'var(--text-primary)', fontSize: '0.8rem', padding: '0.3rem 0.5rem', outline: 'none', cursor: 'pointer' }}
-              >
-                <option value="All">{language === 'ar' ? 'جميع المنافذ' : 'All Outlets'}</option>
-                <option value="eltalg">{t('eltalg')}</option>
-                <option value="tegara">{t('tegara')}</option>
-                <option value="mostashfa">{t('mostashfa')}</option>
-              </select>
+            {/* Insights now automatically follow the global outlet filter at the top */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.3rem 0.6rem', background: 'rgba(255,255,255,0.03)', borderRadius: '6px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+              <Activity size={12} />
+              {selectedOutlet === 'All' ? (language === 'ar' ? 'جميع المنافذ' : 'All Outlets') : t(selectedOutlet)}
             </div>
           </div>
         </div>
@@ -890,7 +1019,7 @@ export default function AnalyticsTab() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 450px), 1fr))', gap: '1rem' }}>
           <ChartCard title={language === 'ar' ? 'المنتجات الأكثر مبيعاً (بالكمية)' : 'Most Sellable Products (by Qty)'} icon={<PackageCheck size={16} color="var(--color-primary)" />} style={{ background: 'transparent', border: 'none', padding: 0 }}>
             {topProductsData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={320}>
+            <ResponsiveContainer width="100%" height={500}>
               <BarChart data={topProductsData} layout="vertical" margin={{ left: 30, right: 30 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
                 <XAxis type="number" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }} axisLine={false} tickLine={false} />
@@ -1178,6 +1307,110 @@ export default function AnalyticsTab() {
           </div>
         </div>
       )}
+
+      {/* Row 7: Advanced Monthly Trends */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 450px), 1fr))', gap: '1rem' }}>
+        <ChartCard title={language === 'ar' ? 'اتجاهات الطلبات الشهرية' : 'Monthly Order Trends'} icon={<TrendingUp size={16} color="var(--color-primary)" />}>
+          {monthlyTrendsData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={monthlyTrendsData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                <XAxis dataKey="month" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis orientation={language === 'ar' ? 'right' : 'left'} tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <Tooltip content={<CustomTooltip language={language} />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+                <Legend iconType="circle" wrapperStyle={{ paddingTop: '1rem' }} />
+                {selectedOutlet === 'All' ? (
+                  <>
+                    <Bar dataKey="orders_eltalg" name={t('eltalg')} fill={OUTLET_COLORS.eltalg} radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="orders_tegara" name={t('tegara')} fill={OUTLET_COLORS.tegara} radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="orders_mostashfa" name={t('mostashfa')} fill={OUTLET_COLORS.mostashfa} radius={[4, 4, 0, 0]} />
+                  </>
+                ) : (
+                  <Bar dataKey="orders" name={language === 'ar' ? 'عدد الطلبات' : 'Order Count'} fill="var(--color-primary)" radius={[4, 4, 0, 0]} />
+                )}
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '250px', color: 'var(--text-muted)' }}>{t('noData')}</div>
+          )}
+        </ChartCard>
+
+        <ChartCard title={language === 'ar' ? 'متوسط حجم السلة شهرياً' : 'Average Monthly Basket Size'} icon={<DollarSign size={16} color="var(--color-success)" />}>
+          {monthlyTrendsData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={monthlyTrendsData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                <XAxis dataKey="month" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis orientation={language === 'ar' ? 'right' : 'left'} tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }} axisLine={false} tickLine={false} unit=" EGP" />
+                <Tooltip content={<CustomTooltip language={language} />} />
+                <Legend iconType="circle" wrapperStyle={{ paddingTop: '1rem' }} />
+                {selectedOutlet === 'All' ? (
+                  <>
+                    <Line type="monotone" dataKey="avgBasket_eltalg" name={t('eltalg')} stroke={OUTLET_COLORS.eltalg} strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                    <Line type="monotone" dataKey="avgBasket_tegara" name={t('tegara')} stroke={OUTLET_COLORS.tegara} strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                    <Line type="monotone" dataKey="avgBasket_mostashfa" name={t('mostashfa')} stroke={OUTLET_COLORS.mostashfa} strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                  </>
+                ) : (
+                  <Line type="monotone" dataKey="avgBasket" name={language === 'ar' ? 'متوسط السلة' : 'Avg Basket'} stroke="#22c55e" strokeWidth={3} dot={{ r: 6, fill: '#22c55e' }} activeDot={{ r: 8 }} />
+                )}
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '250px', color: 'var(--text-muted)' }}>{t('noData')}</div>
+          )}
+        </ChartCard>
+      </div>
+
+      {/* Row 8: Demographic Breakdown */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 350px), 1fr))', gap: '1rem', paddingBottom: '2rem' }}>
+        <ChartCard title={language === 'ar' ? 'تحليل حجم الطلبات حسب النوع (رجال vs نساء)' : 'Order Volume by Gender (Men vs Women)'} icon={<Users size={16} color="var(--color-primary)" />}>
+          <div style={{ marginBottom: '0.5rem', fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+            <span>{language === 'ar' ? `إجمالي الطلبات (مخزن + استلام): ${allOrdersInRange.length}` : `Total Orders (Inv + Picked): ${allOrdersInRange.length}`}</span>
+            <span>{language === 'ar' ? `عملاء مسجلين: ${customers.length}` : `Registered Customers: ${customers.length}`}</span>
+            <span>{language === 'ar' ? `طلبات تم ربطها بعملاء: ${matchedPhonesCount}` : `Orders Linked to Customers: ${matchedPhonesCount}`}</span>
+            <span style={{ color: '#3b82f6' }}>{language === 'ar' ? `رجال: ${genderMap['Male'] || 0}` : `Male: ${genderMap['Male'] || 0}`}</span>
+            <span style={{ color: '#ec4899' }}>{language === 'ar' ? `نساء: ${genderMap['Female'] || 0}` : `Female: ${genderMap['Female'] || 0}`}</span>
+            <span style={{ color: '#94a3b8' }}>{language === 'ar' ? `غير معروف: ${genderMap['Unknown'] || 0}` : `Unknown: ${genderMap['Unknown'] || 0}`}</span>
+          </div>
+          {genderData.length > 0 ? (
+            <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '2rem' }}>
+              <ResponsiveContainer width="50%" height={260}>
+                <PieChart>
+                  <Pie
+                    data={genderData}
+                    cx="50%" cy="50%"
+                    innerRadius={60} outerRadius={100}
+                    paddingAngle={6}
+                    dataKey="value"
+                  >
+                    {genderData.map((entry, i) => (
+                      <Cell key={i} fill={entry.color} stroke="transparent" />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip language={language} />} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
+                {genderData.map(d => (
+                  <div key={d.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem', background: 'var(--bg-overlay)', borderRadius: '12px', borderLeft: `4px solid ${d.color}` }}>
+                    <div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{d.name}</div>
+                      <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'white' }}>{d.value.toLocaleString()}</div>
+                    </div>
+                    <div style={{ fontSize: '1.1rem', fontWeight: 700, color: d.color }}>
+                      {Math.round((d.value / genderData.reduce((s, x) => s + x.value, 0)) * 100)}%
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '250px', color: 'var(--text-muted)' }}>
+              {language === 'ar' ? 'يرجى تحديد النوع للعملاء في دليل العملاء لرؤية البيانات' : 'Please set customer genders in the directory to see data'}
+            </div>
+          )}
+        </ChartCard>
+      </div>
 
     </div>
   );

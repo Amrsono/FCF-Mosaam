@@ -18,6 +18,12 @@ const normalizeOutlet = (val) => {
   return val;
 };
 
+const normalizePhone = (phone) => {
+  if (!phone) return '';
+  const cleaned = String(phone).replace(/\D/g, '').replace(/^0+/, ''); 
+  return cleaned.length >= 10 ? cleaned.slice(-10) : cleaned;
+};
+
 export default function OrdersTab() {
   const { 
     orders, 
@@ -34,6 +40,7 @@ export default function OrdersTab() {
     revertCustomerReturn,
     updateCustomerReturn,
     deleteCustomerReturn,
+    validateDiscount,
     updateOrder,
     cancelOrder,
     deleteOrder,
@@ -95,6 +102,9 @@ export default function OrdersTab() {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(15);
+  
+  // Sort state
+  const [sortConfig, setSortConfig] = useState({ key: 'receivedAt', direction: 'desc' });
 
   // Form for new order simulation
   const [newOrder, setNewOrder] = useState({
@@ -106,7 +116,9 @@ export default function OrdersTab() {
     customerName: '',
     outlet: user?.outlet || 'eltalg',
     size: '',
-    paymentMethod: 'Cash'
+    paymentMethod: 'Cash',
+    discountCode: '',
+    discountAmount: 0
   });
 
   const [isScanning, setIsScanning] = useState(false);
@@ -211,8 +223,45 @@ export default function OrdersTab() {
         }
       })
       .filter(order => filterStatus === 'All' || order.status === filterStatus)
-      .sort((a, b) => new Date(b.receivedAt) - new Date(a.receivedAt));
-  }, [allFilteredOrders, filterStatus, filterDateStart, filterDateEnd]);
+      .sort((a, b) => {
+        let aVal = a[sortConfig.key];
+        let bVal = b[sortConfig.key];
+
+        if (sortConfig.key === 'customer') {
+          aVal = String(a.customerName || '').toLowerCase();
+          bVal = String(b.customerName || '').toLowerCase();
+        } else if (sortConfig.key === 'receivedAt' || sortConfig.key === 'pickedUpAt') {
+          aVal = new Date(aVal || 0).getTime();
+          bVal = new Date(bVal || 0).getTime();
+        } else if (sortConfig.key === 'daysParked' || sortConfig.key === 'totalValue') {
+          aVal = parseFloat(aVal) || 0;
+          bVal = parseFloat(bVal) || 0;
+        } else {
+          aVal = String(aVal || '').toLowerCase();
+          bVal = String(bVal || '').toLowerCase();
+        }
+
+        if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+  }, [allFilteredOrders, filterStatus, filterDateStart, filterDateEnd, sortConfig]);
+
+  const handleSort = (key) => {
+    if (sortConfig.key === key) {
+      if (sortConfig.direction === 'asc') {
+        setSortConfig({ key, direction: 'desc' });
+      } else {
+        if (key !== 'receivedAt') {
+          setSortConfig({ key: 'receivedAt', direction: 'desc' });
+        } else {
+          setSortConfig({ key, direction: 'asc' });
+        }
+      }
+    } else {
+      setSortConfig({ key, direction: 'asc' });
+    }
+  };
   
   // Calculate Pagination
   const totalPages = Math.ceil(orderList.length / itemsPerPage);
@@ -312,11 +361,11 @@ export default function OrdersTab() {
       const available = inventoryCurrent.length;
       
       // Total money collected in period (from pick ups)
-      const totalMoney = pickedUpInRange.reduce((sum, o) => sum + (o.totalValue || 0), 0);
+      const totalMoney = pickedUpInRange.reduce((sum, o) => sum + ((o.totalValue || 0) - (o.discountAmount || 0)), 0);
       const paid = totalMoney; 
       
-      const jumiaPay = pickedUpInRange.filter(o => o.paymentMethod?.toLowerCase().includes('jumia')).reduce((sum, o) => sum + (o.totalValue || 0), 0);
-      const creditCard = pickedUpInRange.filter(o => (o.paymentMethod?.toLowerCase().includes('card') || o.paymentMethod?.toLowerCase().includes('visa'))).reduce((sum, o) => sum + (o.totalValue || 0), 0);
+      const jumiaPay = pickedUpInRange.filter(o => o.paymentMethod?.toLowerCase().includes('jumia')).reduce((sum, o) => sum + ((o.totalValue || 0) - (o.discountAmount || 0)), 0);
+      const creditCard = pickedUpInRange.filter(o => (o.paymentMethod?.toLowerCase().includes('card') || o.paymentMethod?.toLowerCase().includes('visa'))).reduce((sum, o) => sum + ((o.totalValue || 0) - (o.discountAmount || 0)), 0);
 
       const sCount = inventoryCurrent.filter(o => o.size === 'S').length;
       const mCount = inventoryCurrent.filter(o => o.size === 'M').length;
@@ -359,12 +408,14 @@ export default function OrdersTab() {
       category: newOrder.category,
       outlet: newOrder.outlet,
       size: newOrder.size,
-      paymentMethod: newOrder.paymentMethod
+      paymentMethod: newOrder.paymentMethod,
+      discountCode: newOrder.discountCode,
+      discountAmount: Number(newOrder.discountAmount)
     });
     setShowSimulateModal(false);
     setNewOrder({ 
       id: '', customerPhone: '', description: '', totalValue: '', category: 'Electronics', customerName: '',
-      outlet: user?.outlet || 'eltalg', size: '', paymentMethod: 'Cash'
+      outlet: user?.outlet || 'eltalg', size: '', paymentMethod: 'Cash', discountCode: '', discountAmount: 0
     });
   };
 
@@ -565,14 +616,30 @@ export default function OrdersTab() {
           <table className="data-table">
             <thead>
               <tr>
-                <th>{t('orderId')}</th>
-                <th>{t('customer')}</th>
-                <th>{t('description')}</th>
-                <th>{t('category')}</th>
-                <th>{t('pickedFromJumia')}</th>
-                <th>{t('status')}</th>
-                <th>{t('pickedUpByCustomer')}</th>
-                <th>{t('daysInInv')}</th>
+                <th onClick={() => handleSort('id')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                  {t('orderId')} {sortConfig.key === 'id' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                </th>
+                <th onClick={() => handleSort('customer')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                  {t('customer')} {sortConfig.key === 'customer' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                </th>
+                <th onClick={() => handleSort('description')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                  {t('description')} {sortConfig.key === 'description' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                </th>
+                <th onClick={() => handleSort('category')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                  {t('category')} {sortConfig.key === 'category' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                </th>
+                <th onClick={() => handleSort('receivedAt')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                  {t('pickedFromJumia')} {sortConfig.key === 'receivedAt' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                </th>
+                <th onClick={() => handleSort('status')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                  {t('status')} {sortConfig.key === 'status' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                </th>
+                <th onClick={() => handleSort('pickedUpAt')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                  {t('pickedUpByCustomer')} {sortConfig.key === 'pickedUpAt' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                </th>
+                <th onClick={() => handleSort('daysParked')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                  {t('daysInInv')} {sortConfig.key === 'daysParked' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                </th>
                 <th>{t('actions')}</th>
               </tr>
             </thead>
@@ -590,7 +657,14 @@ export default function OrdersTab() {
                   <td>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                       <span style={{ fontSize: '0.9rem' }}>{order.description}</span>
-                      <span style={{ fontSize: '0.85rem', color: 'var(--color-primary)', fontWeight: 700 }}>{order.totalValue?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP</span>
+                      <span style={{ fontSize: '0.85rem', color: 'var(--color-primary)', fontWeight: 700 }}>
+                      {(order.totalValue - (order.discountAmount || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP
+                      {order.discountAmount > 0 && (
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', [language === 'ar' ? 'marginRight' : 'marginLeft']: '0.4rem', textDecoration: 'line-through', fontWeight: 400 }}>
+                          {order.totalValue.toLocaleString()}
+                        </span>
+                      )}
+                    </span>
                     </div>
                   </td>
                   <td>
@@ -1006,6 +1080,48 @@ export default function OrdersTab() {
                   <option value="L">{t('big')}</option>
                 </select>
               </div>
+
+              <div className="input-group" style={{ position: 'relative' }}>
+                <label className="input-label">{language === 'ar' ? 'كود الخصم (اختياري)' : 'Discount Code (Optional)'}</label>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <input 
+                    className="input-field" 
+                    value={newOrder.discountCode} 
+                    onChange={e => setNewOrder({...newOrder, discountCode: e.target.value.toUpperCase()})} 
+                    placeholder="PROMO10"
+                    style={{ flex: 1 }}
+                  />
+                  <button 
+                    type="button" 
+                    className="btn btn-outline" 
+                    style={{ whiteSpace: 'nowrap', padding: '0.4rem 0.8rem' }}
+                    onClick={async () => {
+                      if (!newOrder.discountCode || newOrder.discountCode.trim() === '') {
+                        setNewOrder({...newOrder, discountAmount: 0, discountCode: null});
+                        alert(language === 'ar' ? 'تم إزالة الخصم' : 'Discount removed');
+                        return;
+                      }
+                      const res = await validateDiscount(newOrder.discountCode, newOrder.customerPhone, newOrder.totalValue);
+                      if (res.success) {
+                        const amt = res.discount.type === 'PERCENT' 
+                          ? (parseFloat(newOrder.totalValue) * res.discount.value / 100) 
+                          : res.discount.value;
+                        setNewOrder({...newOrder, discountAmount: amt});
+                        alert(language === 'ar' ? `تم تطبيق خصم بقيمة ${amt} EGP` : `Discount of ${amt} EGP applied!`);
+                      } else {
+                        alert(res.error);
+                      }
+                    }}
+                  >
+                    {language === 'ar' ? 'تفعيل' : 'Verify'}
+                  </button>
+                </div>
+                {newOrder.discountAmount > 0 && (
+                  <div style={{ fontSize: '0.75rem', color: 'var(--color-success)', marginTop: '0.25rem', fontWeight: 600 }}>
+                    {language === 'ar' ? `خصم مفعل: -${newOrder.discountAmount} EGP` : `Active Discount: -${newOrder.discountAmount} EGP`}
+                  </div>
+                )}
+              </div>
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
                 <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>{t('confirm')}</button>
                 <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowSimulateModal(false)}>{t('cancel')}</button>
@@ -1125,6 +1241,55 @@ export default function OrdersTab() {
                 </select>
               </div>
 
+              <div className="form-group">
+                <label className="label" style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '0.4rem', display: 'block' }}>{language === 'ar' ? 'كود الخصم (اختياري)' : 'Discount Code (Optional)'}</label>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <input 
+                    type="text" 
+                    className="input-field" 
+                    value={editingOrder.discountCode || ''} 
+                    onChange={e => setEditingOrder({...editingOrder, discountCode: e.target.value.toUpperCase()})}
+                    placeholder="PROMO10"
+                    style={{ flex: 1 }}
+                  />
+                  <button 
+                    type="button" 
+                    className="btn btn-outline" 
+                    style={{ whiteSpace: 'nowrap', padding: '0.4rem 0.8rem' }}
+                    onClick={async () => {
+                      if (!editingOrder.discountCode || editingOrder.discountCode.trim() === '') {
+                        setEditingOrder({...editingOrder, discountAmount: 0, discountCode: null});
+                        alert(language === 'ar' ? 'تم إزالة الخصم' : 'Discount removed');
+                        return;
+                      }
+                      const res = await validateDiscount(editingOrder.discountCode, editingOrder.customerPhone, editingOrder.totalValue, editingOrder.id);
+                      if (res.success) {
+                        const amt = res.discount.type === 'PERCENT' 
+                          ? (parseFloat(editingOrder.totalValue) * res.discount.value / 100) 
+                          : res.discount.value;
+                        setEditingOrder({...editingOrder, discountAmount: amt});
+                        alert(language === 'ar' ? `تم تطبيق خصم بقيمة ${amt} EGP` : `Discount of ${amt} EGP applied!`);
+                      } else {
+                        alert(res.error);
+                      }
+                    }}
+                  >
+                    {language === 'ar' ? 'تفعيل' : 'Verify'}
+                  </button>
+                </div>
+                {editingOrder.discountAmount > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--color-success)', fontWeight: 600 }}>
+                      {language === 'ar' ? `خصم مفعل: -${editingOrder.discountAmount} EGP` : `Active Discount: -${editingOrder.discountAmount} EGP`}
+                    </div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                      {language === 'ar' ? 'الإجمالي الصافي: ' : 'Net Total: '}
+                      {(parseFloat(editingOrder.totalValue || 0) - editingOrder.discountAmount).toLocaleString()} EGP
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
                 <button 
                   className="btn btn-primary" 
@@ -1142,7 +1307,9 @@ export default function OrdersTab() {
                       category: editingOrder.category,
                       outlet: editingOrder.outlet,
                       size: editingOrder.size,
-                      paymentMethod: editingOrder.paymentMethod
+                      paymentMethod: editingOrder.paymentMethod,
+                      discountCode: editingOrder.discountCode,
+                      discountAmount: editingOrder.discountAmount
                     });
                     if (res.success) {
                       setEditingOrder(null);

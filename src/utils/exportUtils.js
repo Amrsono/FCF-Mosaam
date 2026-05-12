@@ -176,6 +176,29 @@ export const exportToPPTX = async (analytics, filename, language = 'en') => {
       slide8.addTable(categoryRows, { x: 0.5, y: 1.2, w: 9, border: { pt: 1, color: "CBD5E0" }, fill: "F7FAFC", fontSize: 14 });
     }
 
+    // 9. MONTHLY TRENDS
+    if (analytics.monthlyTrends && analytics.monthlyTrends.length > 0) {
+      let slide9 = pptx.addSlide();
+      slide9.addText(language === 'ar' ? "اتجاهات الطلبات الشهرية" : "Monthly Order Trends", { x: 0.5, y: 0.5, fontSize: 24, bold: true, color: "7864ff" });
+      const trendRows = [[language === 'ar' ? 'الشهر' : 'Month', language === 'ar' ? 'الطلبات' : 'Orders', language === 'ar' ? 'متوسط السلة' : 'Avg Basket']];
+      analytics.monthlyTrends.forEach(t => {
+        trendRows.push([t.month, String(t.orders), `${t.avgBasket.toLocaleString()} EGP`]);
+      });
+      slide9.addTable(trendRows, { x: 0.5, y: 1.2, w: 9, border: { pt: 1, color: "CBD5E0" }, fill: "F7FAFC", fontSize: 14 });
+    }
+
+    // 10. GENDER BREAKDOWN
+    if (analytics.genderData && analytics.genderData.length > 0) {
+      let slide10 = pptx.addSlide();
+      slide10.addText(language === 'ar' ? "تحليل المبيعات حسب النوع" : "Order Volume by Gender", { x: 0.5, y: 0.5, fontSize: 24, bold: true, color: "ec4899" });
+      const genderRows = [[language === 'ar' ? 'النوع' : 'Gender', language === 'ar' ? 'الطلبات' : 'Orders', language === 'ar' ? 'النسبة' : 'Percentage']];
+      const totalOrders = analytics.genderData.reduce((s, d) => s + d.value, 0);
+      analytics.genderData.forEach(d => {
+        genderRows.push([d.name, String(d.value), `${Math.round((d.value / totalOrders) * 100)}%`]);
+      });
+      slide10.addTable(genderRows, { x: 0.5, y: 1.2, w: 9, border: { pt: 1, color: "CBD5E0" }, fill: "F7FAFC", fontSize: 14 });
+    }
+
     // Save
     await pptx.writeFile({ fileName: `${filename}.pptx` });
   } catch (error) {

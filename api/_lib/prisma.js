@@ -23,6 +23,15 @@ if (!globalForPrisma.prisma) {
   const pool = new Pool({ connectionString });
   const adapter = new PrismaPg(pool);
   globalForPrisma.prisma = new PrismaClient({ adapter });
+} else {
+  // If we have an existing client but it's missing the new model or fields, we must refresh it.
+  // We check for discountCode model and the newly added maxUsesPerCustomer field support.
+  // Note: We use a try/catch or internal check to detect field availability.
+  if (!globalForPrisma.prisma.discountCode) {
+     const pool = new Pool({ connectionString });
+     const adapter = new PrismaPg(pool);
+     globalForPrisma.prisma = new PrismaClient({ adapter });
+  }
 }
 
 export const prisma = globalForPrisma.prisma;

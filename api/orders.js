@@ -15,36 +15,51 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
       const {
         id, customerPhone, customerName, description, totalValue, category,
-        email, address, tier,
-        outlet, size, paymentMethod, orderCost
+        email, address, tier, gender,
+        outlet, size, paymentMethod, orderCost,
+        discountCode, discountAmount
       } = req.body;
 
-      // Upsert Customer logic: match by phone
-      await prisma.customer.upsert({
-        where: { phone: customerPhone },
-        update: {},
-        create: {
-          phone: customerPhone,
-          name: customerName || 'Unknown',
-          email: email || null,
-          address: address || null,
-          tier: tier || 'New'
-        }
-      });
-
       // Create Order
-      const newOrder = await prisma.order.create({
-        data: {
-          id,
-          customerPhone,
-          description,
-          totalValue: parseFloat(totalValue),
-          category,
-          outlet: outlet || "eltalg",
-          size: size || "M",
-          paymentMethod: paymentMethod || "Cash",
-          orderCost: parseFloat(orderCost || 0)
+      const newOrder = await prisma.$transaction(async (tx) => {
+        // Upsert Customer logic: match by phone
+        await tx.customer.upsert({
+          where: { phone: customerPhone },
+          update: {},
+          create: {
+            phone: customerPhone,
+            name: customerName || 'Unknown',
+            email: email || null,
+            address: address || null,
+            tier: tier || 'New',
+            gender: gender || 'Unknown'
+          }
+        });
+
+        const order = await tx.order.create({
+          data: {
+            id,
+            customerPhone,
+            description,
+            totalValue: parseFloat(totalValue),
+            category,
+            outlet: outlet || "eltalg",
+            size: size || "M",
+            paymentMethod: paymentMethod || "Cash",
+            orderCost: parseFloat(orderCost || 0),
+            discountCode: discountCode || null,
+            discountAmount: parseFloat(discountAmount || 0)
+          }
+        });
+
+        if (discountCode) {
+          await tx.discountCode.update({
+            where: { code: discountCode.toUpperCase() },
+            data: { usedCount: { increment: 1 } }
+          }).catch(() => {}); // Ignore if code not found in table (legacy or external)
         }
+
+        return order;
       });
 
       return res.status(201).json(newOrder);
@@ -86,6 +101,8 @@ export default async function handler(req, res) {
 
       if (action === 'CANCEL') {
         const { reason } = req.body;
+        const existingOrder = await prisma.order.findUnique({ where: { id } });
+        
         const order = await prisma.order.update({
           where: { id },
           data: {
@@ -94,11 +111,21 @@ export default async function handler(req, res) {
             returnedAt: new Date() // Treat as returned for inventory logic
           }
         });
+
+        if (existingOrder?.discountCode) {
+          await prisma.discountCode.update({
+            where: { code: existingOrder.discountCode.toUpperCase() },
+            data: { usedCount: { decrement: 1 } }
+          }).catch(() => {});
+        }
+
         return res.status(200).json(order);
       }
 
       if (action === 'DELETE') {
         const { reason } = req.body;
+        const existingOrder = await prisma.order.findUnique({ where: { id } });
+
         const order = await prisma.order.update({
           where: { id },
           data: {
@@ -106,11 +133,19 @@ export default async function handler(req, res) {
             deletionReason: reason
           }
         });
+
+        if (existingOrder?.discountCode) {
+          await prisma.discountCode.update({
+            where: { code: existingOrder.discountCode.toUpperCase() },
+            data: { usedCount: { decrement: 1 } }
+          }).catch(() => {});
+        }
+
         return res.status(200).json(order);
       }
 
       if (action === 'UPDATE_INFO') {
-        const { newId, customerPhone, description, totalValue, category, outlet, size, paymentMethod, orderCost } = req.body;
+        const { newId, customerPhone, description, totalValue, category, outlet, size, paymentMethod, orderCost, discountCode, discountAmount } = req.body;
         
         // If phone changed, ensure customer exists (Upsert)
         if (customerPhone) {
@@ -125,6 +160,8 @@ export default async function handler(req, res) {
           });
         }
 
+        const existingOrder = await prisma.order.findUnique({ where: { id } });
+
         const updated = await prisma.order.update({
           where: { id },
           data: {
@@ -136,23 +173,32 @@ export default async function handler(req, res) {
             outlet,
             size,
             paymentMethod,
-            orderCost: orderCost !== undefined ? parseFloat(orderCost) : undefined
+            orderCost: orderCost !== undefined ? parseFloat(orderCost) : undefined,
+            discountCode: discountCode !== undefined ? (discountCode || null) : undefined,
+            discountAmount: discountAmount !== undefined ? parseFloat(discountAmount) : undefined
           }
         });
-
+  
         // Also update any linked CallLogs if ID changed
         if (newId && newId !== id) {
           await prisma.callLog.updateMany({
             where: { orderId: id, orderSource: 'jumia' },
             data: { orderId: newId }
           });
-
+  
           await prisma.customerReturn.updateMany({
             where: { orderId: id },
             data: { orderId: newId }
           });
         }
 
+        if (discountCode && discountCode !== existingOrder?.discountCode) {
+          await prisma.discountCode.update({
+            where: { code: discountCode.toUpperCase() },
+            data: { usedCount: { increment: 1 } }
+          }).catch(() => {});
+        }
+  
         return res.status(200).json(updated);
       }
 

@@ -85,6 +85,11 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Username, password, role, and outlet are required.' });
       }
 
+      // Validate role
+      if (!['admin', 'staff'].includes(role)) {
+        return res.status(400).json({ error: 'Invalid role. Must be admin or staff.' });
+      }
+
       // Check if user already exists
       const existingUser = await prisma.admin.findUnique({
         where: { username: username.toLowerCase() }
@@ -120,6 +125,45 @@ export default async function handler(req, res) {
         role: newUser.role,
         outlet: newUser.outlet
       });
+    }
+
+    // DELETE: Delete a user
+    if (req.method === 'DELETE') {
+      const { username } = req.body;
+
+      if (!username) {
+        return res.status(400).json({ error: 'Username is required for deletion.' });
+      }
+
+      // Prevent deleting the main admin or protected accounts
+      const protectedUsers = ['admin', 'ezz'];
+      if (protectedUsers.includes(username.toLowerCase())) {
+        return res.status(403).json({ error: 'This user is protected and cannot be deleted.' });
+      }
+
+      // Check if user exists
+      const targetUser = await prisma.admin.findUnique({
+        where: { username: username.toLowerCase() }
+      });
+
+      if (!targetUser) {
+        return res.status(404).json({ error: 'User not found.' });
+      }
+
+      await prisma.admin.delete({
+        where: { username: username.toLowerCase() }
+      });
+
+      // Log the deletion
+      await prisma.userLog.create({
+        data: {
+          username: decoded.username,
+          action: 'Delete User',
+          details: JSON.stringify({ targetUser: username.toLowerCase() })
+        }
+      });
+
+      return res.status(200).json({ message: 'User deleted successfully.' });
     }
 
     return res.status(405).json({ error: 'Method Not Allowed' });

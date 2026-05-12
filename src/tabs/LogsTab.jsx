@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { ShieldAlert, Search, Filter, Download, Users, X, CheckCircle, AlertCircle as AlertIcon } from 'lucide-react';
+import { ShieldAlert, Search, Filter, Download, Users, X, CheckCircle, Trash2, AlertCircle as AlertIcon } from 'lucide-react';
 import { exportToExcel } from '../utils/exportUtils';
 
 export default function LogsTab() {
@@ -132,6 +132,36 @@ export default function LogsTab() {
       setUserUpdateStatus({ type: 'success', message: t('successUpdateUser') });
       fetchUsers(); // Refresh list
       fetchLogs();  // Refresh logs to show the update action
+    } catch (err) {
+      setUserUpdateStatus({ type: 'error', message: err.message });
+    }
+  };
+
+  const handleDeleteUser = async (username) => {
+    if (!window.confirm(language === 'ar' ? `هل أنت متأكد من حذف المستخدم ${username}؟` : `Are you sure you want to delete user ${username}?`)) {
+      return;
+    }
+
+    try {
+      setUserUpdateStatus({ type: '', message: '' });
+      const token = localStorage.getItem('fcf_token');
+      const res = await fetch('/api/users', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ username })
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to delete user');
+      }
+
+      setUserUpdateStatus({ type: 'success', message: language === 'ar' ? 'تم حذف المستخدم بنجاح' : 'User deleted successfully' });
+      fetchUsers(); // Refresh list
+      fetchLogs();  // Refresh logs to show deletion
     } catch (err) {
       setUserUpdateStatus({ type: 'error', message: err.message });
     }
@@ -417,6 +447,27 @@ export default function LogsTab() {
                         <option value="tegara">{t('tegara')}</option>
                         <option value="mostashfa">{t('mostashfa')}</option>
                       </select>
+                      
+                      <button 
+                        onClick={() => handleDeleteUser(u.username)}
+                        className="btn-icon"
+                        style={{ 
+                          color: '#f87171', 
+                          background: 'rgba(239, 68, 68, 0.1)', 
+                          padding: '0.5rem', 
+                          borderRadius: 'var(--radius-md)',
+                          border: '1px solid rgba(239, 68, 68, 0.2)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseOver={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)'}
+                        onMouseOut={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
+                        title={language === 'ar' ? 'حذف' : 'Delete'}
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </div>
                   </div>
                 ))

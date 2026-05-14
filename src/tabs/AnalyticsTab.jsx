@@ -218,9 +218,9 @@ export default function AnalyticsTab() {
       return d >= 3 && d < 5;
     }).length;
     
-    const jumiaPayTotal = jumiaPickedUp.filter(o => o.paymentMethod?.toLowerCase().includes('jumia')).reduce((s, o) => s + o.totalValue, 0);
-    const jumiaCardTotal = jumiaPickedUp.filter(o => o.paymentMethod?.toLowerCase().includes('card') || o.paymentMethod?.toLowerCase().includes('visa')).reduce((s, o) => s + o.totalValue, 0);
-    const jumiaCashTotal = jumiaPickedUp.filter(o => !o.paymentMethod || o.paymentMethod?.toLowerCase() === 'cash').reduce((s, o) => s + o.totalValue, 0);
+    const jumiaPayTotal = jumiaPickedUp.filter(o => o.paymentMethod?.toLowerCase().includes('jumia')).reduce((s, o) => s + (Number(o.totalValue) || 0), 0);
+    const jumiaCardTotal = jumiaPickedUp.filter(o => o.paymentMethod?.toLowerCase().includes('card') || o.paymentMethod?.toLowerCase().includes('visa')).reduce((s, o) => s + (Number(o.totalValue) || 0), 0);
+    const jumiaCashTotal = jumiaPickedUp.filter(o => !o.paymentMethod || o.paymentMethod?.toLowerCase() === 'cash').reduce((s, o) => s + (Number(o.totalValue) || 0), 0);
     
     const jumiaPaymentData = [
       { name: t('cash'), value: jumiaCashTotal, color: '#f97316' },
@@ -531,7 +531,7 @@ export default function AnalyticsTab() {
   const getCashByOutlet = (list) => {
     return list.reduce((acc, o) => {
       const outlet = normalizeOutlet(o.outlet);
-      acc[outlet] = (acc[outlet] || 0) + o.totalValue;
+      acc[outlet] = (acc[outlet] || 0) + (Number(o.totalValue) || 0);
       return acc;
     }, { eltalg: 0, tegara: 0, mostashfa: 0 });
   };

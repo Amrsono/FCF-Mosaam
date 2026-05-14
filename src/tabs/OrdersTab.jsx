@@ -137,8 +137,8 @@ export default function OrdersTab() {
     { label: language === 'ar' ? 'المنفذ' : 'Outlet', accessor: 'outlet' },
     { label: language === 'ar' ? 'المقاس' : 'Size', accessor: 'size' },
     { label: t('paymentMethod'), accessor: 'paymentMethod' },
-    { label: language === 'ar' ? 'مبلغ كاش' : 'Cash Amount', accessor: o => o.status === 'Picked Up' && (!o.paymentMethod || o.paymentMethod === 'Cash' || o.paymentMethod === 'VISA') ? (o.totalValue - (o.discountAmount || 0)) : 0 },
-    { label: language === 'ar' ? 'مبلغ جوميا باي' : 'JumiaPay Amount', accessor: o => o.status === 'Picked Up' && o.paymentMethod === 'JumiaPay' ? (o.totalValue - (o.discountAmount || 0)) : 0 },
+    { label: language === 'ar' ? 'مبلغ كاش' : 'Cash Amount', accessor: o => o.status === 'Picked Up' && (!o.paymentMethod || ['cash', 'visa', 'creditcard'].includes(String(o.paymentMethod).toLowerCase().replace(/\s/g, ''))) ? (Number(o.totalValue) - (o.discountAmount || 0)) : 0 },
+    { label: language === 'ar' ? 'مبلغ جوميا باي' : 'JumiaPay Amount', accessor: o => o.status === 'Picked Up' && o.paymentMethod && String(o.paymentMethod).toLowerCase().replace(/\s/g, '') === 'jumiapay' ? (Number(o.totalValue) - (o.discountAmount || 0)) : 0 },
     { label: t('status'), accessor: 'status' },
     { label: t('pickedFromJumia'), accessor: o => new Date(o.receivedAt).toLocaleString() },
     { label: t('pickedUpByCustomer'), accessor: o => o.pickedUpAt ? new Date(o.pickedUpAt).toLocaleString() : '-' },
@@ -368,14 +368,14 @@ export default function OrdersTab() {
       const totalMoney = pickedUpInRange.reduce((sum, o) => sum + ((o.totalValue || 0) - (o.discountAmount || 0)), 0);
       const paid = totalMoney; 
       
-      const pickedUpWithCash = pickedUpInRange.filter(o => !o.paymentMethod || o.paymentMethod === 'Cash' || o.paymentMethod === 'VISA');
-      const pickedUpWithJumiaPay = pickedUpInRange.filter(o => o.paymentMethod === 'JumiaPay');
+      const pickedUpWithCash = pickedUpInRange.filter(o => !o.paymentMethod || ['cash', 'visa', 'creditcard'].includes(String(o.paymentMethod).toLowerCase().replace(/\s/g, '')));
+      const pickedUpWithJumiaPay = pickedUpInRange.filter(o => o.paymentMethod && String(o.paymentMethod).toLowerCase().replace(/\s/g, '') === 'jumiapay');
 
       const cashQty = pickedUpWithCash.length;
-      const cashAmount = pickedUpWithCash.reduce((sum, o) => sum + ((o.totalValue || 0) - (o.discountAmount || 0)), 0);
+      const cashAmount = pickedUpWithCash.reduce((sum, o) => sum + ((Number(o.totalValue) || 0) - (o.discountAmount || 0)), 0);
       
       const jumiaPayQty = pickedUpWithJumiaPay.length;
-      const jumiaPayAmount = pickedUpWithJumiaPay.reduce((sum, o) => sum + ((o.totalValue || 0) - (o.discountAmount || 0)), 0);
+      const jumiaPayAmount = pickedUpWithJumiaPay.reduce((sum, o) => sum + ((Number(o.totalValue) || 0) - (o.discountAmount || 0)), 0);
 
       const sCount = inventoryCurrent.filter(o => o.size === 'S').length;
       const mCount = inventoryCurrent.filter(o => o.size === 'M').length;

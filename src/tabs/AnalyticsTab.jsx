@@ -195,14 +195,14 @@ export default function AnalyticsTab() {
     };
     const jumiaProfit = jumiaPickedUp.reduce((s, o) => s + getJumiaCharge(o.size), 0);
 
-    const jumiaPayOrders = jumiaPickedUp.filter(o => o.paymentMethod === 'JumiaPay');
-    const jumiaCashOrders = jumiaPickedUp.filter(o => !o.paymentMethod || o.paymentMethod === 'Cash' || o.paymentMethod === 'VISA');
+    const jumiaPayOrders = jumiaPickedUp.filter(o => o.paymentMethod && String(o.paymentMethod).toLowerCase().replace(/\s/g, '') === 'jumiapay');
+    const jumiaCashOrders = jumiaPickedUp.filter(o => !o.paymentMethod || ['cash', 'visa', 'creditcard'].includes(String(o.paymentMethod).toLowerCase().replace(/\s/g, '')));
 
     const jumiaPayQty = jumiaPayOrders.length;
-    const jumiaPayAmt = jumiaPayOrders.reduce((s, o) => s + o.totalValue, 0);
+    const jumiaPayAmt = jumiaPayOrders.reduce((s, o) => s + (Number(o.totalValue) || 0), 0);
     
     const jumiaCashQty = jumiaCashOrders.length;
-    const jumiaCashAmt = jumiaCashOrders.reduce((s, o) => s + o.totalValue, 0);
+    const jumiaCashAmt = jumiaCashOrders.reduce((s, o) => s + (Number(o.totalValue) || 0), 0);
 
     // --- BOSTA ---
     const bostaInventory = bostaOrders.filter(o => o.status === 'Inventory' && isInRange(o.receivedAt) && matchesOutlet(o));

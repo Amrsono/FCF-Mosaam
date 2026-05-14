@@ -43,18 +43,18 @@ export const exportToPPTX = async (analytics, filename, language = 'en') => {
 
     // 1. TITLE SLIDE
     let slide1 = pptx.addSlide();
-    slide1.background = { color: "1e1b2e" }; // Dark theme background
+    slide1.background = { fill: "1e1b2e" }; // Dark theme background
     
     slide1.addText("FCF MOSAAM", { 
-      x: 0, y: "30%", w: "100%", align: "center", 
+      x: 0, y: "35%", w: "100%", align: "center", 
       fontSize: 44, bold: true, color: "7864ff" 
     });
     slide1.addText(language === 'ar' ? "تقرير التحليلات الرئيسي" : "Master Analytics Report", { 
-      x: 0, y: "45%", w: "100%", align: "center", 
+      x: 0, y: "48%", w: "100%", align: "center", 
       fontSize: 32, color: "ffffff" 
     });
     slide1.addText(new Date().toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US', { dateStyle: 'full' }), { 
-      x: 0, y: "60%", w: "100%", align: "center", 
+      x: 0, y: "62%", w: "100%", align: "center", 
       fontSize: 18, color: "a0aec0" 
     });
 
@@ -72,17 +72,22 @@ export const exportToPPTX = async (analytics, filename, language = 'en') => {
       [`  - Small (S)`, String(analytics.jumia.sizes?.S || 0)],
       [`  - Medium (M)`, String(analytics.jumia.sizes?.M || 0)],
       [`  - Large (L)`, String(analytics.jumia.sizes?.L || 0)],
-      [language === 'ar' ? 'إجمالي الأرباح (حسب الحجم)' : 'Total Station Profit (by size)', `${analytics.jumia.profit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP`],
+      [language === 'ar' ? 'إجمالي الأرباح (حسب الحجم)' : 'Total Station Profit (by size)', `${(analytics.jumia.profit || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP`],
       [`  - ${language === 'ar' ? 'بنها 1 "eltalg"' : 'Banha 1 "eltalg"'}`, `${(analytics.jumia.profitByOutlet?.eltalg || 0).toLocaleString()} EGP`],
       [`  - ${language === 'ar' ? 'بنها 2 "tegara"' : 'Banha 2 "tegara"'}`, `${(analytics.jumia.profitByOutlet?.tegara || 0).toLocaleString()} EGP`],
       [`  - ${language === 'ar' ? 'بنها 3 "mostashfa"' : 'Banha 3 "mostashfa"'}`, `${(analytics.jumia.profitByOutlet?.mostashfa || 0).toLocaleString()} EGP`],
-      [language === 'ar' ? 'إجمالي النقد المحصل (COD)' : 'Total COD Collected', `${analytics.jumia.cash.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP`],
+      [language === 'ar' ? 'إجمالي النقد المحصل (COD)' : 'Total COD Collected', `${(analytics.jumia.cash || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP`],
       [`  - ${language === 'ar' ? 'نقدي' : 'Cash'}`, `${(analytics.jumia.cashTotal || 0).toLocaleString()} EGP`],
       [`  - ${language === 'ar' ? 'جوميا باي (أونلاين)' : 'Jumia Pay (Online)'}`, `${(analytics.jumia.jumiaPayTotal || 0).toLocaleString()} EGP`],
-      [language === 'ar' ? 'المرتجع' : 'Returns', String(analytics.jumia.returnedCount)],
-      [language === 'ar' ? 'غرامات التخزين' : 'Storage Penalties', `${analytics.jumia.penalties.toLocaleString()} EGP`]
+      [language === 'ar' ? 'المرتجع' : 'Returns', String(analytics.jumia.returnedCount || 0)],
+      [language === 'ar' ? 'غرامات التخزين' : 'Storage Penalties', `${(analytics.jumia.penalties || 0).toLocaleString()} EGP`]
     ];
-    slide2.addTable(jStats, { x: 0.5, y: 1.2, w: 9, border: { pt: 1, color: "CBD5E0" }, fill: "F7FAFC", fontSize: 14 });
+    slide2.addTable(jStats, { 
+      x: 0.5, y: 1.2, w: 9, 
+      border: { pt: 1, color: "CBD5E0", type: 'solid' }, 
+      fill: { color: "F7FAFC" }, 
+      fontSize: 14 
+    });
 
     // 3. BOSTA PERFORMANCE
     let slide3 = pptx.addSlide();
@@ -97,19 +102,24 @@ export const exportToPPTX = async (analytics, filename, language = 'en') => {
       [`  - Small (S)`, String(analytics.bosta.sizes?.S || 0)],
       [`  - Medium (M)`, String(analytics.bosta.sizes?.M || 0)],
       [`  - Large (L)`, String(analytics.bosta.sizes?.L || 0)],
-      [language === 'ar' ? 'إجمالي الأرباح (10 ج.م / طلب)' : 'Total Station Profit (10 EGP/pkg)', `${analytics.bosta.profit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP`],
+      [language === 'ar' ? 'إجمالي الأرباح (10 ج.م / طلب)' : 'Total Station Profit (10 EGP/pkg)', `${(analytics.bosta.profit || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP`],
       [`  - ${language === 'ar' ? 'بنها 1 "eltalg"' : 'Banha 1 "eltalg"'}`, `${(analytics.bosta.profitByOutlet?.eltalg || 0).toLocaleString()} EGP`],
       [`  - ${language === 'ar' ? 'بنها 2 "tegara"' : 'Banha 2 "tegara"'}`, `${(analytics.bosta.profitByOutlet?.tegara || 0).toLocaleString()} EGP`],
       [`  - ${language === 'ar' ? 'بنها 3 "mostashfa"' : 'Banha 3 "mostashfa"'}`, `${(analytics.bosta.profitByOutlet?.mostashfa || 0).toLocaleString()} EGP`],
-      [language === 'ar' ? 'إجمالي النقد المحصل (COD)' : 'Total COD Collected', `${analytics.bosta.cash.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP`],
-      [language === 'ar' ? 'المرتجع' : 'Returns', String(analytics.bosta.returnedCount)]
+      [language === 'ar' ? 'إجمالي النقد المحصل (COD)' : 'Total COD Collected', `${(analytics.bosta.cash || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP`],
+      [language === 'ar' ? 'المرتجع' : 'Returns', String(analytics.bosta.returnedCount || 0)]
     ];
-    slide3.addTable(bStats, { x: 0.5, y: 1.2, w: 9, border: { pt: 1, color: "CBD5E0" }, fill: "F7FAFC", fontSize: 14 });
+    slide3.addTable(bStats, { 
+      x: 0.5, y: 1.2, w: 9, 
+      border: { pt: 1, color: "CBD5E0", type: 'solid' }, 
+      fill: { color: "F7FAFC" }, 
+      fontSize: 14 
+    });
 
     // 4. BASATA POS ANALYTICS
     let slide4 = pptx.addSlide();
     slide4.addText(language === 'ar' ? "تحليلات بساطة POS" : "Basata POS Analytics", { x: 0.5, y: 0.5, fontSize: 24, bold: true, color: "ec4899" });
-    slide4.addText(language === 'ar' ? `إجمالي الحجم: ${analytics.basata.volume.toLocaleString()} EGP` : `Total Volume: ${analytics.basata.volume.toLocaleString()} EGP`, { x: 0.5, y: 1.0, fontSize: 16 });
+    slide4.addText(language === 'ar' ? `إجمالي الحجم: ${(analytics.basata.volume || 0).toLocaleString()} EGP` : `Total Volume: ${(analytics.basata.volume || 0).toLocaleString()} EGP`, { x: 0.5, y: 1.0, fontSize: 16 });
     
     if (analytics.basata.categoryData.length > 0) {
       const basataRows = [[language === 'ar' ? 'الفئة / المنفذ' : 'Category / Outlet', language === 'ar' ? 'المبلغ' : 'Amount']];
@@ -127,7 +137,12 @@ export const exportToPPTX = async (analytics, filename, language = 'en') => {
       basataRows.push([{ text: language === 'ar' ? 'حسب الفئة' : 'By Category', options: { bold: true, fill: "EDF2F7" } }, { text: '', options: { fill: "EDF2F7" } }]);
       analytics.basata.categoryData.forEach(c => basataRows.push([`  - ${c.name}`, `${c.amount.toLocaleString()} EGP`]));
       
-      slide4.addTable(basataRows, { x: 0.5, y: 1.5, w: 9, border: { pt: 1, color: "CBD5E0" }, fill: "F7FAFC", fontSize: 12 });
+      slide4.addTable(basataRows, { 
+        x: 0.5, y: 1.5, w: 9, 
+        border: { pt: 1, color: "CBD5E0", type: 'solid' }, 
+        fill: { color: "F7FAFC" }, 
+        fontSize: 12 
+      });
     }
 
     // 5. CALLS LOG PERFORMANCE
@@ -140,19 +155,29 @@ export const exportToPPTX = async (analytics, filename, language = 'en') => {
       [language === 'ar' ? 'المكالمات المحلولة' : 'Resolved', String(analytics.calls.resolved)],
       [language === 'ar' ? 'نسبة التغطية' : 'Coverage Rate', `${analytics.calls.coverage}%`]
     ];
-    slide5.addTable(cStats, { x: 0.5, y: 1.2, w: 9, border: { pt: 1, color: "CBD5E0" }, fill: "F7FAFC", fontSize: 14 });
+    slide5.addTable(cStats, { 
+      x: 0.5, y: 1.2, w: 9, 
+      border: { pt: 1, color: "CBD5E0", type: 'solid' }, 
+      fill: { color: "F7FAFC" }, 
+      fontSize: 14 
+    });
 
     // 6. FINANCIAL SUMMARY
     let slide6 = pptx.addSlide();
     slide6.addText(language === 'ar' ? "الملخص المالي النهائي" : "Final Financial Summary", { x: 0.5, y: 0.5, fontSize: 24, bold: true, color: "10b981" });
     const fStats = [
       [language === 'ar' ? 'القناة' : 'Channel', language === 'ar' ? 'صافي المركز' : 'Net Position'],
-      ["Jumia (Profit)", `${analytics.jumia.profit.toLocaleString()} EGP`],
-      ["Bosta (Profit)", `${analytics.bosta.profit.toLocaleString()} EGP`],
-      ["Basata", `${analytics.basata.volume.toLocaleString()} EGP`],
-      [language === 'ar' ? 'الإجمالي النهائي' : 'GRAND TOTAL', `${analytics.grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP`]
+      ["Jumia (Profit)", `${(analytics.jumia.profit || 0).toLocaleString()} EGP`],
+      ["Bosta (Profit)", `${(analytics.bosta.profit || 0).toLocaleString()} EGP`],
+      ["Basata", `${(analytics.basata.volume || 0).toLocaleString()} EGP`],
+      [language === 'ar' ? 'الإجمالي النهائي' : 'GRAND TOTAL', `${(analytics.grandTotal || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP`]
     ];
-    slide6.addTable(fStats, { x: 0.5, y: 1.2, w: 9, border: { pt: 1, color: "CBD5E0" }, fill: "F7FAFC", fontSize: 16, bold: true });
+    slide6.addTable(fStats, { 
+      x: 0.5, y: 1.2, w: 9, 
+      border: { pt: 1, color: "CBD5E0", type: 'solid' }, 
+      fill: { color: "F7FAFC" }, 
+      fontSize: 16
+    });
 
     // 7. TOP PRODUCTS
     if (analytics.topProducts && analytics.topProducts.length > 0) {
@@ -162,7 +187,12 @@ export const exportToPPTX = async (analytics, filename, language = 'en') => {
       analytics.topProducts.forEach(p => {
         productRows.push([p.name, String(p.count), `${(p.value || 0).toLocaleString()} EGP`]);
       });
-      slide7.addTable(productRows, { x: 0.5, y: 1.2, w: 9, border: { pt: 1, color: "CBD5E0" }, fill: "F7FAFC", fontSize: 12 });
+      slide7.addTable(productRows, { 
+        x: 0.5, y: 1.2, w: 9, 
+        border: { pt: 1, color: "CBD5E0", type: 'solid' }, 
+        fill: { color: "F7FAFC" }, 
+        fontSize: 12 
+      });
     }
 
     // 8. TOP CATEGORIES
@@ -173,7 +203,12 @@ export const exportToPPTX = async (analytics, filename, language = 'en') => {
       analytics.topCategories.forEach(c => {
         categoryRows.push([c.name, String(c.count), `${(c.value || 0).toLocaleString()} EGP`]);
       });
-      slide8.addTable(categoryRows, { x: 0.5, y: 1.2, w: 9, border: { pt: 1, color: "CBD5E0" }, fill: "F7FAFC", fontSize: 14 });
+      slide8.addTable(categoryRows, { 
+        x: 0.5, y: 1.2, w: 9, 
+        border: { pt: 1, color: "CBD5E0", type: 'solid' }, 
+        fill: { color: "F7FAFC" }, 
+        fontSize: 14 
+      });
     }
 
     // 9. MONTHLY TRENDS
@@ -184,7 +219,12 @@ export const exportToPPTX = async (analytics, filename, language = 'en') => {
       analytics.monthlyTrends.forEach(t => {
         trendRows.push([t.month, String(t.orders), `${t.avgBasket.toLocaleString()} EGP`]);
       });
-      slide9.addTable(trendRows, { x: 0.5, y: 1.2, w: 9, border: { pt: 1, color: "CBD5E0" }, fill: "F7FAFC", fontSize: 14 });
+      slide9.addTable(trendRows, { 
+        x: 0.5, y: 1.2, w: 9, 
+        border: { pt: 1, color: "CBD5E0", type: 'solid' }, 
+        fill: { color: "F7FAFC" }, 
+        fontSize: 14 
+      });
     }
 
     // 10. GENDER BREAKDOWN
@@ -196,13 +236,20 @@ export const exportToPPTX = async (analytics, filename, language = 'en') => {
       analytics.genderData.forEach(d => {
         genderRows.push([d.name, String(d.value), `${Math.round((d.value / totalOrders) * 100)}%`]);
       });
-      slide10.addTable(genderRows, { x: 0.5, y: 1.2, w: 9, border: { pt: 1, color: "CBD5E0" }, fill: "F7FAFC", fontSize: 14 });
+      slide10.addTable(genderRows, { 
+        x: 0.5, y: 1.2, w: 9, 
+        border: { pt: 1, color: "CBD5E0", type: 'solid' }, 
+        fill: { color: "F7FAFC" }, 
+        fontSize: 14 
+      });
     }
 
     // Save
-    await pptx.writeFile({ fileName: `${filename}.pptx` });
+    console.log('Finalizing PPTX export...');
+    await pptx.writeFile({ fileName: `${filename || 'Master_Report'}.pptx` });
+    console.log('PPTX export successful');
   } catch (error) {
     console.error('PPTX export failed:', error);
-    alert('PowerPoint export failed: ' + (error.message || 'Unknown error'));
+    alert(language === 'ar' ? 'فشل تصدير PowerPoint: ' + (error.message || 'خطأ غير معروف') : 'PowerPoint export failed: ' + (error.message || 'Unknown error'));
   }
 };

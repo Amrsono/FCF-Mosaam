@@ -707,10 +707,16 @@ export default function BostaTab() {
                   className="input-field" 
                   value={newOrder.subcategory} 
                   onChange={e => setNewOrder({...newOrder, subcategory: e.target.value})}
+                  required
                 >
-                  {(JUMIA_CATEGORIES.find(c => c.en === newOrder.category)?.subcategories || []).map(sub => (
-                    <option key={sub.en} value={sub.en}>{language === 'ar' ? sub.ar : sub.en}</option>
-                  ))}
+                  {(() => {
+                    const cat = JUMIA_CATEGORIES.find(c => c.en === newOrder.category || c.ar === newOrder.category);
+                    const subs = cat?.subcategories || [];
+                    if (subs.length === 0) return <option value="">{language === 'ar' ? 'اختر الفئة أولاً' : 'Select Category First'}</option>;
+                    return subs.map(sub => (
+                      <option key={sub.en} value={sub.en}>{language === 'ar' ? sub.ar : sub.en}</option>
+                    ));
+                  })()}
                 </select>
               </div>
               <div className="input-group">
@@ -846,11 +852,11 @@ export default function BostaTab() {
                     className="input-field" 
                     value={editingOrder.category} 
                     onChange={e => {
-                      const catEn = e.target.value;
-                      const cat = JUMIA_CATEGORIES.find(c => c.en === catEn);
+                      const catVal = e.target.value;
+                      const cat = JUMIA_CATEGORIES.find(c => c.en === catVal || c.ar === catVal);
                       setEditingOrder({
                         ...editingOrder, 
-                        category: catEn, 
+                        category: cat?.en || catVal, 
                         subcategory: cat?.subcategories[0]?.en || ''
                       });
                     }}
@@ -868,10 +874,16 @@ export default function BostaTab() {
                   className="input-field" 
                   value={editingOrder.subcategory} 
                   onChange={e => setEditingOrder({...editingOrder, subcategory: e.target.value})}
+                  required
                 >
-                  {(JUMIA_CATEGORIES.find(c => c.en === editingOrder.category)?.subcategories || []).map(sub => (
-                    <option key={sub.en} value={sub.en}>{language === 'ar' ? sub.ar : sub.en}</option>
-                  ))}
+                  {(() => {
+                    const cat = JUMIA_CATEGORIES.find(c => c.en === editingOrder.category || c.ar === editingOrder.category);
+                    const subs = cat?.subcategories || [];
+                    if (subs.length === 0) return <option value="">{language === 'ar' ? 'اختر الفئة أولاً' : 'Select Category First'}</option>;
+                    return subs.map(sub => (
+                      <option key={sub.en} value={sub.en}>{language === 'ar' ? sub.ar : sub.en}</option>
+                    ));
+                  })()}
                 </select>
               </div>
 

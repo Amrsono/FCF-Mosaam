@@ -1,6 +1,6 @@
 export const JUMIA_CATEGORIES = [
   {
-    ar: "ازياء",
+    ar: "أزياء",
     en: "Fashion",
     subcategories: [
       { ar: "أزياء رجالي", en: "Men's Fashion" },

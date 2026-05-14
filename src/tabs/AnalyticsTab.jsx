@@ -493,6 +493,7 @@ export default function AnalyticsTab() {
     return {
       jumiaPickedUp, jumiaInventory, jumiaReceived, stdReturned, jumiaReturned, jumiaCancelled, jumiaProfit,
       jumiaCash, jumiaPayQty, jumiaPayAmt, jumiaCashQty, jumiaCashAmt,
+      activePenalties, jumiaSlaCritical, jumiaSlaNear, jumiaPayTotal, jumiaCardTotal, jumiaCashTotal, jumiaPaymentData,
       bostaInventory, bostaReceived, bostaPickedUp, bostaReturned, bostaCancelled, bostaCash, bostaProfit,
       bostaReturnedAmt,
       jumiaSizes, jumiaInventorySizes, bostaSizes, bostaInventorySizes,

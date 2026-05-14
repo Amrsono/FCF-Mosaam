@@ -28,6 +28,7 @@ model Order {
   description   String
   totalValue    Float     // Using Float for typical DB precision without needing Decimal.js locally 
   category      String
+  subcategory   String?
   status             String    @default("Inventory") // "Inventory", "Picked_Up", "Returned", "Cancelled"
   receivedAt         DateTime  @default(now())
   pickedUpAt         DateTime?
@@ -70,6 +71,7 @@ model BostaOrder {
   description   String
   totalValue    Float     
   category      String
+  subcategory   String?
   status             String    @default("Inventory") // "Inventory", "Picked Up", "Returned", "Cancelled"
   receivedAt         DateTime  @default(now())
   pickedUpAt         DateTime?

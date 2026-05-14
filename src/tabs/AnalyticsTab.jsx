@@ -94,7 +94,8 @@ export default function AnalyticsTab() {
   const setSelectedOutlet = (val) => updateFilters('analytics', { outlet: val });
   const setTimeframe = (val) => updateFilters('analytics', { timeframe: val });
 
-  const [insightsSource, setInsightsSource] = useState('All');
+    const [insightsSource, setInsightsSource] = useState('All');
+    const [jumiaVolumeFilter, setJumiaVolumeFilter] = useState('All');
 
   const handleTimeframeChange = (tf) => {
     setTimeframe(tf);
@@ -193,6 +194,15 @@ export default function AnalyticsTab() {
       return 30;
     };
     const jumiaProfit = jumiaPickedUp.reduce((s, o) => s + getJumiaCharge(o.size), 0);
+
+    const jumiaPayOrders = jumiaPickedUp.filter(o => o.paymentMethod === 'JumiaPay');
+    const jumiaCashOrders = jumiaPickedUp.filter(o => !o.paymentMethod || o.paymentMethod === 'Cash' || o.paymentMethod === 'VISA');
+
+    const jumiaPayQty = jumiaPayOrders.length;
+    const jumiaPayAmt = jumiaPayOrders.reduce((s, o) => s + o.totalValue, 0);
+    
+    const jumiaCashQty = jumiaCashOrders.length;
+    const jumiaCashAmt = jumiaCashOrders.reduce((s, o) => s + o.totalValue, 0);
 
     // --- BOSTA ---
     const bostaInventory = bostaOrders.filter(o => o.status === 'Inventory' && isInRange(o.receivedAt) && matchesOutlet(o));
@@ -338,12 +348,24 @@ export default function AnalyticsTab() {
       { name: t('tegara'), amount: basataByOutlet.tegara, color: OUTLET_COLORS.tegara },
       { name: t('mostashfa'), amount: basataByOutlet.mostashfa, color: OUTLET_COLORS.mostashfa },
     ].filter(d => d.amount > 0);
+    
+    const getJumiaVolumeByStatus = (status) => {
+      let filtered = [];
+      if (status === 'All') filtered = jumiaReceived;
+      else if (status === 'Inventory') filtered = jumiaInventory;
+      else if (status === 'Picked Up') filtered = jumiaPickedUp;
+      else if (status === 'Returned') filtered = jumiaReturned;
+      else if (status === 'Cancelled') filtered = jumiaCancelled;
+      
+      const counts = getByOutlet(filtered, () => 1);
+      return [
+        { name: t('eltalg'), amount: counts.eltalg, color: OUTLET_COLORS.eltalg },
+        { name: t('tegara'), amount: counts.tegara, color: OUTLET_COLORS.tegara },
+        { name: t('mostashfa'), amount: counts.mostashfa, color: OUTLET_COLORS.mostashfa },
+      ].filter(d => d.amount >= 0);
+    };
 
-    const jumiaProfitByOutletData = [
-      { name: t('eltalg'), amount: jumiaProfitByOutlet.eltalg, color: OUTLET_COLORS.eltalg },
-      { name: t('tegara'), amount: jumiaProfitByOutlet.tegara, color: OUTLET_COLORS.tegara },
-      { name: t('mostashfa'), amount: jumiaProfitByOutlet.mostashfa, color: OUTLET_COLORS.mostashfa },
-    ].filter(d => d.amount > 0);
+    const jumiaOutletVolumeData = getJumiaVolumeByStatus(jumiaVolumeFilter);
 
     const comparisonData = [
       { name: language === 'ar' ? 'المدخلات' : 'Inventory', jumia: jumiaInventory.length, bosta: bostaInventory.length },
@@ -454,7 +476,7 @@ export default function AnalyticsTab() {
     }, {});
     const topProductsData = Object.entries(productMap)
       .map(([name, stats]) => ({ name, count: stats.count, value: stats.value }))
-      .sort((a, b) => b.count - a.count)
+      .sort((a, b) => b.value - a.value || b.count - a.count)
       .slice(0, 20);
 
     const categoryMap = allPickedUpInsights.reduce((acc, o) => {
@@ -466,17 +488,19 @@ export default function AnalyticsTab() {
     }, {});
     const topCategoriesData = Object.entries(categoryMap)
       .map(([name, stats]) => ({ name, count: stats.count, value: stats.value }))
-      .sort((a, b) => b.count - a.count);
+      .sort((a, b) => b.value - a.value || b.count - a.count);
 
     return {
-      jumiaPickedUp, jumiaInventory, jumiaReceived, stdReturned, jumiaReturned, jumiaCancelled, jumiaCash, jumiaReturnedAmt, jumiaProfit,
-      bostaInventory, activePenalties, jumiaSlaCritical, jumiaSlaNear, jumiaPayTotal, jumiaCardTotal, jumiaCashTotal, jumiaPaymentData,
-      bostaPickedUp, bostaReceived, bostaReturned, bostaCancelled, bostaCash, bostaReturnedAmt, bostaProfit,
+      jumiaPickedUp, jumiaInventory, jumiaReceived, stdReturned, jumiaReturned, jumiaCancelled, jumiaProfit,
+      jumiaCash, jumiaPayQty, jumiaPayAmt, jumiaCashQty, jumiaCashAmt,
+      bostaInventory, bostaReceived, bostaPickedUp, bostaReturned, bostaCancelled, bostaCash, bostaProfit,
+      bostaReturnedAmt,
       jumiaSizes, jumiaInventorySizes, bostaSizes, bostaInventorySizes,
       activeBasata, basataVolume, basataCategories, basataProviders, basataByOutlet, basataCountByOutlet,
       jumiaPickedUpByOutlet, jumiaInventoryByOutlet, jumiaProfitByOutlet, bostaProfitByOutlet,
       grandTotal, callsInPeriod, callsMade, callsResolved, callsClosed, coveragePct,
-      basataCatData, resolutionPieData, revenueStreamData, ordersStatusData, basataByOutletData, jumiaProfitByOutletData, comparisonData,
+      basataCatData, resolutionPieData, revenueStreamData, ordersStatusData, basataByOutletData, comparisonData,
+      jumiaOutletVolumeData,
       basataProviderData, callsVsOrdersData, ordersReceivedKey, callsMadeKey,
       topProductsData, topCategoriesData, allPickedUp, allOrdersInRange,
       monthlyTrendsData, genderData, genderMap, matchedPhonesCount,
@@ -487,14 +511,16 @@ export default function AnalyticsTab() {
   }, [orders, bostaOrders, basataTransactions, callLogs, customerReturns, selectedOutlet, startDate, endDate, isAdminAccount, language, calculatePenalty, insightsSource, customers]);
 
   const {
-    jumiaPickedUp, jumiaInventory, jumiaReceived, stdReturned, jumiaReturned, jumiaCancelled, jumiaCash, jumiaReturnedAmt, jumiaProfit,
+    jumiaPickedUp, jumiaInventory, jumiaReceived, stdReturned, jumiaReturned, jumiaCancelled, jumiaProfit,
+    jumiaCash, jumiaPayQty, jumiaPayAmt, jumiaCashQty, jumiaCashAmt,
     bostaInventory, activePenalties, jumiaSlaCritical, jumiaSlaNear, jumiaPayTotal, jumiaCardTotal, jumiaCashTotal, jumiaPaymentData,
     bostaPickedUp, bostaReceived, bostaReturned, bostaCancelled, bostaCash, bostaReturnedAmt, bostaProfit,
     jumiaSizes, jumiaInventorySizes, bostaSizes, bostaInventorySizes,
     activeBasata, basataVolume, basataCategories, basataProviders, basataByOutlet, basataCountByOutlet,
     jumiaPickedUpByOutlet, jumiaInventoryByOutlet, jumiaProfitByOutlet, bostaProfitByOutlet,
     grandTotal, callsInPeriod, callsMade, callsResolved, callsClosed, coveragePct,
-    basataCatData, resolutionPieData, revenueStreamData, ordersStatusData, basataByOutletData, jumiaProfitByOutletData, comparisonData,
+    basataCatData, resolutionPieData, revenueStreamData, ordersStatusData, basataByOutletData, comparisonData,
+    jumiaOutletVolumeData,
     basataProviderData, callsVsOrdersData, ordersReceivedKey, callsMadeKey,
     topProductsData, topCategoriesData, allPickedUp, allOrdersInRange,
     monthlyTrendsData, genderData, genderMap, matchedPhonesCount,
@@ -852,14 +878,31 @@ export default function AnalyticsTab() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title={language === 'ar' ? 'أرباح جوميا حسب المنفذ' : 'Jumia Profit by Outlet'} icon={<BarChart2 size={16} color={CHART_COLORS.jumia} />}>
-          <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={jumiaProfitByOutletData || []} barGap={4}>
+        <ChartCard 
+          title={t('jumiaOutletsVolume')} 
+          icon={<BarChart2 size={16} color={CHART_COLORS.jumia} />}
+        >
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.5rem' }}>
+            <select 
+              className="input-field" 
+              style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem', minWidth: '120px' }}
+              value={jumiaVolumeFilter}
+              onChange={(e) => setJumiaVolumeFilter(e.target.value)}
+            >
+              <option value="All">{language === 'ar' ? 'الكل (مستلم)' : 'All (Received)'}</option>
+              <option value="Inventory">{t('inventory')}</option>
+              <option value="Picked Up">{t('pickedUpStatus')}</option>
+              <option value="Returned">{t('returnedStatus')}</option>
+              <option value="Cancelled">{language === 'ar' ? 'ملغي' : 'Cancelled'}</option>
+            </select>
+          </div>
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={jumiaOutletVolumeData || []} barGap={4}>
               <XAxis dataKey="name" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} axisLine={false} tickLine={false} />
               <YAxis orientation={language === 'ar' ? 'right' : 'left'} tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} axisLine={false} tickLine={false} />
-              <Tooltip content={<CustomTooltip language={language} />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} formatter={(v) => `${v.toLocaleString()} EGP`} />
-              <Bar dataKey="amount" name={language === 'ar' ? 'الأرباح' : 'Profit'} fill={CHART_COLORS.jumia} radius={[6, 6, 0, 0]}>
-                {(jumiaProfitByOutletData || []).map((entry, index) => (
+              <Tooltip content={<CustomTooltip language={language} />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+              <Bar dataKey="amount" name={language === 'ar' ? 'حجم الطلبات' : 'Order Volume'} fill={CHART_COLORS.jumia} radius={[6, 6, 0, 0]}>
+                {(jumiaOutletVolumeData || []).map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Bar>
@@ -1099,71 +1142,67 @@ export default function AnalyticsTab() {
           <table className="data-table">
             <thead>
               <tr>
-                <th>{t('stream')}</th>
-                <th>{t('pickedFromJumia')}</th>
-                <th>{language === 'ar' ? 'إجمالي مبلغ المعاملات' : 'Transactions Amount'}</th>
-                <th>{language === 'ar' ? 'الأرباح' : 'Profit'}</th>
-                <th>{t('pickedUpByCustomer')}</th>
-                <th>{t('returnedStatus')}</th>
-                <th>{language === 'ar' ? 'ملغي' : 'Cancelled'}</th>
-                <th>{language === 'ar' ? 'صافي المركز' : 'Net Position'}</th>
+                 <th>{t('stream')}</th>
+                 <th>{t('pickedFromJumia')}</th>
+                 <th>{language === 'ar' ? 'كاش (عدد)' : 'Cash (Qty)'}</th>
+                 <th>{language === 'ar' ? 'كاش (مبلغ)' : 'Cash (Amt)'}</th>
+                 <th>{language === 'ar' ? 'جوميا باي (عدد)' : 'JumiaPay (Qty)'}</th>
+                 <th>{language === 'ar' ? 'جوميا باي (مبلغ)' : 'JumiaPay (Amt)'}</th>
+                 <th>{language === 'ar' ? 'الأرباح' : 'Profit'}</th>
+                 <th>{language === 'ar' ? 'صافي المركز' : 'Net Position'}</th>
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td><span style={{ color: CHART_COLORS.jumia, fontWeight: 700 }}>{t('jumia')}</span></td>
-                <td style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{jumiaReceived.length}</td>
-                <td style={{ color: 'var(--text-muted)' }}>{jumiaCash.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP</td>
-                <td style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{jumiaProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP</td>
-                <td style={{ color: 'var(--text-primary)' }}>{jumiaPickedUp.length}</td>
-                <td style={{ color: 'var(--text-primary)' }}><span style={{ color: 'var(--color-danger)' }}>{jumiaReturned.length}</span></td>
-                <td style={{ color: 'var(--color-warning)' }}>{jumiaCancelled.length}</td>
-                <td style={{ color: 'var(--color-success)', fontWeight: 700 }}>
-                  {jumiaProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP
-                </td>
-              </tr>
+               <tr>
+                 <td><span style={{ color: CHART_COLORS.jumia, fontWeight: 700 }}>{t('jumia')}</span></td>
+                 <td style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{jumiaReceived.length}</td>
+                 <td style={{ color: 'var(--text-primary)' }}>{jumiaCashQty}</td>
+                 <td style={{ color: 'var(--text-muted)' }}>{jumiaCashAmt.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} EGP</td>
+                 <td style={{ color: '#f97316', fontWeight: 600 }}>{jumiaPayQty}</td>
+                 <td style={{ color: '#f97316', fontWeight: 600 }}>{jumiaPayAmt.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} EGP</td>
+                 <td style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{jumiaProfit.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} EGP</td>
+                 <td style={{ color: 'var(--color-success)', fontWeight: 700 }}>
+                   {jumiaProfit.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} EGP
+                 </td>
+               </tr>
               <tr>
                 <td><span style={{ color: CHART_COLORS.bosta, fontWeight: 700 }}>{t('bosta')}</span></td>
                 <td style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{bostaReceived.length}</td>
-                <td style={{ color: 'var(--text-muted)' }}>{bostaCash.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP</td>
-                <td style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{bostaProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP</td>
                 <td style={{ color: 'var(--text-primary)' }}>{bostaPickedUp.length}</td>
-                <td style={{ color: 'var(--text-primary)' }}><span style={{ color: 'var(--color-danger)' }}>{bostaReturned.length}</span></td>
-                <td style={{ color: 'var(--color-warning)' }}>{bostaCancelled.length}</td>
+                <td style={{ color: 'var(--text-muted)' }}>{bostaCash.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} EGP</td>
+                <td style={{ color: 'var(--text-muted)' }}>—</td>
+                <td style={{ color: 'var(--text-muted)' }}>—</td>
+                <td style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{bostaProfit.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} EGP</td>
                 <td style={{ color: 'var(--color-success)', fontWeight: 700 }}>
-                  {bostaProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP
+                  {bostaProfit.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} EGP
                 </td>
               </tr>
               <tr>
                 <td><span style={{ color: CHART_COLORS.basata, fontWeight: 700 }}>{t('basata')} POS</span></td>
                 <td style={{ color: 'var(--text-muted)' }}>—</td>
-                <td style={{ color: 'var(--text-muted)' }}>{basataVolume.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP</td>
-                <td style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{basataVolume.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP</td>
-                <td style={{ color: 'var(--text-primary)' }}>{activeBasata.length} {language === 'ar' ? 'عملية' : 'trx'}</td>
                 <td style={{ color: 'var(--text-muted)' }}>—</td>
                 <td style={{ color: 'var(--text-muted)' }}>—</td>
-                <td style={{ color: 'var(--color-success)', fontWeight: 700 }}>{basataVolume.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP</td>
+                <td style={{ color: 'var(--text-primary)', fontWeight: 600 }} colSpan="2">{basataVolume.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} EGP</td>
+                <td style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{basataVolume.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} EGP</td>
+                <td style={{ color: 'var(--color-success)', fontWeight: 700 }}>{basataVolume.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} EGP</td>
               </tr>
               <tr>
                 <td><span style={{ color: CHART_COLORS.warning, fontWeight: 700 }}>{t('penalties')}</span></td>
                 <td style={{ color: 'var(--text-muted)' }}>—</td>
-                <td style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{activePenalties.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP</td>
-                <td style={{ color: 'var(--text-primary)' }}>{jumiaInventory.length} {language === 'ar' ? 'طلب مخزن' : 'parked'}</td>
-                <td style={{ color: 'var(--text-muted)' }}>—</td>
-                <td style={{ color: 'var(--text-muted)' }}>—</td>
-                <td style={{ color: 'var(--text-muted)' }}>—</td>
-                <td style={{ color: 'var(--color-success)', fontWeight: 700 }}>{activePenalties.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP</td>
+                <td style={{ color: 'var(--text-muted)' }} colSpan="4">{jumiaInventory.length} {language === 'ar' ? 'طلب مخزن' : 'parked'}</td>
+                <td style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{activePenalties.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} EGP</td>
+                <td style={{ color: 'var(--color-success)', fontWeight: 700 }}>{activePenalties.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} EGP</td>
               </tr>
               <tr style={{ borderTop: '2px solid var(--border-color)', background: 'var(--bg-overlay)' }}>
                 <td style={{ color: 'var(--text-primary)', fontWeight: 800 }}>{language === 'ar' ? 'الإجمالي' : 'TOTAL'}</td>
                 <td style={{ color: 'var(--text-primary)', fontWeight: 800 }}>{jumiaReceived.length + bostaReceived.length}</td>
-                <td style={{ color: 'var(--text-muted)', fontWeight: 700 }}>{(jumiaCash + bostaCash + basataVolume).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP</td>
-                <td style={{ color: 'var(--text-primary)', fontWeight: 800 }}>{grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP</td>
-                <td style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{jumiaPickedUp.length + bostaPickedUp.length}</td>
-                <td style={{ color: 'var(--color-danger)', fontWeight: 700 }}>{jumiaReturned.length + bostaReturned.length}</td>
-                <td style={{ color: 'var(--color-warning)', fontWeight: 700 }}>{jumiaCancelled.length + bostaCancelled.length}</td>
+                <td style={{ color: 'var(--text-primary)', fontWeight: 800 }}>{jumiaCashQty + bostaPickedUp.length}</td>
+                <td style={{ color: 'var(--text-muted)', fontWeight: 700 }}>{(jumiaCashAmt + bostaCash).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</td>
+                <td style={{ color: '#f97316', fontWeight: 800 }}>{jumiaPayQty}</td>
+                <td style={{ color: '#f97316', fontWeight: 800 }}>{jumiaPayAmt.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</td>
+                <td style={{ color: 'var(--text-primary)', fontWeight: 800 }}>{grandTotal.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} EGP</td>
                 <td style={{ color: 'var(--color-success)', fontWeight: 800 }}>
-                  {grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP
+                  {grandTotal.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} EGP
                 </td>
               </tr>
             </tbody>

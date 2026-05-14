@@ -14,7 +14,7 @@ export default async function handler(req, res) {
     // POST: Receive new Bosta order into inventory
     if (req.method === 'POST') {
       const { 
-        id, customerPhone, customerName, description, totalValue, category, 
+        id, customerPhone, customerName, description, totalValue, category, subcategory,
         email, address, tier,
         outlet, size, paymentMethod, orderCost,
         discountCode, discountAmount
@@ -41,6 +41,7 @@ export default async function handler(req, res) {
             description,
             totalValue: parseFloat(totalValue),
             category,
+            subcategory,
             outlet: outlet || "eltalg",
             size: size || "M",
             paymentMethod: paymentMethod || "Cash",
@@ -139,7 +140,7 @@ export default async function handler(req, res) {
       }
 
       if (action === 'UPDATE_INFO') {
-        const { newId, customerPhone, description, totalValue, category, outlet, size, paymentMethod, orderCost } = req.body;
+        const { newId, customerPhone, description, totalValue, category, subcategory, outlet, size, paymentMethod, orderCost } = req.body;
 
         // If phone changed, ensure customer exists (Upsert)
         if (customerPhone) {
@@ -164,6 +165,7 @@ export default async function handler(req, res) {
             description,
             totalValue: totalValue !== undefined ? parseFloat(totalValue) : undefined,
             category,
+            subcategory,
             outlet,
             size,
             paymentMethod,

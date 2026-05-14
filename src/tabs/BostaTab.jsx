@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { Search, Plus, UserCheck, RefreshCw, Package, CreditCard, Gift, AlertCircle, CalendarClock, Clock, Pencil, X, Trash2, RotateCcw } from 'lucide-react';
 import ExportActions from '../components/ExportActions';
 import { useLanguage } from '../context/LanguageContext';
+import { JUMIA_CATEGORIES } from '../utils/jumiaCategories';
 
 export default function BostaTab() {
   const { 
@@ -62,7 +63,8 @@ export default function BostaTab() {
     customerName: '', 
     description: '', 
     totalValue: '', 
-    category: 'Electronics', 
+    category: JUMIA_CATEGORIES[0].en, 
+    subcategory: JUMIA_CATEGORIES[0].subcategories[0].en,
     outlet: user?.outlet || 'eltalg', 
     size: 'M',
     discountCode: '',
@@ -222,6 +224,7 @@ export default function BostaTab() {
       description: newOrder.description,
       totalValue: Number(newOrder.totalValue),
       category: newOrder.category,
+      subcategory: newOrder.subcategory,
       outlet: newOrder.outlet,
       size: newOrder.size,
       discountCode: newOrder.discountCode,
@@ -229,7 +232,9 @@ export default function BostaTab() {
     });
     setShowModal(false);
     setNewOrder({ 
-      id: '', customerPhone: '', customerName: '', description: '', totalValue: '', category: 'Electronics', 
+      id: '', customerPhone: '', customerName: '', description: '', totalValue: '', 
+      category: JUMIA_CATEGORIES[0].en, 
+      subcategory: JUMIA_CATEGORIES[0].subcategories[0].en,
       outlet: user?.outlet || 'eltalg', size: '', discountCode: '', discountAmount: 0 
     });
   };
@@ -349,10 +354,9 @@ export default function BostaTab() {
 
           <select className="input-field" style={{ flex: '1 1 120px' }} value={filterCategory} onChange={e => setFilterCategory(e.target.value)}>
              <option value="All">{language === 'ar' ? 'جميع الفئات' : 'All Categories'}</option>
-             <option value="Electronics">{language === 'ar' ? 'إلكترونيات' : 'Electronics'}</option>
-             <option value="Apparel">{language === 'ar' ? 'ملابس' : 'Apparel'}</option>
-             <option value="Home">{language === 'ar' ? 'منزل' : 'Home'}</option>
-             <option value="Groceries">{language === 'ar' ? 'بقاليات' : 'Groceries'}</option>
+             {JUMIA_CATEGORIES.map(cat => (
+               <option key={cat.en} value={cat.en}>{language === 'ar' ? cat.ar : cat.en}</option>
+             ))}
           </select>
           
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flex: '1 1 300px' }}>
@@ -457,7 +461,7 @@ export default function BostaTab() {
                   </div>
                 </td>
                 <td>
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                     <span>{order.description}</span>
                     <span style={{ fontSize: '0.85rem', color: '#6366f1', fontWeight: 600 }}>
                       {(order.totalValue - (order.discountAmount || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP
@@ -467,7 +471,21 @@ export default function BostaTab() {
                         </span>
                       )}
                     </span>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{order.category}</span>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>
+                      {(() => {
+                        const cat = JUMIA_CATEGORIES.find(c => c.en === order.category);
+                        return language === 'ar' ? (cat?.ar || order.category) : (cat?.en || order.category);
+                      })()}
+                    </span>
+                    {order.subcategory && (
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                        {(() => {
+                          const cat = JUMIA_CATEGORIES.find(c => c.en === order.category);
+                          const sub = cat?.subcategories.find(s => s.en === order.subcategory);
+                          return language === 'ar' ? (sub?.ar || order.subcategory) : (sub?.en || order.subcategory);
+                        })()}
+                      </span>
+                    )}
                   </div>
                 </td>
                 <td style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{getOutletLabel(order.outlet)}</td>
@@ -664,13 +682,36 @@ export default function BostaTab() {
                 </div>
                 <div className="input-group" style={{ flex: '1 1 150px' }}>
                   <label className="input-label">{t('category')}</label>
-                  <select className="input-field" value={newOrder.category} onChange={e => setNewOrder({ ...newOrder, category: e.target.value })}>
-                     <option value="Electronics">{language === 'ar' ? 'إلكترونيات' : 'Electronics'}</option>
-                     <option value="Apparel">{language === 'ar' ? 'ملابس' : 'Apparel'}</option>
-                     <option value="Home">{language === 'ar' ? 'منزل' : 'Home'}</option>
-                     <option value="Groceries">{language === 'ar' ? 'بقاليات' : 'Groceries'}</option>
+                  <select 
+                    className="input-field" 
+                    value={newOrder.category} 
+                    onChange={e => {
+                      const catEn = e.target.value;
+                      const cat = JUMIA_CATEGORIES.find(c => c.en === catEn);
+                      setNewOrder({
+                        ...newOrder, 
+                        category: catEn, 
+                        subcategory: cat?.subcategories[0]?.en || ''
+                      });
+                    }}
+                  >
+                    {JUMIA_CATEGORIES.map(cat => (
+                      <option key={cat.en} value={cat.en}>{language === 'ar' ? cat.ar : cat.en}</option>
+                    ))}
                   </select>
                 </div>
+              </div>
+              <div className="input-group">
+                <label className="input-label">{language === 'ar' ? 'الفئة الفرعية' : 'Sub-category'}</label>
+                <select 
+                  className="input-field" 
+                  value={newOrder.subcategory} 
+                  onChange={e => setNewOrder({...newOrder, subcategory: e.target.value})}
+                >
+                  {(JUMIA_CATEGORIES.find(c => c.en === newOrder.category)?.subcategories || []).map(sub => (
+                    <option key={sub.en} value={sub.en}>{language === 'ar' ? sub.ar : sub.en}</option>
+                  ))}
+                </select>
               </div>
               <div className="input-group">
                 <label className="input-label">{t('packageSize')}</label>
@@ -804,14 +845,34 @@ export default function BostaTab() {
                   <select 
                     className="input-field" 
                     value={editingOrder.category} 
-                    onChange={e => setEditingOrder({...editingOrder, category: e.target.value})}
+                    onChange={e => {
+                      const catEn = e.target.value;
+                      const cat = JUMIA_CATEGORIES.find(c => c.en === catEn);
+                      setEditingOrder({
+                        ...editingOrder, 
+                        category: catEn, 
+                        subcategory: cat?.subcategories[0]?.en || ''
+                      });
+                    }}
                   >
-                    <option value="Electronics">{language === 'ar' ? 'إلكترونيات' : 'Electronics'}</option>
-                    <option value="Apparel">{language === 'ar' ? 'ملابس' : 'Apparel'}</option>
-                    <option value="Home">{language === 'ar' ? 'منزل' : 'Home'}</option>
-                    <option value="Groceries">{language === 'ar' ? 'بقاليات' : 'Groceries'}</option>
+                    {JUMIA_CATEGORIES.map(cat => (
+                      <option key={cat.en} value={cat.en}>{language === 'ar' ? cat.ar : cat.en}</option>
+                    ))}
                   </select>
                 </div>
+              </div>
+
+              <div className="form-group">
+                <label className="label">{language === 'ar' ? 'الفئة الفرعية' : 'Sub-category'}</label>
+                <select 
+                  className="input-field" 
+                  value={editingOrder.subcategory} 
+                  onChange={e => setEditingOrder({...editingOrder, subcategory: e.target.value})}
+                >
+                  {(JUMIA_CATEGORIES.find(c => c.en === editingOrder.category)?.subcategories || []).map(sub => (
+                    <option key={sub.en} value={sub.en}>{language === 'ar' ? sub.ar : sub.en}</option>
+                  ))}
+                </select>
               </div>
 
               <div className="form-group">
@@ -918,6 +979,7 @@ export default function BostaTab() {
                       description: editingOrder.description,
                       totalValue: editingOrder.totalValue,
                       category: editingOrder.category,
+                      subcategory: editingOrder.subcategory,
                       outlet: editingOrder.outlet,
                       size: editingOrder.size,
                       discountCode: editingOrder.discountCode,

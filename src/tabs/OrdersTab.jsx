@@ -8,6 +8,7 @@ import {
 import { Html5Qrcode } from 'html5-qrcode';
 import ExportActions from '../components/ExportActions';
 import { useLanguage } from '../context/LanguageContext';
+import { JUMIA_CATEGORIES } from '../utils/jumiaCategories';
 
 const normalizeOutlet = (val) => {
   if (!val) return 'eltalg';
@@ -112,7 +113,8 @@ export default function OrdersTab() {
     customerPhone: '',
     description: '',
     totalValue: '',
-    category: 'Electronics',
+    category: JUMIA_CATEGORIES[0].en,
+    subcategory: JUMIA_CATEGORIES[0].subcategories[0].en,
     customerName: '',
     outlet: user?.outlet || 'eltalg',
     size: '',
@@ -135,6 +137,8 @@ export default function OrdersTab() {
     { label: language === 'ar' ? 'المنفذ' : 'Outlet', accessor: 'outlet' },
     { label: language === 'ar' ? 'المقاس' : 'Size', accessor: 'size' },
     { label: t('paymentMethod'), accessor: 'paymentMethod' },
+    { label: language === 'ar' ? 'مبلغ كاش' : 'Cash Amount', accessor: o => o.status === 'Picked Up' && (!o.paymentMethod || o.paymentMethod === 'Cash' || o.paymentMethod === 'VISA') ? (o.totalValue - (o.discountAmount || 0)) : 0 },
+    { label: language === 'ar' ? 'مبلغ جوميا باي' : 'JumiaPay Amount', accessor: o => o.status === 'Picked Up' && o.paymentMethod === 'JumiaPay' ? (o.totalValue - (o.discountAmount || 0)) : 0 },
     { label: t('status'), accessor: 'status' },
     { label: t('pickedFromJumia'), accessor: o => new Date(o.receivedAt).toLocaleString() },
     { label: t('pickedUpByCustomer'), accessor: o => o.pickedUpAt ? new Date(o.pickedUpAt).toLocaleString() : '-' },
@@ -364,8 +368,14 @@ export default function OrdersTab() {
       const totalMoney = pickedUpInRange.reduce((sum, o) => sum + ((o.totalValue || 0) - (o.discountAmount || 0)), 0);
       const paid = totalMoney; 
       
-      const jumiaPay = pickedUpInRange.filter(o => o.paymentMethod?.toLowerCase().includes('jumia')).reduce((sum, o) => sum + ((o.totalValue || 0) - (o.discountAmount || 0)), 0);
-      const creditCard = pickedUpInRange.filter(o => (o.paymentMethod?.toLowerCase().includes('card') || o.paymentMethod?.toLowerCase().includes('visa'))).reduce((sum, o) => sum + ((o.totalValue || 0) - (o.discountAmount || 0)), 0);
+      const pickedUpWithCash = pickedUpInRange.filter(o => !o.paymentMethod || o.paymentMethod === 'Cash' || o.paymentMethod === 'VISA');
+      const pickedUpWithJumiaPay = pickedUpInRange.filter(o => o.paymentMethod === 'JumiaPay');
+
+      const cashQty = pickedUpWithCash.length;
+      const cashAmount = pickedUpWithCash.reduce((sum, o) => sum + ((o.totalValue || 0) - (o.discountAmount || 0)), 0);
+      
+      const jumiaPayQty = pickedUpWithJumiaPay.length;
+      const jumiaPayAmount = pickedUpWithJumiaPay.reduce((sum, o) => sum + ((o.totalValue || 0) - (o.discountAmount || 0)), 0);
 
       const sCount = inventoryCurrent.filter(o => o.size === 'S').length;
       const mCount = inventoryCurrent.filter(o => o.size === 'M').length;
@@ -382,8 +392,10 @@ export default function OrdersTab() {
         available,
         totalMoney,
         paid,
-        jumiaPay,
-        creditCard,
+        cashQty,
+        cashAmount,
+        jumiaPayQty,
+        jumiaPayAmount,
         storageFees,
         sCount,
         mCount,
@@ -406,6 +418,7 @@ export default function OrdersTab() {
       description: newOrder.description,
       totalValue: Number(newOrder.totalValue),
       category: newOrder.category,
+      subcategory: newOrder.subcategory,
       outlet: newOrder.outlet,
       size: newOrder.size,
       paymentMethod: newOrder.paymentMethod,
@@ -414,7 +427,10 @@ export default function OrdersTab() {
     });
     setShowSimulateModal(false);
     setNewOrder({ 
-      id: '', customerPhone: '', description: '', totalValue: '', category: 'Electronics', customerName: '',
+      id: '', customerPhone: '', description: '', totalValue: '', 
+      category: JUMIA_CATEGORIES[0].en, 
+      subcategory: JUMIA_CATEGORIES[0].subcategories[0].en,
+      customerName: '',
       outlet: user?.outlet || 'eltalg', size: '', paymentMethod: 'Cash', discountCode: '', discountAmount: 0
     });
   };
@@ -475,10 +491,9 @@ export default function OrdersTab() {
 
             <select className="input-field" style={{ flex: '1 1 120px' }} value={filterCategory} onChange={e => setFilterCategory(e.target.value)}>
                <option value="All">{language === 'ar' ? 'جميع الفئات' : 'All Categories'}</option>
-               <option value="Electronics">{language === 'ar' ? 'إلكترونيات' : 'Electronics'}</option>
-               <option value="Apparel">{language === 'ar' ? 'ملابس' : 'Apparel'}</option>
-               <option value="Home">{language === 'ar' ? 'منزل' : 'Home'}</option>
-               <option value="Groceries">{language === 'ar' ? 'بقاليات' : 'Groceries'}</option>
+               {JUMIA_CATEGORIES.map(cat => (
+                 <option key={cat.en} value={cat.en}>{language === 'ar' ? cat.ar : cat.en}</option>
+               ))}
             </select>
 
             <select className="input-field" style={{ flex: '1 1 120px' }} value={filterSize} onChange={e => setFilterSize(e.target.value)}>
@@ -567,7 +582,10 @@ export default function OrdersTab() {
                   <th>{language === 'ar' ? 'مرتجع' : 'Returned'}</th>
                   <th>{t('inventory')}</th>
                   <th>{language === 'ar' ? 'اجمالي' : 'Total'}</th>
-                  <th>{language === 'ar' ? 'سداد' : 'Paid'}</th>
+                  <th style={{ background: 'rgba(255,255,255,0.03)' }}>{language === 'ar' ? 'كاش (عدد)' : 'Cash (Qty)'}</th>
+                  <th style={{ background: 'rgba(255,255,255,0.03)' }}>{language === 'ar' ? 'كاش (مبلغ)' : 'Cash (Amt)'}</th>
+                  <th style={{ background: 'rgba(255,165,0,0.05)' }}>{language === 'ar' ? 'جوميا باي (عدد)' : 'JumiaPay (Qty)'}</th>
+                  <th style={{ background: 'rgba(255,165,0,0.05)' }}>{language === 'ar' ? 'جوميا باي (مبلغ)' : 'JumiaPay (Amt)'}</th>
                   <th style={{ color: 'var(--color-primary)' }}>{language === 'ar' ? 'رسوم التخزين' : 'Storage Fees'}</th>
                   <th>S</th>
                   <th>M</th>
@@ -583,9 +601,12 @@ export default function OrdersTab() {
                     <td style={{ color: 'var(--color-warning)' }}>{row.cancelled}</td>
                     <td style={{ color: 'var(--color-danger)' }}>{row.returned}</td>
                     <td style={{ fontWeight: 600 }}>{row.available}</td>
-                    <td>{row.totalMoney.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                    <td>{row.paid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                    <td style={{ fontWeight: 600 }}>{row.storageFees.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td style={{ fontWeight: 700 }}>{row.totalMoney.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</td>
+                    <td style={{ background: 'rgba(255,255,255,0.02)' }}>{row.cashQty}</td>
+                    <td style={{ background: 'rgba(255,255,255,0.02)' }}>{row.cashAmount.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</td>
+                    <td style={{ background: 'rgba(255,165,0,0.03)', color: '#f97316', fontWeight: 600 }}>{row.jumiaPayQty}</td>
+                    <td style={{ background: 'rgba(255,165,0,0.03)', color: '#f97316', fontWeight: 600 }}>{row.jumiaPayAmount.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</td>
+                    <td style={{ fontWeight: 600 }}>{row.storageFees.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</td>
                     <td>{row.sCount}</td>
                     <td>{row.mCount}</td>
                     <td>{row.lCount}</td>
@@ -599,9 +620,12 @@ export default function OrdersTab() {
                   <td style={{ fontWeight: 700, color: 'var(--color-warning)' }}>{summaryByOutlet.reduce((sum, r) => sum + r.cancelled, 0)}</td>
                   <td style={{ fontWeight: 700, color: 'var(--color-danger)' }}>{summaryByOutlet.reduce((sum, r) => sum + r.returned, 0)}</td>
                   <td style={{ fontWeight: 700 }}>{summaryByOutlet.reduce((sum, r) => sum + r.available, 0)}</td>
-                  <td style={{ fontWeight: 700 }}>{summaryByOutlet.reduce((sum, r) => sum + r.totalMoney, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  <td style={{ fontWeight: 700 }}>{summaryByOutlet.reduce((sum, r) => sum + r.paid, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  <td style={{ fontWeight: 800, color: 'var(--color-primary)' }}>{summaryByOutlet.reduce((sum, r) => sum + r.storageFees, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  <td style={{ fontWeight: 800 }}>{summaryByOutlet.reduce((sum, r) => sum + r.totalMoney, 0).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</td>
+                  <td style={{ fontWeight: 700, background: 'rgba(255,255,255,0.05)' }}>{summaryByOutlet.reduce((sum, r) => sum + r.cashQty, 0)}</td>
+                  <td style={{ fontWeight: 700, background: 'rgba(255,255,255,0.05)' }}>{summaryByOutlet.reduce((sum, r) => sum + r.cashAmount, 0).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</td>
+                  <td style={{ fontWeight: 800, background: 'rgba(255,165,0,0.08)', color: '#f97316' }}>{summaryByOutlet.reduce((sum, r) => sum + r.jumiaPayQty, 0)}</td>
+                  <td style={{ fontWeight: 800, background: 'rgba(255,165,0,0.08)', color: '#f97316' }}>{summaryByOutlet.reduce((sum, r) => sum + r.jumiaPayAmount, 0).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</td>
+                  <td style={{ fontWeight: 800, color: 'var(--color-primary)' }}>{summaryByOutlet.reduce((sum, r) => sum + r.storageFees, 0).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</td>
                   <td style={{ fontWeight: 700 }}>{summaryByOutlet.reduce((sum, r) => sum + r.sCount, 0)}</td>
                   <td style={{ fontWeight: 700 }}>{summaryByOutlet.reduce((sum, r) => sum + r.mCount, 0)}</td>
                   <td style={{ fontWeight: 700 }}>{summaryByOutlet.reduce((sum, r) => sum + r.lCount, 0)}</td>
@@ -624,9 +648,6 @@ export default function OrdersTab() {
                 </th>
                 <th onClick={() => handleSort('description')} style={{ cursor: 'pointer', userSelect: 'none' }}>
                   {t('description')} {sortConfig.key === 'description' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                </th>
-                <th onClick={() => handleSort('category')} style={{ cursor: 'pointer', userSelect: 'none' }}>
-                  {t('category')} {sortConfig.key === 'category' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                 </th>
                 <th onClick={() => handleSort('receivedAt')} style={{ cursor: 'pointer', userSelect: 'none' }}>
                   {t('pickedFromJumia')} {sortConfig.key === 'receivedAt' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
@@ -655,22 +676,31 @@ export default function OrdersTab() {
                     </div>
                   </td>
                   <td>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                       <span style={{ fontSize: '0.9rem' }}>{order.description}</span>
                       <span style={{ fontSize: '0.85rem', color: 'var(--color-primary)', fontWeight: 700 }}>
-                      {(order.totalValue - (order.discountAmount || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP
-                      {order.discountAmount > 0 && (
-                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', [language === 'ar' ? 'marginRight' : 'marginLeft']: '0.4rem', textDecoration: 'line-through', fontWeight: 400 }}>
-                          {order.totalValue.toLocaleString()}
+                        {(order.totalValue - (order.discountAmount || 0)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP
+                        {order.discountAmount > 0 && (
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', [language === 'ar' ? 'marginRight' : 'marginLeft']: '0.4rem', textDecoration: 'line-through', fontWeight: 400 }}>
+                            {order.totalValue.toLocaleString()}
+                          </span>
+                        )}
+                      </span>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>
+                        {(() => {
+                          const cat = JUMIA_CATEGORIES.find(c => c.en === order.category);
+                          return language === 'ar' ? (cat?.ar || order.category) : (cat?.en || order.category);
+                        })()}
+                      </span>
+                      {order.subcategory && (
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                          {(() => {
+                            const cat = JUMIA_CATEGORIES.find(c => c.en === order.category);
+                            const sub = cat?.subcategories.find(s => s.en === order.subcategory);
+                            return language === 'ar' ? (sub?.ar || order.subcategory) : (sub?.en || order.subcategory);
+                          })()}
                         </span>
                       )}
-                    </span>
-                    </div>
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                       {order.category === 'Electronics' && <Gift size={14} color="#6366f1" />}
-                       <span style={{ fontSize: '0.85rem' }}>{order.category}</span>
                     </div>
                   </td>
                   <td>
@@ -1056,20 +1086,43 @@ export default function OrdersTab() {
                 <label className="input-label">{t('description')}</label>
                 <input required className="input-field" value={newOrder.description} onChange={e => setNewOrder({...newOrder, description: e.target.value})} placeholder="Items..." />
               </div>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <div className="input-group" style={{ flex: 1 }}>
+              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                <div className="input-group" style={{ flex: '1 1 150px' }}>
                   <label className="input-label">{language === 'ar' ? 'اجمالي الفلوس' : 'Total Value'}</label>
                   <input required type="number" step="0.01" className="input-field" value={newOrder.totalValue} onChange={e => setNewOrder({...newOrder, totalValue: e.target.value})} placeholder="0.00" />
                 </div>
-                <div className="input-group" style={{ flex: 1 }}>
+                <div className="input-group" style={{ flex: '1 1 150px' }}>
                   <label className="input-label">{t('category')}</label>
-                  <select className="input-field" value={newOrder.category} onChange={e => setNewOrder({...newOrder, category: e.target.value})}>
-                     <option value="Electronics">Electronics</option>
-                     <option value="Apparel">Apparel</option>
-                     <option value="Home">Home</option>
-                     <option value="Groceries">Groceries</option>
+                  <select 
+                    className="input-field" 
+                    value={newOrder.category} 
+                    onChange={e => {
+                      const catEn = e.target.value;
+                      const cat = JUMIA_CATEGORIES.find(c => c.en === catEn);
+                      setNewOrder({
+                        ...newOrder, 
+                        category: catEn, 
+                        subcategory: cat?.subcategories[0]?.en || ''
+                      });
+                    }}
+                  >
+                    {JUMIA_CATEGORIES.map(cat => (
+                      <option key={cat.en} value={cat.en}>{language === 'ar' ? cat.ar : cat.en}</option>
+                    ))}
                   </select>
                 </div>
+              </div>
+              <div className="input-group">
+                <label className="input-label">{language === 'ar' ? 'الفئة الفرعية' : 'Sub-category'}</label>
+                <select 
+                  className="input-field" 
+                  value={newOrder.subcategory} 
+                  onChange={e => setNewOrder({...newOrder, subcategory: e.target.value})}
+                >
+                  {(JUMIA_CATEGORIES.find(c => c.en === newOrder.category)?.subcategories || []).map(sub => (
+                    <option key={sub.en} value={sub.en}>{language === 'ar' ? sub.ar : sub.en}</option>
+                  ))}
+                </select>
               </div>
               <div className="input-group">
                 <label className="input-label">{t('packageSize')}</label>
@@ -1190,15 +1243,34 @@ export default function OrdersTab() {
                   <select 
                     className="input-field" 
                     value={editingOrder.category} 
-                    onChange={e => setEditingOrder({...editingOrder, category: e.target.value})}
+                    onChange={e => {
+                      const catEn = e.target.value;
+                      const cat = JUMIA_CATEGORIES.find(c => c.en === catEn);
+                      setEditingOrder({
+                        ...editingOrder, 
+                        category: catEn, 
+                        subcategory: cat?.subcategories[0]?.en || ''
+                      });
+                    }}
                   >
-                    <option value="Electronics">Electronics</option>
-                    <option value="Apparel">Apparel</option>
-                    <option value="Home">Home</option>
-                    <option value="Groceries">Groceries</option>
-                    <option value="General">General</option>
+                    {JUMIA_CATEGORIES.map(cat => (
+                      <option key={cat.en} value={cat.en}>{language === 'ar' ? cat.ar : cat.en}</option>
+                    ))}
                   </select>
                 </div>
+              </div>
+
+              <div className="form-group">
+                <label className="label" style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '0.4rem', display: 'block' }}>{language === 'ar' ? 'الفئة الفرعية' : 'Sub-category'}</label>
+                <select 
+                  className="input-field" 
+                  value={editingOrder.subcategory} 
+                  onChange={e => setEditingOrder({...editingOrder, subcategory: e.target.value})}
+                >
+                  {(JUMIA_CATEGORIES.find(c => c.en === editingOrder.category)?.subcategories || []).map(sub => (
+                    <option key={sub.en} value={sub.en}>{language === 'ar' ? sub.ar : sub.en}</option>
+                  ))}
+                </select>
               </div>
 
               <div className="form-group">
@@ -1305,6 +1377,7 @@ export default function OrdersTab() {
                       description: editingOrder.description,
                       totalValue: parseFloat(editingOrder.totalValue),
                       category: editingOrder.category,
+                      subcategory: editingOrder.subcategory,
                       outlet: editingOrder.outlet,
                       size: editingOrder.size,
                       paymentMethod: editingOrder.paymentMethod,

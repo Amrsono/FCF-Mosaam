@@ -11,7 +11,7 @@ export const translations = {
     returned: "Returned to Jumia",
     analytics: "Analytics Insights",
     signOut: "Sign Out",
-    jumiaStation: "Jumia Station",
+    jumiaStation: "Jumia Station V3",
     fcf: "FCF",
     mosaam: "Mosaam",
     admin: "Admin",
@@ -159,6 +159,7 @@ export const translations = {
     basataRevenueCat: "Basata Revenue by Category",
     topBasataServices: "Top Basata Services by Volume",
     financialSummary: "Full Financial Summary",
+    jumiaOutletsVolume: "Jumia Outlets Volume Comparison",
 
     // Calls Log Tab
     takeCall: "📞 Make Call",
@@ -215,7 +216,7 @@ export const translations = {
     returned: "المرتجع لـ جوميا",
     analytics: "التحليلات",
     signOut: "تسجيل الخروج",
-    jumiaStation: "محطة جوميا",
+    jumiaStation: "محطة جوميا V3",
     fcf: "إف سي إف",
     mosaam: "مواسام",
     admin: "مدير",
@@ -363,6 +364,7 @@ export const translations = {
     basataRevenueCat: "إيرادات بساطة حسب الفئة",
     topBasataServices: "أعلى خدمات بساطة حسب الحجم",
     financialSummary: "الملخص المالي الكامل",
+    jumiaOutletsVolume: "مقارنة حجم طلبات جوميا حسب المنفذ",
 
     // Calls Log Tab
     takeCall: "📞 إجراء المكالمة",

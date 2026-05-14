@@ -184,8 +184,8 @@ export default function AnalyticsTab() {
     const jumiaReturned = [...stdReturned, ...custReturned];
     const jumiaCancelled = orders.filter(o => o.status === 'Cancelled' && isInRange(o.returnedAt) && matchesOutlet(o));
     
-    const jumiaCash = jumiaPickedUp.reduce((s, o) => s + o.totalValue, 0);
-    const jumiaReturnedAmt = stdReturned.reduce((s, o) => s + o.totalValue, 0);
+    const jumiaCash = jumiaPickedUp.reduce((s, o) => s + (Number(o.totalValue) || 0), 0);
+    const jumiaReturnedAmt = stdReturned.reduce((s, o) => s + (Number(o.totalValue) || 0), 0);
 
     const getJumiaCharge = (size) => {
       const s = (size || 'M').toUpperCase();
@@ -232,8 +232,8 @@ export default function AnalyticsTab() {
     const bostaReceived = bostaOrders.filter(o => isInRange(o.receivedAt) && matchesOutlet(o));
     const bostaReturned = bostaOrders.filter(o => o.status === 'Returned' && isInRange(o.returnedAt) && matchesOutlet(o));
     const bostaCancelled = bostaOrders.filter(o => o.status === 'Cancelled' && isInRange(o.returnedAt) && matchesOutlet(o));
-    const bostaCash = bostaPickedUp.reduce((s, o) => s + o.totalValue, 0);
-    const bostaReturnedAmt = bostaReturned.reduce((s, o) => s + o.totalValue, 0);
+    const bostaCash = bostaPickedUp.reduce((s, o) => s + (Number(o.totalValue) || 0), 0);
+    const bostaReturnedAmt = bostaReturned.reduce((s, o) => s + (Number(o.totalValue) || 0), 0);
     const bostaProfit = bostaPickedUp.length * 10;
 
     const getSizes = (list) => {
@@ -492,7 +492,7 @@ export default function AnalyticsTab() {
 
     return {
       jumiaPickedUp, jumiaInventory, jumiaReceived, stdReturned, jumiaReturned, jumiaCancelled, jumiaProfit,
-      jumiaCash, jumiaPayQty, jumiaPayAmt, jumiaCashQty, jumiaCashAmt,
+      jumiaCash, jumiaPayQty, jumiaPayAmt, jumiaCashQty, jumiaCashAmt, jumiaReturnedAmt,
       activePenalties, jumiaSlaCritical, jumiaSlaNear, jumiaPayTotal, jumiaCardTotal, jumiaCashTotal, jumiaPaymentData,
       bostaInventory, bostaReceived, bostaPickedUp, bostaReturned, bostaCancelled, bostaCash, bostaProfit,
       bostaReturnedAmt,
@@ -513,7 +513,7 @@ export default function AnalyticsTab() {
 
   const {
     jumiaPickedUp, jumiaInventory, jumiaReceived, stdReturned, jumiaReturned, jumiaCancelled, jumiaProfit,
-    jumiaCash, jumiaPayQty, jumiaPayAmt, jumiaCashQty, jumiaCashAmt,
+    jumiaCash, jumiaPayQty, jumiaPayAmt, jumiaCashQty, jumiaCashAmt, jumiaReturnedAmt,
     bostaInventory, activePenalties, jumiaSlaCritical, jumiaSlaNear, jumiaPayTotal, jumiaCardTotal, jumiaCashTotal, jumiaPaymentData,
     bostaPickedUp, bostaReceived, bostaReturned, bostaCancelled, bostaCash, bostaReturnedAmt, bostaProfit,
     jumiaSizes, jumiaInventorySizes, bostaSizes, bostaInventorySizes,
@@ -536,8 +536,10 @@ export default function AnalyticsTab() {
     }, { eltalg: 0, tegara: 0, mostashfa: 0 });
   };
 
-  const handleExportPPTX = () => {
-    const analytics = {
+  const handleExportPPTX = async () => {
+    console.log('Starting PPTX export process...');
+    try {
+      const analytics = {
       jumia: {
         pickedUpCount: jumiaPickedUp.length,
         cash: jumiaCash,
@@ -587,7 +589,13 @@ export default function AnalyticsTab() {
     const filename = timeframe === 'custom' 
       ? `FCF_Master_Report_${startDate}_to_${endDate}` 
       : `FCF_Master_Report_${timeframe}_${startDate}`;
-    exportToPPTX(analytics, filename, language);
+    
+    console.log('Calling exportToPPTX with analytics data...');
+    await exportToPPTX(analytics, filename, language);
+    } catch (err) {
+      console.error('handleExportPPTX error:', err);
+      alert('Error initiating export: ' + err.message);
+    }
   };
 
   // Metric Card
@@ -768,7 +776,10 @@ export default function AnalyticsTab() {
                 background: 'rgba(120, 100, 255, 0.05)',
                 gap: '0.5rem',
                 fontSize: '0.85rem',
-                padding: '0.4rem 0.8rem'
+                padding: '0.4rem 0.8rem',
+                cursor: 'pointer',
+                position: 'relative',
+                zIndex: 5
               }}
               onClick={handleExportPPTX}
             >

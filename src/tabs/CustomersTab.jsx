@@ -1,18 +1,55 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useDashboard } from '../context/DashboardContext';
 import { Edit2, Save, X, Plus, UserPlus } from 'lucide-react';
 import ExportActions from '../components/ExportActions';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function CustomersTab() {
   const { customers, orders, bostaOrders, updateCustomer, addCustomer } = useDashboard();
   const { t, language } = useLanguage();
+  const { user } = useAuth();
 
   const normalizePhone = (phone) => {
     if (!phone) return '';
     const cleaned = String(phone).replace(/\D/g, '').replace(/^0+/, ''); 
     return cleaned.length >= 10 ? cleaned.slice(-10) : cleaned;
   };
+
+  const normalizeOutlet = (val) => {
+    if (!val) return 'eltalg';
+    const v = String(val).toLowerCase().trim();
+    if (v === 'eltalg' || v.includes('banha 1') || v.includes('banha1') || v.includes('ثلج') || v.includes('تلج')) return 'eltalg';
+    if (v === 'tegara' || v.includes('banha 2') || v.includes('banha2') || v.includes('تجارة') || v.includes('تجاره')) return 'tegara';
+    if (v === 'mostashfa' || v.includes('banha 3') || v.includes('banha3') || v.includes('مستشفى') || v.includes('مستشفي')) return 'mostashfa';
+    return val;
+  };
+
+  const customerOutletsMap = useMemo(() => {
+    const map = new Map();
+    
+    orders.forEach(order => {
+      const phone = normalizePhone(order.customerPhone);
+      if (!phone) return;
+      const outlet = normalizeOutlet(order.outlet);
+      if (!map.has(phone)) {
+        map.set(phone, new Set());
+      }
+      map.get(phone).add(outlet);
+    });
+
+    bostaOrders.forEach(order => {
+      const phone = normalizePhone(order.customerPhone);
+      if (!phone) return;
+      const outlet = normalizeOutlet(order.outlet);
+      if (!map.has(phone)) {
+        map.set(phone, new Set());
+      }
+      map.get(phone).add(outlet);
+    });
+
+    return map;
+  }, [orders, bostaOrders]);
   
   const [editingPhone, setEditingPhone] = useState(null);
   const [editForm, setEditForm] = useState({});
@@ -26,6 +63,15 @@ export default function CustomersTab() {
   const [searchTerm, setSearchTerm] = useState('');
   const [genderFilter, setGenderFilter] = useState('All');
   const [tierFilter, setTierFilter] = useState('All');
+  const [outletFilter, setOutletFilter] = useState('All');
+
+  useEffect(() => {
+    if (user && user.role !== 'admin') {
+      setOutletFilter(normalizeOutlet(user.outlet || 'eltalg'));
+    }
+  }, [user]);
+
+  const filterOutlet = user?.role === 'admin' ? outletFilter : normalizeOutlet(user?.outlet || 'eltalg');
 
   const exportHeaders = [
     { label: t('phone'), accessor: 'phone' },
@@ -74,7 +120,10 @@ export default function CustomersTab() {
     const matchesGender = genderFilter === 'All' || c.gender === genderFilter;
     const matchesTier = tierFilter === 'All' || c.tier === tierFilter;
     
-    return matchesSearch && matchesGender && matchesTier;
+    const customerPhonesWithOutlet = customerOutletsMap.get(normalizePhone(c.phone));
+    const matchesOutlet = filterOutlet === 'All' || (customerPhonesWithOutlet && customerPhonesWithOutlet.has(filterOutlet));
+    
+    return matchesSearch && matchesGender && matchesTier && matchesOutlet;
   });
 
   return (
@@ -116,6 +165,19 @@ export default function CustomersTab() {
                 <option value="Bronze">Bronze</option>
                 <option value="Silver">Silver</option>
                 <option value="Gold">Gold</option>
+              </select>
+
+              <select 
+                className="input-field" 
+                style={{ width: 'auto' }} 
+                value={filterOutlet} 
+                onChange={e => setOutletFilter(e.target.value)}
+                disabled={user?.role !== 'admin'}
+              >
+                <option value="All">{language === 'ar' ? 'جميع المنافذ' : 'All Outlets'}</option>
+                <option value="eltalg">{t('eltalg')}</option>
+                <option value="tegara">{t('tegara')}</option>
+                <option value="mostashfa">{t('mostashfa')}</option>
               </select>
             </div>
           </div>

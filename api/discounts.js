@@ -48,7 +48,7 @@ export default async function handler(req, res) {
           const customerUsageBosta = await prisma.bostaOrder.count({
             where: { customerPhone: phone, discountCode: code.toUpperCase(), status: validStatuses, ...excludeCondition }
           });
-          
+
           if ((customerUsageJumia + customerUsageBosta) >= discount.maxUsesPerCustomer) {
             return res.status(400).json({ error: `You have already used this code ${discount.maxUsesPerCustomer} time(s)` });
           }
@@ -66,7 +66,7 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST') {
       const { code, type, value, minSpend, maxUses, isFirstTimeOnly, maxUsesPerCustomer } = req.body;
-      
+
       const newDiscount = await prisma.discountCode.create({
         data: {
           code: code.toUpperCase(),
@@ -84,16 +84,16 @@ export default async function handler(req, res) {
     if (req.method === 'PATCH') {
       const { id, isActive, value, minSpend, maxUses, maxUsesPerCustomer } = req.body;
       const data = {};
-      
+
       if (isActive !== undefined) data.isActive = isActive;
       if (value !== undefined && value !== '') data.value = parseFloat(value);
       if (minSpend !== undefined && minSpend !== '') data.minSpend = parseFloat(minSpend);
-      
+
       if (maxUses !== undefined) {
         data.maxUses = (maxUses === '' || maxUses === null) ? null : parseInt(maxUses);
         if (data.maxUses !== null && isNaN(data.maxUses)) delete data.maxUses;
       }
-      
+
       if (maxUsesPerCustomer !== undefined) {
         data.maxUsesPerCustomer = (maxUsesPerCustomer === '' || maxUsesPerCustomer === null) ? null : parseInt(maxUsesPerCustomer);
         if (data.maxUsesPerCustomer !== null && isNaN(data.maxUsesPerCustomer)) delete data.maxUsesPerCustomer;

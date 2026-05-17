@@ -71,6 +71,23 @@ export default function BostaTab() {
     discountAmount: 0
   });
 
+  const [phoneSuggestions, setPhoneSuggestions] = useState([]);
+  const [hoveredIdx, setHoveredIdx] = useState(null);
+
+  const handlePhoneChange = (val) => {
+    setNewOrder(prev => ({ ...prev, customerPhone: val }));
+    if (!val.trim()) {
+      setPhoneSuggestions([]);
+      return;
+    }
+    const cleanVal = val.toLowerCase();
+    const matches = customers.filter(c => 
+      c.phone.includes(cleanVal) || 
+      c.name.toLowerCase().includes(cleanVal)
+    ).slice(0, 5);
+    setPhoneSuggestions(matches);
+  };
+
   const exportHeaders = [
     { label: t('orderId'), accessor: 'id' },
     { label: t('customer'), accessor: 'customerName' },
@@ -231,6 +248,7 @@ export default function BostaTab() {
       discountAmount: Number(newOrder.discountAmount)
     });
     setShowModal(false);
+    setPhoneSuggestions([]);
     setNewOrder({ 
       id: '', customerPhone: '', customerName: '', description: '', totalValue: '', 
       category: JUMIA_CATEGORIES[0].en, 
@@ -663,9 +681,64 @@ export default function BostaTab() {
                 <label className="input-label">{language === 'ar' ? 'رقم طلب بوسطة' : 'Bosta Order ID'}</label>
                 <input required className="input-field" value={newOrder.id} onChange={e => setNewOrder({ ...newOrder, id: e.target.value })} placeholder="e.g. BST-001" />
               </div>
-              <div className="input-group">
+              <div className="input-group" style={{ position: 'relative' }}>
                 <label className="input-label">{t('phone')}</label>
-                <input required className="input-field" value={newOrder.customerPhone} onChange={e => setNewOrder({ ...newOrder, customerPhone: e.target.value })} placeholder="01..." />
+                <input 
+                  required 
+                  className="input-field" 
+                  value={newOrder.customerPhone} 
+                  onChange={e => handlePhoneChange(e.target.value)} 
+                  placeholder="01..." 
+                  autoComplete="off"
+                />
+                {phoneSuggestions.length > 0 && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    background: 'var(--bg-panel)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '8px',
+                    boxShadow: 'var(--shadow-lg)',
+                    zIndex: 1000,
+                    maxHeight: '200px',
+                    overflowY: 'auto',
+                    marginTop: '4px'
+                  }}>
+                    {phoneSuggestions.map((cust, idx) => (
+                      <div 
+                        key={cust.phone}
+                        style={{
+                          padding: '0.6rem 1rem',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          borderBottom: '1px solid rgba(255,255,255,0.05)',
+                          transition: 'background 0.2s',
+                          background: hoveredIdx === idx ? 'var(--bg-overlay-hover)' : 'transparent'
+                        }}
+                        onMouseEnter={() => setHoveredIdx(idx)}
+                        onMouseLeave={() => setHoveredIdx(null)}
+                        onClick={() => {
+                          setNewOrder({
+                            ...newOrder,
+                            customerPhone: cust.phone,
+                            customerName: cust.name
+                          });
+                          setPhoneSuggestions([]);
+                        }}
+                      >
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <span style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.85rem' }}>{cust.name}</span>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{cust.phone}</span>
+                        </div>
+                        <span className="badge badge-neutral" style={{ fontSize: '0.65rem' }}>{cust.tier}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="input-group">
                 <label className="input-label">{t('customer')}</label>
@@ -785,7 +858,7 @@ export default function BostaTab() {
               </div>
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
                 <button type="submit" className="btn btn-primary" style={{ flex: 1, background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>{t('confirm')}</button>
-                <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setShowModal(false)}>{t('cancel')}</button>
+                <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => { setShowModal(false); setPhoneSuggestions([]); }}>{t('cancel')}</button>
               </div>
             </form>
           </div>

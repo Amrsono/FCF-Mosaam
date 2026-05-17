@@ -80,11 +80,11 @@ export default function CustomersTab() {
     { label: t('address'), accessor: 'address' },
     { label: language === 'ar' ? 'النوع' : 'Gender', accessor: 'gender' },
     { label: t('tier'), accessor: 'tier' },
-    { label: t('deliveries'), accessor: c => orders.filter(o => o.customerPhone === c.phone).length },
-    { label: t('bostaDeliveries'), accessor: c => bostaOrders.filter(o => o.customerPhone === c.phone).length },
+    { label: t('deliveries'), accessor: c => orders.filter(o => normalizePhone(o.customerPhone) === normalizePhone(c.phone)).length },
+    { label: t('bostaDeliveries'), accessor: c => bostaOrders.filter(o => normalizePhone(o.customerPhone) === normalizePhone(c.phone)).length },
     { label: t('total'), accessor: c => 
-      orders.filter(o => o.customerPhone === c.phone).length + 
-      bostaOrders.filter(o => o.customerPhone === c.phone).length 
+      orders.filter(o => normalizePhone(o.customerPhone) === normalizePhone(c.phone)).length + 
+      bostaOrders.filter(o => normalizePhone(o.customerPhone) === normalizePhone(c.phone)).length 
     }
   ];
 

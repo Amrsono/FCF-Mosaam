@@ -458,6 +458,77 @@ export default function AnalyticsTab() {
       { name: language === 'ar' ? 'غير معروف' : 'Unknown', value: genderMap['Unknown'] || 0, color: '#94a3b8' }
     ].filter(d => d.value > 0);
 
+    // --- GENDER PURCHASE POWER COMPARISON (Picked Up Orders) ---
+    const genderPurchases = allPickedUp.reduce((acc, o) => {
+      const phone = normalizePhone(o.customerPhone);
+      const genderRaw = customerGenderMap[phone];
+      const gender = genderRaw ? (String(genderRaw).trim().charAt(0).toUpperCase() + String(genderRaw).trim().slice(1).toLowerCase()) : 'Unknown';
+      
+      if (!acc[gender]) {
+        acc[gender] = {
+          count: 0,
+          value: 0,
+          categories: {}
+        };
+      }
+      
+      acc[gender].count += 1;
+      acc[gender].value += (Number(o.totalValue) || 0);
+      
+      const cat = (o.category || (language === 'ar' ? 'عام' : 'General')).trim();
+      acc[gender].categories[cat] = (acc[gender].categories[cat] || 0) + 1;
+      
+      return acc;
+    }, {
+      Male: { count: 0, value: 0, categories: {} },
+      Female: { count: 0, value: 0, categories: {} },
+      Unknown: { count: 0, value: 0, categories: {} }
+    });
+
+    const genderPurchasesData = [
+      {
+        name: language === 'ar' ? 'ذكر' : 'Male',
+        orders: genderPurchases.Male.count,
+        spend: genderPurchases.Male.value,
+        avgBasket: genderPurchases.Male.count > 0 ? Math.round(genderPurchases.Male.value / genderPurchases.Male.count) : 0,
+        color: '#3b82f6'
+      },
+      {
+        name: language === 'ar' ? 'أنثى' : 'Female',
+        orders: genderPurchases.Female.count,
+        spend: genderPurchases.Female.value,
+        avgBasket: genderPurchases.Female.count > 0 ? Math.round(genderPurchases.Female.value / genderPurchases.Female.count) : 0,
+        color: '#ec4899'
+      },
+      {
+        name: language === 'ar' ? 'غير معروف' : 'Unknown',
+        orders: genderPurchases.Unknown.count,
+        spend: genderPurchases.Unknown.value,
+        avgBasket: genderPurchases.Unknown.count > 0 ? Math.round(genderPurchases.Unknown.value / genderPurchases.Unknown.count) : 0,
+        color: '#94a3b8'
+      }
+    ].filter(d => d.orders > 0 || d.spend > 0);
+
+    const allCategoriesSet = new Set([
+      ...Object.keys(genderPurchases.Male.categories),
+      ...Object.keys(genderPurchases.Female.categories),
+      ...Object.keys(genderPurchases.Unknown.categories)
+    ]);
+    
+    const genderCategoryChartData = Array.from(allCategoriesSet).map(cat => {
+      const maleCount = genderPurchases.Male.categories[cat] || 0;
+      const femaleCount = genderPurchases.Female.categories[cat] || 0;
+      const unknownCount = genderPurchases.Unknown.categories[cat] || 0;
+      return {
+        category: cat,
+        [language === 'ar' ? 'ذكر' : 'Male']: maleCount,
+        [language === 'ar' ? 'أنثى' : 'Female']: femaleCount,
+        [language === 'ar' ? 'غير معروف' : 'Unknown']: unknownCount,
+        total: maleCount + femaleCount + unknownCount
+      };
+    }).sort((a, b) => b.total - a.total)
+      .slice(0, 8);
+
     // --- SALES INSIGHTS ---
     const insightsJumia = orders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt) && (selectedOutlet === 'All' || normalizeOutlet(o.outlet) === selectedOutlet));
     const insightsBosta = bostaOrders.filter(o => o.status === 'Picked Up' && isInRange(o.pickedUpAt) && (selectedOutlet === 'All' || normalizeOutlet(o.outlet) === selectedOutlet));
@@ -505,6 +576,7 @@ export default function AnalyticsTab() {
       basataProviderData, callsVsOrdersData, ordersReceivedKey, callsMadeKey,
       topProductsData, topCategoriesData, allPickedUp, allOrdersInRange,
       monthlyTrendsData, genderData, genderMap, matchedPhonesCount,
+      genderPurchasesData, genderCategoryChartData,
       dailyCount: isAdminAccount ? getTransactionCount(86400000) : 0,
       weeklyCount: isAdminAccount ? getTransactionCount(86400000 * 7) : 0,
       monthlyCount: isAdminAccount ? getTransactionCount(86400000 * 30) : 0
@@ -525,6 +597,7 @@ export default function AnalyticsTab() {
     basataProviderData, callsVsOrdersData, ordersReceivedKey, callsMadeKey,
     topProductsData, topCategoriesData, allPickedUp, allOrdersInRange,
     monthlyTrendsData, genderData, genderMap, matchedPhonesCount,
+    genderPurchasesData, genderCategoryChartData,
     dailyCount, weeklyCount, monthlyCount
   } = stats;
 
@@ -1412,8 +1485,8 @@ export default function AnalyticsTab() {
         </ChartCard>
       </div>
 
-      {/* Row 8: Demographic Breakdown */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 350px), 1fr))', gap: '1rem', paddingBottom: '2rem' }}>
+      {/* Row 8: Demographic Breakdown & Purchase Power */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 350px), 1fr))', gap: '1rem', paddingBottom: '1rem' }}>
         <ChartCard title={language === 'ar' ? 'تحليل حجم الطلبات حسب النوع (رجال vs نساء)' : 'Order Volume by Gender (Men vs Women)'} icon={<Users size={16} color="var(--color-primary)" />}>
           <div style={{ marginBottom: '0.5rem', fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
             <span>{language === 'ar' ? `إجمالي الطلبات (مخزن + استلام): ${allOrdersInRange.length}` : `Total Orders (Inv + Picked): ${allOrdersInRange.length}`}</span>
@@ -1458,6 +1531,92 @@ export default function AnalyticsTab() {
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '250px', color: 'var(--text-muted)' }}>
               {language === 'ar' ? 'يرجى تحديد النوع للعملاء في دليل العملاء لرؤية البيانات' : 'Please set customer genders in the directory to see data'}
+            </div>
+          )}
+        </ChartCard>
+
+        {/* New Purchase Power Comparison */}
+        <ChartCard title={t('genderPurchasesTitle')} icon={<TrendingUp size={16} color="var(--color-success)" />}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', height: '100%', justifyContent: 'center' }}>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>
+              {t('genderPurchasesDesc')}
+            </div>
+            {genderPurchasesData.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {genderPurchasesData.map(d => (
+                  <div key={d.name} style={{ background: 'var(--bg-overlay)', borderRadius: '12px', padding: '0.8rem 1rem', borderLeft: `4px solid ${d.color}`, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.95rem', fontWeight: 700, color: d.color }}>{d.name}</span>
+                      <span style={{ fontSize: '0.75rem', background: `${d.color}15`, color: d.color, padding: '0.2rem 0.5rem', borderRadius: '999px', fontWeight: 600 }}>
+                        {t('pickedUpOrdersCount')}: {d.orders}
+                      </span>
+                    </div>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                      <div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('totalPurchasedVal')}</div>
+                        <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'white' }}>
+                          {d.spend.toLocaleString()} <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>EGP</span>
+                        </div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('avgPurchaseBasket')}</div>
+                        <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'white' }}>
+                          {d.avgBasket.toLocaleString()} <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>EGP</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+                      <div style={{ height: '4px', background: 'rgba(255,255,255,0.06)', borderRadius: '2px', overflow: 'hidden' }}>
+                        <div style={{
+                          height: '100%',
+                          width: `${genderPurchasesData.reduce((s, x) => s + x.spend, 0) > 0 ? (d.spend / genderPurchasesData.reduce((s, x) => s + x.spend, 0)) * 100 : 0}%`,
+                          background: d.color,
+                          borderRadius: '2px'
+                        }} />
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                        <span>{language === 'ar' ? 'نسبة المساهمة المالية' : 'Financial Share'}</span>
+                        <span>{genderPurchasesData.reduce((s, x) => s + x.spend, 0) > 0 ? Math.round((d.spend / genderPurchasesData.reduce((s, x) => s + x.spend, 0)) * 100) : 0}%</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '200px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                {language === 'ar' ? 'لا توجد مبيعات مكتملة بعد' : 'No completed sales found.'}
+              </div>
+            )}
+          </div>
+        </ChartCard>
+      </div>
+
+      {/* Row 9: What did they purchase (Grouped Categories) */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem', paddingBottom: '3rem' }}>
+        <ChartCard title={t('whatPurchasedTitle')} icon={<BarChart2 size={16} color="var(--color-primary)" />}>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
+            {language === 'ar' ? 'أعلى الفئات المشتراة مقارنة بالنوع للطلبات المستلمة بنجاح.' : 'Comparison of top purchased product categories grouped by gender for successful pick-ups.'}
+          </div>
+          {genderCategoryChartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={320}>
+              <BarChart data={genderCategoryChartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                <XAxis dataKey="category" tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis orientation={language === 'ar' ? 'right' : 'left'} tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <Tooltip content={<CustomTooltip language={language} />} cursor={{ fill: 'rgba(255,255,255,0.02)' }} />
+                <Legend iconType="circle" wrapperStyle={{ paddingTop: '1rem' }} />
+                <Bar dataKey={language === 'ar' ? 'ذكر' : 'Male'} name={language === 'ar' ? 'ذكر' : 'Male'} fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                <Bar dataKey={language === 'ar' ? 'أنثى' : 'Female'} name={language === 'ar' ? 'أنثى' : 'Female'} fill="#ec4899" radius={[4, 4, 0, 0]} />
+                {genderCategoryChartData.some(d => d[language === 'ar' ? 'غير معروف' : 'Unknown'] > 0) && (
+                  <Bar dataKey={language === 'ar' ? 'غير معروف' : 'Unknown'} name={language === 'ar' ? 'غير معروف' : 'Unknown'} fill="#94a3b8" radius={[4, 4, 0, 0]} />
+                )}
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '250px', color: 'var(--text-muted)' }}>
+              {t('noData')}
             </div>
           )}
         </ChartCard>

@@ -160,6 +160,13 @@ export const translations = {
     topBasataServices: "Top Basata Services by Volume",
     financialSummary: "Full Financial Summary",
     jumiaOutletsVolume: "Jumia Outlets Volume Comparison",
+    genderPurchasesTitle: "Male vs Female Purchase Power",
+    genderPurchasesDesc: "Detailed purchase power comparison based on successful picked-up orders.",
+    totalPurchasedVal: "Total Spend",
+    pickedUpOrdersCount: "Purchased Orders",
+    avgPurchaseBasket: "Avg Basket Size",
+    whatPurchasedTitle: "What they Purchased (Top Categories by Gender)",
+    genderCompareHeader: "Male vs Female Purchases",
 
     // Calls Log Tab
     takeCall: "📞 Make Call",
@@ -365,6 +372,13 @@ export const translations = {
     topBasataServices: "أعلى خدمات بساطة حسب الحجم",
     financialSummary: "الملخص المالي الكامل",
     jumiaOutletsVolume: "مقارنة حجم طلبات جوميا حسب المنفذ",
+    genderPurchasesTitle: "مقارنة القوة الشرائية (رجال vs نساء)",
+    genderPurchasesDesc: "مقارنة تفصيلية للقوة الشرائية بناءً على الطلبات المستلمة بنجاح.",
+    totalPurchasedVal: "إجمالي الإنفاق",
+    pickedUpOrdersCount: "الطلبات المستلمة",
+    avgPurchaseBasket: "متوسط حجم السلة",
+    whatPurchasedTitle: "ماذا اشتروا (أعلى الفئات حسب النوع)",
+    genderCompareHeader: "مقارنات الشراء للرجال والنساء",
 
     // Calls Log Tab
     takeCall: "📞 إجراء المكالمة",

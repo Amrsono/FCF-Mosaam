@@ -532,3 +532,13 @@ h3 { font-size: 1rem; font-weight: 500; color: var(--text-secondary); }
   cursor: pointer;
   line-height: 1;
 }
+
+/* Fix for dark mode select dropdown options (prevent white-on-white text) */
+select {
+  color-scheme: dark;
+}
+
+select option {
+  background-color: var(--bg-panel) !important;
+  color: var(--text-primary) !important;
+}

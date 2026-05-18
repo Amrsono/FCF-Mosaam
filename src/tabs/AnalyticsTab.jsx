@@ -595,7 +595,7 @@ export default function AnalyticsTab() {
     }, {});
     const topProductsData = Object.entries(productMap)
       .map(([name, stats]) => ({ name, count: stats.count, value: stats.value }))
-      .sort((a, b) => b.value - a.value || b.count - a.count)
+      .sort((a, b) => b.count - a.count || b.value - a.value)
       .slice(0, 20);
 
     const categoryMap = allPickedUpInsights.reduce((acc, o) => {
@@ -608,7 +608,7 @@ export default function AnalyticsTab() {
     }, {});
     const topCategoriesData = Object.entries(categoryMap)
       .map(([name, stats]) => ({ name, count: stats.count, value: stats.value }))
-      .sort((a, b) => b.value - a.value || b.count - a.count);
+      .sort((a, b) => b.count - a.count || b.value - a.value);
 
     return {
       jumiaPickedUp, jumiaInventory, jumiaReceived, stdReturned, jumiaReturned, jumiaCancelled, jumiaProfit,

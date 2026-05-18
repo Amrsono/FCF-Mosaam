@@ -32,6 +32,53 @@ const normalizePhone = (phone) => {
   return cleaned.length >= 10 ? cleaned.slice(-10) : cleaned;
 };
 
+const translateCategory = (cat, lang) => {
+  if (!cat) return lang === 'ar' ? 'عام' : 'General';
+  if (lang !== 'ar') return cat;
+  
+  const lower = String(cat).toLowerCase().trim();
+  
+  const mapping = {
+    'general': 'عام',
+    'fashion': 'ملابس وأزياء',
+    'electronics': 'إلكترونيات',
+    'phones & tablets': 'موبايلات وتابلت',
+    'phones': 'موبايلات',
+    'tablets': 'تابلت',
+    'home & office': 'منزل ومكتب',
+    'home & kitchen': 'المنزل والمطبخ',
+    'home': 'منزل',
+    'beauty & health': 'صحة وجمال',
+    'beauty': 'جمال',
+    'health': 'صحة',
+    'supermarket': 'سوبرماركت',
+    'baby products': 'منتجات الأطفال',
+    'baby': 'أطفال',
+    'computing': 'كمبيوتر ولاب توب',
+    'sporting goods': 'أدوات رياضية',
+    'sports': 'رياضة',
+    'automotive': 'مستلزمات سيارات',
+    'toys & games': 'ألعاب وأطفال',
+    'toys': 'ألعاب',
+    'books': 'كتب',
+    'groceries': 'بقالة',
+    'appliances': 'أجهزة منزلية',
+    'accessories': 'إكسسوارات',
+    'other': 'أخرى',
+    'others': 'أخرى'
+  };
+
+  if (mapping[lower]) return mapping[lower];
+
+  for (const [enKey, arVal] of Object.entries(mapping)) {
+    if (lower.includes(enKey) || enKey.includes(lower)) {
+      return arVal;
+    }
+  }
+
+  return cat;
+};
+
 const CHART_COLORS = {
   jumia: '#f97316',
   bosta: '#6366f1',
@@ -475,7 +522,8 @@ export default function AnalyticsTab() {
       acc[gender].count += 1;
       acc[gender].value += (Number(o.totalValue) || 0);
       
-      const cat = (o.category || (language === 'ar' ? 'عام' : 'General')).trim();
+      const rawCat = (o.category || (language === 'ar' ? 'عام' : 'General')).trim();
+      const cat = translateCategory(rawCat, language);
       acc[gender].categories[cat] = (acc[gender].categories[cat] || 0) + 1;
       
       return acc;
@@ -551,7 +599,8 @@ export default function AnalyticsTab() {
       .slice(0, 20);
 
     const categoryMap = allPickedUpInsights.reduce((acc, o) => {
-      const cat = (o.category || (language === 'ar' ? 'عام' : 'General')).trim();
+      const rawCat = (o.category || (language === 'ar' ? 'عام' : 'General')).trim();
+      const cat = translateCategory(rawCat, language);
       if (!acc[cat]) acc[cat] = { count: 0, value: 0 };
       acc[cat].count += 1;
       acc[cat].value += (Number(o.totalValue) || 0);

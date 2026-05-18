@@ -590,7 +590,14 @@ export default function AnalyticsTab() {
     else if (insightsSource === 'Bosta') allPickedUpInsights = insightsBosta;
     
     const productMap = allPickedUpInsights.reduce((acc, o) => {
-      const name = (o.description || (language === 'ar' ? 'غير معروف' : 'Unknown')).trim();
+      let name = (o.description || (language === 'ar' ? 'غير معروف' : 'Unknown')).trim();
+      
+      // Consolidate raw tracking numbers, barcode numbers, and shipping package labels
+      const isPackage = name.startsWith('Package') || name.startsWith('JE-BCM-') || name.includes('BCM-') || /^\d+$/.test(name);
+      if (isPackage) {
+        name = language === 'ar' ? 'شحنات مجمعة' : 'Consolidated Packages';
+      }
+
       if (!acc[name]) acc[name] = { count: 0, value: 0 };
       acc[name].count += 1;
       acc[name].value += (Number(o.totalValue) || 0);

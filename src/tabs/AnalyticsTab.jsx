@@ -41,6 +41,9 @@ const translateCategory = (cat, lang) => {
   const mapping = {
     'general': 'عام',
     'fashion': 'ملابس وأزياء',
+    'apparel': 'ملابس وأزياء',
+    'clothing': 'ملابس وأزياء',
+    'clothes': 'ملابس وأزياء',
     'electronics': 'إلكترونيات',
     'phones & tablets': 'موبايلات وتابلت',
     'phones': 'موبايلات',

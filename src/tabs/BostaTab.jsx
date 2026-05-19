@@ -1001,6 +1001,20 @@ export default function BostaTab() {
               </div>
 
               <div className="form-group">
+                <label className="label">{language === 'ar' ? 'حالة الطلب' : 'Order Status'}</label>
+                <select 
+                  className="input-field" 
+                  value={editingOrder.status} 
+                  onChange={e => setEditingOrder({...editingOrder, status: e.target.value})}
+                >
+                  <option value="Inventory">{t('pickedFromJumia')}</option>
+                  <option value="Picked Up">{t('pickedUpByCustomer')}</option>
+                  <option value="Cancelled">{language === 'ar' ? 'ملغي' : 'Cancelled'}</option>
+                  <option value="Returned">{t('returnedStatus')}</option>
+                </select>
+              </div>
+
+              <div className="form-group">
                 <label className="label">{language === 'ar' ? 'كود الخصم (اختياري)' : 'Discount Code (Optional)'}</label>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   <input 
@@ -1068,7 +1082,8 @@ export default function BostaTab() {
                       outlet: editingOrder.outlet,
                       size: editingOrder.size,
                       discountCode: editingOrder.discountCode,
-                      discountAmount: editingOrder.discountAmount
+                      discountAmount: editingOrder.discountAmount,
+                      status: editingOrder.status
                     });
                     if (res.success) {
                       setEditingOrder(null);

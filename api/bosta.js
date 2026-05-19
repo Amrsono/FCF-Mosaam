@@ -140,7 +140,7 @@ export default async function handler(req, res) {
       }
 
       if (action === 'UPDATE_INFO') {
-        const { newId, customerPhone, description, totalValue, category, subcategory, outlet, size, paymentMethod, orderCost } = req.body;
+        const { newId, customerPhone, description, totalValue, category, subcategory, outlet, size, paymentMethod, orderCost, discountCode, discountAmount, status } = req.body;
 
         // If phone changed, ensure customer exists (Upsert)
         if (customerPhone) {
@@ -171,7 +171,8 @@ export default async function handler(req, res) {
             paymentMethod,
             orderCost: orderCost !== undefined ? parseFloat(orderCost) : undefined,
             discountCode: discountCode !== undefined ? (discountCode || null) : undefined,
-            discountAmount: discountAmount !== undefined ? parseFloat(discountAmount) : undefined
+            discountAmount: discountAmount !== undefined ? parseFloat(discountAmount) : undefined,
+            status: status !== undefined ? status : undefined
           }
         });
 

@@ -1,12 +1,12 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useDashboard } from '../context/DashboardContext';
-import { Edit2, Save, X, Plus, UserPlus } from 'lucide-react';
+import { Edit2, Save, X, Plus, UserPlus, Trash2 } from 'lucide-react';
 import ExportActions from '../components/ExportActions';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 
 export default function CustomersTab() {
-  const { customers, orders, bostaOrders, updateCustomer, addCustomer } = useDashboard();
+  const { customers, orders, bostaOrders, updateCustomer, addCustomer, deleteCustomer } = useDashboard();
   const { t, language } = useLanguage();
   const { user } = useAuth();
 
@@ -107,6 +107,18 @@ export default function CustomersTab() {
       setNewCustomer({ phone: '', name: '', email: '', address: '', tier: 'New' });
     } else {
       setError(res.error || (language === 'ar' ? 'فشل إضافة العميل' : 'Failed to add customer'));
+    }
+  };
+  const handleDelete = async (customer) => {
+    const confirmMessage = language === 'ar' 
+      ? `هل أنت متأكد من حذف العميل "${customer.name}"؟\nسيؤدي هذا إلى حذف جميع طلباته وتاريخه بالكامل بشكل نهائي!`
+      : `Are you sure you want to delete customer "${customer.name}"?\nThis will permanently delete all of their orders and transaction history!`;
+    
+    if (window.confirm(confirmMessage)) {
+      const res = await deleteCustomer(customer.phone);
+      if (!res.success) {
+        alert(res.error || (language === 'ar' ? 'فشل حذف العميل' : 'Failed to delete customer'));
+      }
     }
   };
   const filteredCustomers = customers.filter(c => {
@@ -272,7 +284,12 @@ export default function CustomersTab() {
                         <button className="btn btn-outline" style={{ padding: '0.4rem', color: 'var(--color-danger)' }} onClick={() => setEditingPhone(null)}><X size={16} /></button>
                       </div>
                     ) : (
-                      <button className="btn btn-outline" style={{ padding: '0.4rem' }} onClick={() => startEdit(customer)}><Edit2 size={16} /></button>
+                      <div style={{ display: 'flex', gap: '0.4rem' }}>
+                        <button className="btn btn-outline" style={{ padding: '0.4rem' }} onClick={() => startEdit(customer)}><Edit2 size={16} /></button>
+                        {user?.role === 'admin' && (
+                          <button className="btn btn-outline" style={{ padding: '0.4rem', color: 'var(--color-danger)' }} onClick={() => handleDelete(customer)}><Trash2 size={16} /></button>
+                        )}
+                      </div>
                     )}
                   </td>
                 </tr>

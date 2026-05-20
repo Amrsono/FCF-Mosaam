@@ -1,4 +1,7 @@
 import { prisma } from './_lib/prisma.js';
+import jwt from 'jsonwebtoken';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'fcf-mosaam-secret-change-in-production';
 
 export default async function handler(req, res) {
   try {
@@ -99,6 +102,55 @@ export default async function handler(req, res) {
       });
 
       return res.status(200).json(updatedCustomer);
+    }
+    // DELETE: Delete a customer and all their related records
+    if (req.method === 'DELETE') {
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'No token provided.' });
+      }
+
+      const token = authHeader.split(' ')[1];
+      let decoded;
+      try {
+        decoded = jwt.verify(token, JWT_SECRET);
+      } catch (err) {
+        return res.status(401).json({ error: 'Invalid or expired token.' });
+      }
+
+      if (decoded.role !== 'admin') {
+        return res.status(403).json({ error: 'Forbidden: Admins only.' });
+      }
+
+      const { phone } = req.body;
+      if (!phone) {
+        return res.status(400).json({ error: 'Phone is required for deletion.' });
+      }
+
+      // Delete customer and all related records in a transaction
+      await prisma.$transaction(async (tx) => {
+        // Delete CallLogs
+        await tx.callLog.deleteMany({ where: { customerPhone: phone } });
+        // Delete CustomerReturns
+        await tx.customerReturn.deleteMany({ where: { customerPhone: phone } });
+        // Delete Orders
+        await tx.order.deleteMany({ where: { customerPhone: phone } });
+        // Delete BostaOrders
+        await tx.bostaOrder.deleteMany({ where: { customerPhone: phone } });
+        // Delete Customer
+        await tx.customer.delete({ where: { phone } });
+      });
+
+      // Log the deletion
+      await prisma.userLog.create({
+        data: {
+          username: decoded.username,
+          action: 'Delete Customer',
+          details: JSON.stringify({ phone })
+        }
+      });
+
+      return res.status(200).json({ message: 'Customer deleted successfully.' });
     }
 
     return res.status(405).json({ error: 'Method Not Allowed' });

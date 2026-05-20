@@ -255,6 +255,32 @@ export const DashboardProvider = ({ children }) => {
     }
   };
 
+  const deleteCustomer = async (phone) => {
+    try {
+      const token = localStorage.getItem('fcf_token');
+      if (!token) return { success: false, error: 'No token provided.' };
+
+      const res = await fetch('/api/customers', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ phone })
+      });
+
+      if (res.ok) {
+        await fetchData();
+        logUserAction('Delete Customer', { phone });
+        return { success: true };
+      }
+      const data = await res.json();
+      return { success: false, error: data.error || 'Failed to delete customer.' };
+    } catch (err) {
+      return { success: false, error: err.message || 'Network error.' };
+    }
+  };
+
   const markOrderPickedUp = async (orderId, paymentMethod = null) => {
     try {
       const res = await fetch('/api/orders', {
@@ -753,7 +779,8 @@ export const DashboardProvider = ({ children }) => {
       updateOrder, updateBostaOrder, cancelOrder, deleteOrder,
       cancelBostaOrder, deleteBostaOrder, revertOrderToInventory, revertBostaOrderToInventory,
       updateCustomerReturn, deleteCustomerReturn,
-      validateDiscount, addDiscountCode, toggleDiscountActive, deleteDiscountCode, updateDiscountCode
+      validateDiscount, addDiscountCode, toggleDiscountActive, deleteDiscountCode, updateDiscountCode,
+      deleteCustomer
     }}>
       {children}
     </DashboardContext.Provider>

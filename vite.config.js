@@ -28,8 +28,8 @@ export default defineConfig({
             return mockRes;
           };
 
-          // Basic body parser for POST/PATCH
-          if (req.method === 'POST' || req.method === 'PATCH' || req.method === 'PUT') {
+          // Basic body parser for POST/PATCH/DELETE
+          if (req.method === 'POST' || req.method === 'PATCH' || req.method === 'PUT' || req.method === 'DELETE') {
             const buffers = [];
             for await (const chunk of req) {
               buffers.push(chunk);

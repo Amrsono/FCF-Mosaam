@@ -154,3 +154,38 @@ model CallLog {
   createdAt     DateTime  @default(now())
 }
 
+model ImtidadOrder {
+  id              String   @id // e.g. IMT-20260530-XXXX
+  senderName      String
+  senderPhone     String
+  senderCity      String
+  dropoffOutlet   String   // e.g. "cairo_hub", "eltalg", etc.
+  recipientName   String
+  recipientPhone  String
+  recipientCity   String
+  pickupOutlet    String   // e.g. "alex_hub", "mostashfa", etc.
+  description     String
+  weight          Float    @default(1.0)
+  size            String   @default("M") // S, M, L
+  totalValue      Float    @default(0.0)
+  shippingCost    Float    @default(0.0)
+  status          String   @default("Pending Drop-off") // Pending Drop-off | At Drop-off Station | In Transit | Ready for Pickup | Picked Up | Cancelled
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model ImtidadOutlet {
+  id        String   @id @default(uuid())
+  key       String   @unique // e.g. "eltalg", "tegara", "cairo_hub"
+  nameEn    String
+  nameAr    String
+  city      String
+  x         Int      @default(200) // SVG layout coordinate X
+  y         Int      @default(200) // SVG layout coordinate Y
+  baseLoad  Int      @default(50)  // Base package load percentage for heatmap
+  status    String   @default("Active") // "Active" | "Inactive"
+  createdAt DateTime @default(now())
+}
+
+
+

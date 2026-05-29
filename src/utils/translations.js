@@ -210,6 +210,39 @@ export const translations = {
     analyticsDesc: "Business intelligence and performance metrics.",
     logsDesc: "System activity and security audit logs.",
     callsDesc: "Customer support and call management.",
+    
+    // Imtidad C2C Logistics
+    imtidadDesc: "Imtidad C2C Logistics: Ship packages between cities using our interactive pickup network.",
+    imtidadShipping: "Imtidad C2C Shipping",
+    c2cBooking: "Book C2C Shipment",
+    c2cDashboard: "Shipments Dashboard",
+    c2cAnalytics: "Network Load Analytics",
+    senderName: "Sender Name",
+    senderPhone: "Sender Phone",
+    senderCity: "Sender City",
+    dropoffOutlet: "Drop-off Station",
+    recipientName: "Recipient Name",
+    recipientPhone: "Recipient Phone",
+    recipientCity: "Recipient City",
+    pickupOutlet: "Delivery Pickup Station",
+    weightKg: "Weight (kg)",
+    shippingCost: "Shipping Cost",
+    trackingId: "Tracking ID",
+    bookingWizard: "C2C Booking Wizard",
+    outletHeatmap: "Interactive Outlets Network",
+    heatmapMode: "Heatmap (Volume Load)",
+    normalMode: "Standard Map (Status)",
+    imtidadGroup: "Imtidad Group",
+    
+    // Stations Management
+    manageOutlets: "Manage Stations",
+    addOutlet: "Add New Station",
+    stationKey: "Station Key (Unique)",
+    clickMapToPlace: "Click on map to automatically set coordinates",
+    stationNameEn: "Station Name (English)",
+    stationNameAr: "Station Name (Arabic)",
+    cityEn: "City Name",
+    baseLoadPercentage: "Base Load Percentage (%)"
   },
   ar: {
     // Sidebar
@@ -422,5 +455,38 @@ export const translations = {
     analyticsDesc: "تحليل البيانات ومقاييس الأداء.",
     logsDesc: "سجلات نشاط النظام والتدقيق الأمني.",
     callsDesc: "إدارة اتصالات وخدمة العملاء.",
+    
+    // Imtidad C2C Logistics
+    imtidadDesc: "خدمات امتداد اللوجستية: شحن الطرود من شخص لشخص (C2C) عبر شبكة محطاتنا التفاعلية.",
+    imtidadShipping: "شحن امتداد C2C",
+    c2cBooking: "حجز شحنة C2C",
+    c2cDashboard: "لوحة تتبع الشحنات",
+    c2cAnalytics: "تحليلات حمولة الشبكة",
+    senderName: "اسم المرسل",
+    senderPhone: "رقم هاتف المرسل",
+    senderCity: "مدينة المرسل",
+    dropoffOutlet: "محطة الإيداع",
+    recipientName: "اسم المستلم",
+    recipientPhone: "رقم هاتف المستلم",
+    recipientCity: "مدينة المستلم",
+    pickupOutlet: "محطة الاستلام والتسليم",
+    weightKg: "الوزن (كجم)",
+    shippingCost: "تكلفة الشحن",
+    trackingId: "رقم التتبع",
+    bookingWizard: "معالج الحجز C2C",
+    outletHeatmap: "شبكة الفروع التفاعلية",
+    heatmapMode: "الخريطة الحرارية (حمولة الطرود)",
+    normalMode: "الخريطة العادية (حالة الفروع)",
+    imtidadGroup: "مجموعة امتداد",
+    
+    // Stations Management
+    manageOutlets: "إدارة المحطات",
+    addOutlet: "إضافة محطة جديدة",
+    stationKey: "رمز المحطة (فريد)",
+    clickMapToPlace: "انقر على الخريطة لتحديد الإحداثيات تلقائياً",
+    stationNameEn: "اسم المحطة (بالإنجليزية)",
+    stationNameAr: "اسم المحطة (بالعربية)",
+    cityEn: "اسم المدينة",
+    baseLoadPercentage: "نسبة الحمولة الأساسية (%)"
   }
 };

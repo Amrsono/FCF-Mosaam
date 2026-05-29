@@ -33,6 +33,23 @@ const pool = new pg.Pool({ connectionString });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
+// ─────────────────────────────────────────────────────────────
+// Imtidad Outlet seed data
+// Positions are calibrated for the SVG viewBox (450x480) Egypt map.
+// The 3 FCF stations are spread apart so they don't visually overlap.
+// ─────────────────────────────────────────────────────────────
+const OUTLETS = [
+  // Active FCF pickup stations
+  { key: 'eltalg',    nameEn: 'Banha - Eltalg Station',    nameAr: 'بنها - محطة التلج',     city: 'Banha',      x: 245, y: 126, baseLoad: 92, status: 'Active'   },
+  { key: 'tegara',    nameEn: 'Banha - Tegara Station',    nameAr: 'بنها - محطة التجارة',   city: 'Banha',      x: 231, y: 140, baseLoad: 45, status: 'Active'   },
+  { key: 'mostashfa', nameEn: 'Banha - Mostashfa Station', nameAr: 'بنها - محطة المستشفى', city: 'Banha',      x: 258, y: 142, baseLoad: 30, status: 'Active'   },
+  // Regional routing hubs (inactive by default — admin can activate when ready)
+  { key: 'cairo_hub', nameEn: 'Cairo Hub',                 nameAr: 'مركز القاهرة الرئيسي', city: 'Cairo',      x: 242, y: 155, baseLoad: 88, status: 'Inactive' },
+  { key: 'giza_hub',  nameEn: 'Giza Station',              nameAr: 'محطة الجيزة',           city: 'Giza',       x: 215, y: 162, baseLoad: 65, status: 'Inactive' },
+  { key: 'alex_hub',  nameEn: 'Alexandria Hub',            nameAr: 'منفذ الإسكندرية',       city: 'Alexandria', x: 120, y:  88, baseLoad: 75, status: 'Inactive' },
+  { key: 'tanta_hub', nameEn: 'Tanta Hub',                 nameAr: 'منفذ طنطا',             city: 'Tanta',      x: 200, y: 110, baseLoad: 50, status: 'Inactive' },
+];
+
 async function main() {
   const hash = await bcrypt.hash('FCFAdmin@2024', 10);
 
@@ -79,6 +96,26 @@ async function main() {
     });
   }
   console.log('✅ Created specific branch staff profiles (mhesham, mhlal).');
+
+  // ─── Seed Imtidad Outlets ───────────────────────────────────────────────────
+  console.log('\n🗺️  Seeding Imtidad logistics outlets...');
+  for (const outlet of OUTLETS) {
+    await prisma.imtidadOutlet.upsert({
+      where: { key: outlet.key },
+      update: {
+        nameEn:   outlet.nameEn,
+        nameAr:   outlet.nameAr,
+        city:     outlet.city,
+        x:        outlet.x,
+        y:        outlet.y,
+        baseLoad: outlet.baseLoad,
+        // Do NOT overwrite status — preserve any admin changes made after initial seeding
+      },
+      create: outlet,
+    });
+    console.log(`   📍 ${outlet.status === 'Active' ? '🟢' : '⚫'} ${outlet.key}: ${outlet.nameEn}`);
+  }
+  console.log('✅ Imtidad outlets seeded (3 active FCF stations + 4 inactive regional hubs).');
 }
 
 main()
@@ -90,3 +127,4 @@ main()
     await prisma.$disconnect();
     await pool.end();
   });
+

@@ -34,7 +34,18 @@ export default function LandingPage({ onSelectService }) {
       color: '#10b981', // Green
       gradient: 'linear-gradient(135deg, #10b981, #059669)',
       tabs: ['basata']
-    }
+    },
+    ...(user?.role === 'admin' ? [
+      {
+        id: 'imtidad',
+        title: t('imtidadGroup'),
+        desc: t('imtidadDesc'),
+        icon: <img src="/imtidad_logo.png" alt="Imtidad Logo" style={{ width: '42px', height: '42px', objectFit: 'contain', background: 'transparent' }} />,
+        color: '#c5a880', // Gold/Bronze accent
+        gradient: 'linear-gradient(135deg, #071b2d, #0f2d4a)', // Imtidad premium dark blue
+        tabs: ['imtidad_shipping']
+      }
+    ] : [])
   ];
 
   const adminTools = [

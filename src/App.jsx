@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { DashboardProvider } from './context/DashboardContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { Package, Users, Clock, AlertTriangle, BarChart2, LayoutDashboard, Zap, LogOut, Shield, Menu, X, Phone, Gift } from 'lucide-react';
+import { Package, Users, Clock, AlertTriangle, BarChart2, LayoutDashboard, Zap, LogOut, Shield, Menu, X, Phone, Gift, Truck, MapPin } from 'lucide-react';
 import OrdersTab from './tabs/OrdersTab';
 import CustomersTab from './tabs/CustomersTab';
 import SLATab from './tabs/SLATab';
@@ -13,6 +13,7 @@ import BostaTab from './tabs/BostaTab';
 import LogsTab from './tabs/LogsTab';
 import CallsLogTab from './tabs/CallsLogTab';
 import DiscountsTab from './tabs/DiscountsTab';
+import ImtidadTab from './tabs/ImtidadTab';
 import LoginPage from './pages/LoginPage';
 import LandingPage from './pages/LandingPage';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -51,6 +52,7 @@ function AppContent() {
     { id: 'bosta',     label: t('bosta'),     icon: <Package size={20} />, service: 'bosta' },
     { id: 'calls',     label: t('callsLog'),  icon: <Phone size={20} />, service: 'admin' },
     ...(user?.role === 'admin' ? [
+      { id: 'imtidad_shipping', label: language === 'ar' ? 'شحن امتداد C2C' : 'Imtidad C2C Shipping', icon: <Truck size={20} />, service: 'imtidad' },
       { id: 'analytics', label: t('analytics'), icon: <BarChart2 size={20} />, service: 'admin' },
       { id: 'discounts', label: language === 'ar' ? 'أكواد الخصم' : 'Discounts', icon: <Gift size={20} />, service: 'admin' },
       { id: 'logs', label: t('logs'), icon: <Shield size={20} />, service: 'admin' }
@@ -93,6 +95,7 @@ function AppContent() {
               {activeTab === 'analytics' && user?.role === 'admin' && <AnalyticsTab />}
               {activeTab === 'discounts' && user?.role === 'admin' && <DiscountsTab />}
               {activeTab === 'logs'      && user?.role === 'admin' && <LogsTab />}
+              {activeTab === 'imtidad_shipping' && user?.role === 'admin' && <ImtidadTab />}
             </>
           )}
         </section>
@@ -107,15 +110,33 @@ function AppContent() {
           <X size={24} />
         </button>
         <div style={{ padding: '2rem 1.5rem 1rem', marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-            {t('fcf')} <span style={{ color: 'var(--color-accent)' }}>{t('mosaam')}</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <div style={{ background: 'var(--color-primary)', padding: '0.5rem', borderRadius: 'var(--radius-md)' }}>
-              <LayoutDashboard size={24} color="white" />
+          {currentService === 'imtidad' ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+              <div style={{ background: 'transparent', padding: '0.1rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <img src="/imtidad_logo.png" alt="Imtidad Logo" style={{ width: '48px', height: '48px', objectFit: 'contain' }} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#c5a880', letterSpacing: '0.5px' }}>
+                  IMTIDAD
+                </div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  {language === 'ar' ? 'الخدمات اللوجستية' : 'Logistics'}
+                </div>
+              </div>
             </div>
-            <h1 style={{ fontSize: '1.25rem', color: 'var(--text-primary)' }}>{t('jumiaStation')}</h1>
-          </div>
+          ) : (
+            <>
+              <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                {t('fcf')} <span style={{ color: 'var(--color-accent)' }}>{t('mosaam')}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ background: 'var(--color-primary)', padding: '0.5rem', borderRadius: 'var(--radius-md)' }}>
+                  <LayoutDashboard size={24} color="white" />
+                </div>
+                <h1 style={{ fontSize: '1.25rem', color: 'var(--text-primary)' }}>{t('jumiaStation')}</h1>
+              </div>
+            </>
+          )}
         </div>
 
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1, padding: '0 1.25rem', overflowY: 'auto' }}>

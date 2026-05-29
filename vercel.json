@@ -1,6 +1,26 @@
 {
   "rewrites": [
     {
+      "source": "/api/auth/login",
+      "destination": "/api/auth"
+    },
+    {
+      "source": "/api/auth/me",
+      "destination": "/api/auth"
+    },
+    {
+      "source": "/api/imtidad-orders",
+      "destination": "/api/imtidad"
+    },
+    {
+      "source": "/api/imtidad-outlets",
+      "destination": "/api/imtidad"
+    },
+    {
+      "source": "/api/customer-returns",
+      "destination": "/api/customers"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/$1"
     },

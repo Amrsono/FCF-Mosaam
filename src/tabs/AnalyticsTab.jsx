@@ -496,7 +496,7 @@ export default function AnalyticsTab() {
       acc[gender].value += (Number(o.totalValue) || 0);
       
       const rawCat = (o.category || (language === 'ar' ? 'عام' : 'General')).trim();
-      const cat = translateCategory(rawCat, language);
+      const cat = resolveCategoryLabel(rawCat, language);
       acc[gender].categories[cat] = (acc[gender].categories[cat] || 0) + 1;
       
       return acc;

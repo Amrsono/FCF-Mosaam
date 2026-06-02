@@ -21,6 +21,7 @@ export default function LogsTab() {
   // Filters
   const [searchUser, setSearchUser] = useState('');
   const [searchAction, setSearchAction] = useState('');
+  const [outletFilter, setOutletFilter] = useState('');
   const [dateFilter, setDateFilter] = useState('');
 
   const [newUsername, setNewUsername] = useState('');
@@ -170,11 +171,13 @@ export default function LogsTab() {
     const matchUser = log.username.toLowerCase().includes(searchUser.toLowerCase());
     const matchAction = log.action.toLowerCase().includes(searchAction.toLowerCase());
     const matchDate = dateFilter ? log.createdAt.startsWith(dateFilter) : true;
-    return matchUser && matchAction && matchDate;
+    const matchOutlet = outletFilter ? (log.outlet || 'eltalg').toLowerCase() === outletFilter.toLowerCase() : true;
+    return matchUser && matchAction && matchDate && matchOutlet;
   });
 
   const uniqueActions = [...new Set(logs.map(l => l.action))];
   const uniqueUsers = [...new Set(logs.map(l => l.username))];
+  const uniqueOutlets = [...new Set(logs.map(l => l.outlet || 'eltalg'))];
 
   return (
     <div className="tab-pane" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: '100%' }}>
@@ -221,6 +224,22 @@ export default function LogsTab() {
             >
               <option value="">{t('allActions')}</option>
               {uniqueActions.map(a => <option key={a} value={a}>{a}</option>)}
+            </select>
+          </div>
+
+          <div className="input-group" style={{ flex: '1 1 200px' }}>
+            <div className="input-icon"><Filter size={16} /></div>
+            <select 
+              value={outletFilter} 
+              onChange={e => setOutletFilter(e.target.value)}
+              style={{ width: '100%', padding: '0.5rem 0.5rem 0.5rem 2.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-primary)' }}
+            >
+              <option value="">{language === 'ar' ? 'جميع الفروع' : 'All Outlets'}</option>
+              {uniqueOutlets.map(o => (
+                <option key={o} value={o}>
+                  {t(o) || o.charAt(0).toUpperCase() + o.slice(1)}
+                </option>
+              ))}
             </select>
           </div>
 

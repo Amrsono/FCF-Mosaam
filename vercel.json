@@ -9,6 +9,10 @@
       "destination": "/api/auth"
     },
     {
+      "source": "/api/auth/confirm-outlet",
+      "destination": "/api/auth"
+    },
+    {
       "source": "/api/imtidad-orders",
       "destination": "/api/imtidad"
     },

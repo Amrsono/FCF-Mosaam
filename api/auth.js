@@ -30,6 +30,55 @@ export default async function handler(req, res) {
       }
     }
 
+    // Route 3: /api/auth/confirm-outlet
+    if (url.pathname.includes('/confirm-outlet')) {
+      if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method Not Allowed' });
+      }
+
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'No token provided.' });
+      }
+
+      const token = authHeader.split(' ')[1];
+      let decoded;
+      try {
+        decoded = jwt.verify(token, JWT_SECRET);
+      } catch (err) {
+        return res.status(401).json({ error: 'Invalid or expired token.' });
+      }
+
+      const raw = req.body;
+      const body = typeof raw === 'string' ? JSON.parse(raw) : raw;
+      const { outlet } = body;
+
+      if (!outlet) {
+        return res.status(400).json({ error: 'Outlet is required.' });
+      }
+
+      const newToken = jwt.sign(
+        { id: decoded.id, username: decoded.username, role: decoded.role, outlet: outlet },
+        JWT_SECRET,
+        { expiresIn: '8h' }
+      );
+
+      // Log the successful login with chosen outlet
+      await prisma.userLog.create({
+        data: {
+          username: decoded.username,
+          action: 'Select Session Outlet',
+          details: JSON.stringify({ outlet }),
+          outlet: outlet
+        }
+      });
+
+      return res.status(200).json({
+        token: newToken,
+        user: { id: decoded.id, username: decoded.username, role: decoded.role, outlet: outlet }
+      });
+    }
+
     // Route 2: /api/auth/login
     if (url.pathname.includes('/login')) {
       if (req.method !== 'POST') {

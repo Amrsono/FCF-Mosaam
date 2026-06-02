@@ -33,7 +33,9 @@ export default async function handler(req, res) {
 
     // POST: Create a log (Any authenticated user)
     if (req.method === 'POST') {
-      const { action, details, outlet } = req.body;
+      const raw = req.body;
+      const body = typeof raw === 'string' ? JSON.parse(raw) : raw;
+      const { action, details, outlet } = body;
 
       if (!action) {
         return res.status(400).json({ error: 'Action is required.' });

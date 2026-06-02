@@ -70,15 +70,29 @@ export const AuthProvider = ({ children }) => {
     return data.user;
   };
 
-  /**
-   * Called from the outlet selection screen.
-   * Merges the chosen outlet into the user object and finalises the session.
-   */
-  const confirmOutlet = (outlet) => {
+  const confirmOutlet = async (outlet) => {
     if (!pendingUser) return;
-    localStorage.setItem('fcf_session_outlet', outlet);
-    setUser({ ...pendingUser, outlet });
-    setPendingUser(null);
+    try {
+      const token = localStorage.getItem('fcf_token');
+      const res = await fetch('/api/auth/confirm-outlet', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ outlet })
+      });
+      
+      if (!res.ok) throw new Error('Failed to confirm session outlet');
+      
+      const data = await res.json();
+      localStorage.setItem('fcf_token', data.token); // Store updated token signed with the chosen outlet
+      localStorage.setItem('fcf_session_outlet', outlet);
+      setUser(data.user);
+      setPendingUser(null);
+    } catch (err) {
+      console.error("confirmOutlet Error:", err);
+    }
   };
 
   /**

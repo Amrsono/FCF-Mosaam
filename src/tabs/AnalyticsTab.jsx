@@ -1181,15 +1181,20 @@ export default function AnalyticsTab() {
               <BarChart data={topProductsData} layout="vertical" margin={{ left: 30, right: 30 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
                 <XAxis type="number" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis 
+                 <YAxis 
                   type="category" 
                   dataKey="name" 
                   orientation={language === 'ar' ? 'right' : 'left'} 
                   tick={{ fill: 'rgba(255,255,255,0.8)', fontSize: 10 }} 
                   axisLine={false} 
                   tickLine={false} 
-                  width={100}
-                  tickFormatter={(val) => val.length > 15 ? val.substring(0, 15) + '...' : val}
+                  width={150}
+                  tickFormatter={(val) => {
+                    const item = topProductsData.find(p => p.name === val);
+                    const catPrefix = item && item.category ? `[${item.category}] ` : '';
+                    const displayVal = catPrefix + val;
+                    return displayVal.length > 30 ? displayVal.substring(0, 30) + '...' : displayVal;
+                  }}
                 />
                 <Tooltip
                   cursor={{ fill: 'rgba(255,255,255,0.03)' }}

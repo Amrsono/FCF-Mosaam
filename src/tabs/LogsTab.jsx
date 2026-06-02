@@ -17,12 +17,12 @@ export default function LogsTab() {
   const [isUsersLoading, setIsUsersLoading] = useState(false);
   const [userUpdateStatus, setUserUpdateStatus] = useState({ type: '', message: '' });
   const [passwordChangeMap, setPasswordChangeMap] = useState({});
-
   // Filters
   const [searchUser, setSearchUser] = useState('');
   const [searchAction, setSearchAction] = useState('');
   const [outletFilter, setOutletFilter] = useState('');
-  const [dateFilter, setDateFilter] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   const [newUsername, setNewUsername] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -170,9 +170,11 @@ export default function LogsTab() {
   const filteredLogs = logs.filter(log => {
     const matchUser = log.username.toLowerCase().includes(searchUser.toLowerCase());
     const matchAction = log.action.toLowerCase().includes(searchAction.toLowerCase());
-    const matchDate = dateFilter ? log.createdAt.startsWith(dateFilter) : true;
+    const logDateStr = log.createdAt.split('T')[0]; // YYYY-MM-DD
+    const matchStartDate = startDate ? logDateStr >= startDate : true;
+    const matchEndDate = endDate ? logDateStr <= endDate : true;
     const matchOutlet = outletFilter ? (log.outlet || 'eltalg').toLowerCase() === outletFilter.toLowerCase() : true;
-    return matchUser && matchAction && matchDate && matchOutlet;
+    return matchUser && matchAction && matchStartDate && matchEndDate && matchOutlet;
   });
 
   const uniqueActions = [...new Set(logs.map(l => l.action))];
@@ -243,11 +245,20 @@ export default function LogsTab() {
             </select>
           </div>
 
-          <div className="input-group" style={{ flex: '1 1 200px' }}>
+          <div className="input-group" style={{ flex: '1 1 150px' }}>
             <input 
               type="date" 
-              value={dateFilter} 
-              onChange={e => setDateFilter(e.target.value)}
+              value={startDate} 
+              onChange={e => setStartDate(e.target.value)}
+              style={{ width: '100%', padding: '0.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-primary)' }}
+            />
+          </div>
+
+          <div className="input-group" style={{ flex: '1 1 150px' }}>
+            <input 
+              type="date" 
+              value={endDate} 
+              onChange={e => setEndDate(e.target.value)}
               style={{ width: '100%', padding: '0.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', background: 'var(--bg-main)', color: 'var(--text-primary)' }}
             />
           </div>
@@ -268,7 +279,7 @@ export default function LogsTab() {
                 { label: language === 'ar' ? 'تاريخ' : 'Date',    accessor: l => new Date(l.createdAt).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-GB', { timeZone: 'Africa/Cairo' }) },
                 { label: language === 'ar' ? 'الوقت' : 'Time',    accessor: l => new Date(l.createdAt).toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-GB', { timeZone: 'Africa/Cairo' }) },
                 { label: language === 'ar' ? 'المستخدم' : 'User',   accessor: 'username' },
-                { label: language === 'ar' ? 'المنفذ' : 'Outlet', accessor: 'outlet' },
+                { label: language === 'ar' ? 'المنفذ' : 'Outlet', accessor: l => l.outlet || 'eltalg' },
                 { label: language === 'ar' ? 'الإجراء' : 'Action', accessor: 'action' },
                 { label: language === 'ar' ? 'رقم الطلب' : 'Order ID', accessor: l => {
                   try {

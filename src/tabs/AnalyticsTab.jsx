@@ -204,8 +204,8 @@ export default function AnalyticsTab() {
     const jumiaReturned = [...stdReturned, ...custReturned];
     const jumiaCancelled = orders.filter(o => o.status === 'Cancelled' && isInRange(o.returnedAt) && matchesOutlet(o));
     
-    const jumiaCash = jumiaPickedUp.reduce((s, o) => s + (Number(o.totalValue) || 0), 0);
-    const jumiaReturnedAmt = stdReturned.reduce((s, o) => s + (Number(o.totalValue) || 0), 0);
+    const jumiaCash = jumiaPickedUp.reduce((s, o) => s + (Number(o.totalValue) || 0) - (o.discountAmount || 0), 0);
+    const jumiaReturnedAmt = stdReturned.reduce((s, o) => s + (Number(o.totalValue) || 0) - (o.discountAmount || 0), 0);
 
     const getJumiaCharge = (size) => {
       const s = (size || 'M').toUpperCase();
@@ -219,10 +219,10 @@ export default function AnalyticsTab() {
     const jumiaCashOrders = jumiaPickedUp.filter(o => !o.paymentMethod || ['cash', 'visa', 'creditcard'].includes(String(o.paymentMethod).toLowerCase().replace(/\s/g, '')));
 
     const jumiaPayQty = jumiaPayOrders.length;
-    const jumiaPayAmt = jumiaPayOrders.reduce((s, o) => s + (Number(o.totalValue) || 0), 0);
+    const jumiaPayAmt = jumiaPayOrders.reduce((s, o) => s + (Number(o.totalValue) || 0) - (o.discountAmount || 0), 0);
     
     const jumiaCashQty = jumiaCashOrders.length;
-    const jumiaCashAmt = jumiaCashOrders.reduce((s, o) => s + (Number(o.totalValue) || 0), 0);
+    const jumiaCashAmt = jumiaCashOrders.reduce((s, o) => s + (Number(o.totalValue) || 0) - (o.discountAmount || 0), 0);
 
     // --- BOSTA ---
     const bostaInventory = bostaOrders.filter(o => o.status === 'Inventory' && isInRange(o.receivedAt) && matchesOutlet(o));
@@ -238,9 +238,9 @@ export default function AnalyticsTab() {
       return d >= 3 && d < 5;
     }).length;
     
-    const jumiaPayTotal = jumiaPickedUp.filter(o => o.paymentMethod?.toLowerCase().includes('jumia')).reduce((s, o) => s + (Number(o.totalValue) || 0), 0);
-    const jumiaCardTotal = jumiaPickedUp.filter(o => o.paymentMethod?.toLowerCase().includes('card') || o.paymentMethod?.toLowerCase().includes('visa')).reduce((s, o) => s + (Number(o.totalValue) || 0), 0);
-    const jumiaCashTotal = jumiaPickedUp.filter(o => !o.paymentMethod || o.paymentMethod?.toLowerCase() === 'cash').reduce((s, o) => s + (Number(o.totalValue) || 0), 0);
+    const jumiaPayTotal = jumiaPickedUp.filter(o => o.paymentMethod?.toLowerCase().includes('jumia')).reduce((s, o) => s + (Number(o.totalValue) || 0) - (o.discountAmount || 0), 0);
+    const jumiaCardTotal = jumiaPickedUp.filter(o => o.paymentMethod?.toLowerCase().includes('card') || o.paymentMethod?.toLowerCase().includes('visa')).reduce((s, o) => s + (Number(o.totalValue) || 0) - (o.discountAmount || 0), 0);
+    const jumiaCashTotal = jumiaPickedUp.filter(o => !o.paymentMethod || o.paymentMethod?.toLowerCase() === 'cash').reduce((s, o) => s + (Number(o.totalValue) || 0) - (o.discountAmount || 0), 0);
     
     const jumiaPaymentData = [
       { name: t('cash'), value: jumiaCashTotal, color: '#f97316' },
@@ -252,8 +252,8 @@ export default function AnalyticsTab() {
     const bostaReceived = bostaOrders.filter(o => isInRange(o.receivedAt) && matchesOutlet(o));
     const bostaReturned = bostaOrders.filter(o => o.status === 'Returned' && isInRange(o.returnedAt) && matchesOutlet(o));
     const bostaCancelled = bostaOrders.filter(o => o.status === 'Cancelled' && isInRange(o.returnedAt) && matchesOutlet(o));
-    const bostaCash = bostaPickedUp.reduce((s, o) => s + (Number(o.totalValue) || 0), 0);
-    const bostaReturnedAmt = bostaReturned.reduce((s, o) => s + (Number(o.totalValue) || 0), 0);
+    const bostaCash = bostaPickedUp.reduce((s, o) => s + (Number(o.totalValue) || 0) - (o.discountAmount || 0), 0);
+    const bostaReturnedAmt = bostaReturned.reduce((s, o) => s + (Number(o.totalValue) || 0) - (o.discountAmount || 0), 0);
     const bostaProfit = bostaPickedUp.length * 10;
 
     const getSizes = (list) => {
@@ -271,6 +271,7 @@ export default function AnalyticsTab() {
     // --- BASATA ---
     const activeBasata = basataTransactions.filter(t => isInRange(t.performedAt) && matchesOutlet(t));
     const basataVolume = activeBasata.reduce((s, t) => s + t.amount, 0);
+    const basataProfit = activeBasata.reduce((s, t) => s + ((t.amount * (t.percentage || 0)) / 100), 0);
     const basataCategories = activeBasata.reduce((acc, t) => {
       acc[t.category] = (acc[t.category] || 0) + t.amount;
       return acc;
@@ -299,8 +300,10 @@ export default function AnalyticsTab() {
     const jumiaInventoryByOutlet = getByOutlet(jumiaInventory, () => 1);
     const jumiaProfitByOutlet = getByOutlet(jumiaPickedUp, (o) => getJumiaCharge(o.size));
     const bostaProfitByOutlet = getByOutlet(bostaPickedUp, () => 10);
+    const basataProfitByOutlet = getByOutlet(activeBasata, (t) => (t.amount * (t.percentage || 0)) / 100);
 
-    const grandTotal = jumiaProfit + bostaProfit + basataVolume + activePenalties;
+    const grandTotal = jumiaProfit + bostaProfit + basataProfit + activePenalties;
+    const grandTotalVolume = jumiaCash + bostaCash + basataVolume + activePenalties;
 
     const allPickedUp = [...jumiaPickedUp, ...bostaPickedUp];
 
@@ -350,7 +353,7 @@ export default function AnalyticsTab() {
     const revenueStreamData = [
       { name: t('jumia'), value: jumiaProfit, color: CHART_COLORS.jumia },
       { name: t('bosta'), value: bostaProfit, color: CHART_COLORS.bosta },
-      { name: t('basata'), value: basataVolume, color: CHART_COLORS.basata },
+      { name: t('basata'), value: basataProfit, color: CHART_COLORS.basata },
       { name: t('penalties'), value: activePenalties, color: CHART_COLORS.warning },
     ];
 
@@ -388,7 +391,7 @@ export default function AnalyticsTab() {
     const jumiaOutletVolumeData = getJumiaVolumeByStatus(jumiaVolumeFilter);
 
     const comparisonData = [
-      { name: language === 'ar' ? 'المدخلات' : 'Inventory', jumia: jumiaInventory.length, bosta: bostaInventory.length },
+      { name: language === 'ar' ? 'المدخلات (المستلمة)' : 'Received (Inputs)', jumia: jumiaReceived.length, bosta: bostaReceived.length },
       { name: t('pickedUpByCustomer'), jumia: jumiaPickedUp.length, bosta: bostaPickedUp.length },
       { name: t('returnedStatus'), jumia: jumiaReturned.length, bosta: bostaReturned.length },
     ];
@@ -598,9 +601,9 @@ export default function AnalyticsTab() {
       bostaInventory, bostaReceived, bostaPickedUp, bostaReturned, bostaCancelled, bostaCash, bostaProfit,
       bostaReturnedAmt,
       jumiaSizes, jumiaInventorySizes, bostaSizes, bostaInventorySizes,
-      activeBasata, basataVolume, basataCategories, basataProviders, basataByOutlet, basataCountByOutlet,
-      jumiaPickedUpByOutlet, jumiaInventoryByOutlet, jumiaProfitByOutlet, bostaProfitByOutlet,
-      grandTotal, callsInPeriod, callsMade, callsResolved, callsClosed, coveragePct,
+      activeBasata, basataVolume, basataProfit, basataCategories, basataProviders, basataByOutlet, basataCountByOutlet,
+      jumiaPickedUpByOutlet, jumiaInventoryByOutlet, jumiaProfitByOutlet, bostaProfitByOutlet, basataProfitByOutlet,
+      grandTotal, grandTotalVolume, callsInPeriod, callsMade, callsResolved, callsClosed, coveragePct,
       basataCatData, resolutionPieData, revenueStreamData, ordersStatusData, basataByOutletData, comparisonData,
       jumiaOutletVolumeData,
       basataProviderData, callsVsOrdersData, ordersReceivedKey, callsMadeKey,
@@ -619,9 +622,9 @@ export default function AnalyticsTab() {
     bostaInventory, activePenalties, jumiaSlaCritical, jumiaSlaNear, jumiaPayTotal, jumiaCardTotal, jumiaCashTotal, jumiaPaymentData,
     bostaPickedUp, bostaReceived, bostaReturned, bostaCancelled, bostaCash, bostaReturnedAmt, bostaProfit,
     jumiaSizes, jumiaInventorySizes, bostaSizes, bostaInventorySizes,
-    activeBasata, basataVolume, basataCategories, basataProviders, basataByOutlet, basataCountByOutlet,
-    jumiaPickedUpByOutlet, jumiaInventoryByOutlet, jumiaProfitByOutlet, bostaProfitByOutlet,
-    grandTotal, callsInPeriod, callsMade, callsResolved, callsClosed, coveragePct,
+    activeBasata, basataVolume, basataProfit, basataCategories, basataProviders, basataByOutlet, basataCountByOutlet,
+    jumiaPickedUpByOutlet, jumiaInventoryByOutlet, jumiaProfitByOutlet, bostaProfitByOutlet, basataProfitByOutlet,
+    grandTotal, grandTotalVolume, callsInPeriod, callsMade, callsResolved, callsClosed, coveragePct,
     basataCatData, resolutionPieData, revenueStreamData, ordersStatusData, basataByOutletData, comparisonData,
     jumiaOutletVolumeData,
     basataProviderData, callsVsOrdersData, ordersReceivedKey, callsMadeKey,
@@ -935,18 +938,22 @@ export default function AnalyticsTab() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
           <div style={{ flex: '1 1 300px' }}>
             <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem' }}>
-              <Activity size={14} /> {language === 'ar' ? 'إجمالي إيرادات المحطة' : 'Total Station Revenue'}
+              <Activity size={14} /> {language === 'ar' ? 'إجمالي أرباح المحطة الصافية' : 'Total Net Station Profit'}
             </div>
             <div style={{ fontSize: 'clamp(2.5rem, 10vw, 3.5rem)', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>
               {grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               <span style={{ fontSize: '0.4em', color: 'var(--text-muted)', [language === 'ar' ? 'marginRight' : 'marginLeft']: '0.5rem' }}>EGP</span>
+            </div>
+            <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.5rem' }}>
+              {language === 'ar' ? 'إجمالي الأموال المتداولة (الكل): ' : 'Total Cash Processed (Gross): '}
+              <strong style={{ color: 'var(--text-secondary)' }}>{grandTotalVolume.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP</strong>
             </div>
           </div>
           <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', flex: '1 1 auto' }}>
             {[
               { label: t('jumia'), value: jumiaProfit, color: CHART_COLORS.jumia },
               { label: t('bosta'), value: bostaProfit, color: CHART_COLORS.bosta },
-              { label: t('basata'), value: basataVolume, color: CHART_COLORS.basata },
+              { label: `${t('basata')} (${language === 'ar' ? 'الأرباح' : 'Profit'})`, value: basataProfit, color: CHART_COLORS.basata },
               { label: t('penalties'), value: activePenalties, color: CHART_COLORS.warning },
             ].map(s => (
               <div key={s.label} style={{ flex: '1 1 auto', minWidth: '80px', textAlign: 'center' }}>
@@ -963,7 +970,7 @@ export default function AnalyticsTab() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
         <MetricCard title={`${t('jumia')} ${language === 'ar' ? 'الأرباح' : 'Profit'}`} value={`${jumiaProfit.toLocaleString()} EGP`} icon={<DollarSign size={14} />} color={CHART_COLORS.jumia} sub={language === 'ar' ? `${jumiaPickedUp.length} طلب استلام عميل` : `${jumiaPickedUp.length} customer pick ups`} />
         <MetricCard title={`${t('bosta')} ${language === 'ar' ? 'الأرباح' : 'Profit'}`} value={`${bostaProfit.toLocaleString()} EGP`} icon={<DollarSign size={14} />} color={CHART_COLORS.bosta} sub={language === 'ar' ? `${bostaPickedUp.length} طلب مستلم` : `${bostaPickedUp.length} orders picked up`} />
-        <MetricCard title={`${t('basata')} POS`} value={`${basataVolume.toLocaleString()} EGP`} icon={<Zap size={14} />} color={CHART_COLORS.basata} sub={language === 'ar' ? `${activeBasata.length} عملية` : `${activeBasata.length} transactions`} />
+        <MetricCard title={`${t('basata')} ${language === 'ar' ? 'الأرباح' : 'Net Profit'}`} value={`${basataProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP`} icon={<Zap size={14} />} color={CHART_COLORS.basata} sub={language === 'ar' ? `${activeBasata.length} عملية (حجم: ${basataVolume.toLocaleString()} EGP)` : `${activeBasata.length} txs (Vol: ${basataVolume.toLocaleString()} EGP)`} />
         <MetricCard title={t('parkedPenalties')} value={`${activePenalties} EGP`} icon={<AlertOctagon size={14} />} color={CHART_COLORS.warning} sub={language === 'ar' ? `${jumiaInventory.length} طلب مخزن` : `${jumiaInventory.length} parked orders`} />
         <MetricCard title={language === 'ar' ? 'حالة SLA حرجة' : 'SLA Critical'} value={jumiaSlaCritical} icon={<ShieldAlert size={14} />} color={CHART_COLORS.danger} sub={language === 'ar' ? 'جوميا 5+ أيام تأخير' : 'Jumia 5+ days overdue'} />
         <MetricCard title={t('customers')} value={customers.length} icon={<Users size={14} />} color="var(--color-primary)" sub={language === 'ar' ? 'مسجلين في المحطة' : 'Registered at station'} />

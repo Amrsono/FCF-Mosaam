@@ -308,7 +308,8 @@ export default function OrdersTab() {
               description: data.description || prev.description,
               totalValue: data.totalValue || data.value || prev.totalValue,
               category: data.category || prev.category,
-              size: data.size || prev.size
+              size: data.size || prev.size,
+              outlet: data.outlet ? normalizeOutlet(data.outlet) : prev.outlet
             }));
           } catch (e) {
             // Not JSON, assume it's just the ID

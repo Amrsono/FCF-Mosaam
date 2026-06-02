@@ -16,6 +16,7 @@ import {
 import { useLanguage } from '../context/LanguageContext';
 import { exportToPPTX } from '../utils/exportUtils';
 import { Presentation } from 'lucide-react';
+import { JUMIA_CATEGORIES } from '../utils/jumiaCategories';
 
 const normalizeOutlet = (val) => {
   if (!val) return 'eltalg';
@@ -32,54 +33,23 @@ const normalizePhone = (phone) => {
   return cleaned.length >= 10 ? cleaned.slice(-10) : cleaned;
 };
 
-const translateCategory = (cat, lang) => {
-  if (!cat) return lang === 'ar' ? 'عام' : 'General';
-  if (lang !== 'ar') return cat;
-  
-  const lower = String(cat).toLowerCase().trim();
-  
-  const mapping = {
-    'general': 'عام',
-    'fashion': 'ملابس وأزياء',
-    'apparel': 'ملابس وأزياء',
-    'clothing': 'ملابس وأزياء',
-    'clothes': 'ملابس وأزياء',
-    'electronics': 'إلكترونيات',
-    'phones & tablets': 'موبايلات وتابلت',
-    'phones': 'موبايلات',
-    'tablets': 'تابلت',
-    'home & office': 'منزل ومكتب',
-    'home & kitchen': 'المنزل والمطبخ',
-    'home': 'منزل',
-    'beauty & health': 'صحة وجمال',
-    'beauty': 'جمال',
-    'health': 'صحة',
-    'supermarket': 'سوبرماركت',
-    'baby products': 'منتجات الأطفال',
-    'baby': 'أطفال',
-    'computing': 'كمبيوتر ولاب توب',
-    'sporting goods': 'أدوات رياضية',
-    'sports': 'رياضة',
-    'automotive': 'مستلزمات سيارات',
-    'toys & games': 'ألعاب وأطفال',
-    'toys': 'ألعاب',
-    'books': 'كتب',
-    'groceries': 'بقالة',
-    'appliances': 'أجهزة منزلية',
-    'accessories': 'إكسسوارات',
-    'other': 'أخرى',
-    'others': 'أخرى'
-  };
+// Resolves a category English key to its display label using JUMIA_CATEGORIES
+// (the same source of truth as the Orders tab)
+const resolveCategoryLabel = (catEn, lang) => {
+  if (!catEn) return lang === 'ar' ? 'عام' : 'General';
+  const found = JUMIA_CATEGORIES.find(c => c.en === catEn);
+  if (found) return lang === 'ar' ? found.ar : found.en;
+  return catEn; // fallback: return as-is if not in the list
+};
 
-  if (mapping[lower]) return mapping[lower];
-
-  for (const [enKey, arVal] of Object.entries(mapping)) {
-    if (lower.includes(enKey) || enKey.includes(lower)) {
-      return arVal;
-    }
-  }
-
-  return cat;
+// Resolves a subcategory English key to its display label using JUMIA_CATEGORIES
+const resolveSubcategoryLabel = (catEn, subEn, lang) => {
+  if (!subEn) return '';
+  const cat = JUMIA_CATEGORIES.find(c => c.en === catEn);
+  if (!cat) return subEn;
+  const sub = cat.subcategories.find(s => s.en === subEn);
+  if (sub) return lang === 'ar' ? sub.ar : sub.en;
+  return subEn;
 };
 
 const CHART_COLORS = {
@@ -589,25 +559,32 @@ export default function AnalyticsTab() {
     else if (insightsSource === 'Jumia') allPickedUpInsights = insightsJumia;
     else if (insightsSource === 'Bosta') allPickedUpInsights = insightsBosta;
     
+    // --- Most Sellable Products ---
+    // Key: description (product name). Also store resolved category/subcategory labels
+    // using JUMIA_CATEGORIES — same as the Orders Inventory screen.
     const productMap = allPickedUpInsights.reduce((acc, o) => {
       const name = (o.description || (language === 'ar' ? 'غير معروف' : 'Unknown')).trim();
+      const catLabel = resolveCategoryLabel(o.category, language);
+      const subLabel = resolveSubcategoryLabel(o.category, o.subcategory, language);
 
-      if (!acc[name]) acc[name] = { count: 0, value: 0 };
+      if (!acc[name]) acc[name] = { count: 0, value: 0, category: catLabel, subcategory: subLabel };
       acc[name].count += 1;
       acc[name].value += (Number(o.totalValue) || 0);
       return acc;
     }, {});
     const topProductsData = Object.entries(productMap)
-      .map(([name, stats]) => ({ name, count: stats.count, value: stats.value }))
+      .map(([name, stats]) => ({ name, count: stats.count, value: stats.value, category: stats.category, subcategory: stats.subcategory }))
       .sort((a, b) => b.count - a.count || b.value - a.value)
       .slice(0, 20);
 
+    // --- Most Sellable Categories ---
+    // Use JUMIA_CATEGORIES to resolve the category English key to its proper display name,
+    // matching exactly how the Orders Inventory tab renders categories.
     const categoryMap = allPickedUpInsights.reduce((acc, o) => {
-      const rawCat = (o.category || (language === 'ar' ? 'عام' : 'General')).trim();
-      const cat = translateCategory(rawCat, language);
-      if (!acc[cat]) acc[cat] = { count: 0, value: 0 };
-      acc[cat].count += 1;
-      acc[cat].value += (Number(o.totalValue) || 0);
+      const catLabel = resolveCategoryLabel(o.category, language);
+      if (!acc[catLabel]) acc[catLabel] = { count: 0, value: 0 };
+      acc[catLabel].count += 1;
+      acc[catLabel].value += (Number(o.totalValue) || 0);
       return acc;
     }, {});
     const topCategoriesData = Object.entries(categoryMap)
@@ -1214,9 +1191,35 @@ export default function AnalyticsTab() {
                   width={100}
                   tickFormatter={(val) => val.length > 15 ? val.substring(0, 15) + '...' : val}
                 />
-                <Tooltip 
-                  content={<CustomTooltip language={language} />} 
+                <Tooltip
                   cursor={{ fill: 'rgba(255,255,255,0.03)' }}
+                  content={({ active, payload }) => {
+                    if (!active || !payload || !payload.length) return null;
+                    const d = payload[0].payload;
+                    return (
+                      <div style={{
+                        background: 'rgba(15,15,30,0.97)',
+                        border: '1px solid rgba(255,255,255,0.12)',
+                        borderRadius: '10px',
+                        padding: '0.75rem 1rem',
+                        maxWidth: '260px',
+                        direction: language === 'ar' ? 'rtl' : 'ltr'
+                      }}>
+                        <div style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 700, fontSize: '0.9rem', marginBottom: '0.4rem', wordBreak: 'break-word' }}>{d.name}</div>
+                        {d.category && (
+                          <div style={{ fontSize: '0.78rem', color: 'var(--color-primary)', marginBottom: '0.15rem' }}>
+                            {d.category}{d.subcategory ? ` › ${d.subcategory}` : ''}
+                          </div>
+                        )}
+                        <div style={{ color: '#8b5cf6', fontWeight: 600, fontSize: '0.88rem' }}>
+                          {language === 'ar' ? 'الكمية' : 'Qty'}: {d.count}
+                        </div>
+                        <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.82rem', marginTop: '0.15rem' }}>
+                          {language === 'ar' ? 'القيمة' : 'Value'}: {(d.value || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} EGP
+                        </div>
+                      </div>
+                    );
+                  }}
                 />
                 <Bar dataKey="count" name={language === 'ar' ? 'الكمية' : 'Quantity'} radius={[0, 4, 4, 0]}>
                   {topProductsData.map((entry, index) => (

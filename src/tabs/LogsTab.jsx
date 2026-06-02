@@ -34,13 +34,22 @@ export default function LogsTab() {
 
   useEffect(() => {
     fetchLogs();
-  }, []);
+  }, [startDate, endDate]);
 
   const fetchLogs = async () => {
     try {
       setIsLoading(true);
       const token = localStorage.getItem('fcf_token');
-      const res = await fetch('/api/logs', {
+      
+      let url = '/api/logs';
+      const params = new URLSearchParams();
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+
+      const res = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

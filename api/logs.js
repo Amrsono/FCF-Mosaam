@@ -25,7 +25,21 @@ export default async function handler(req, res) {
         return res.status(403).json({ error: 'Forbidden: Admins only.' });
       }
 
+      const { startDate, endDate } = req.query;
+      const where = {};
+
+      if (startDate || endDate) {
+        where.createdAt = {};
+        if (startDate) {
+          where.createdAt.gte = new Date(`${startDate}T00:00:00.000Z`);
+        }
+        if (endDate) {
+          where.createdAt.lte = new Date(`${endDate}T23:59:59.999Z`);
+        }
+      }
+
       const logs = await prisma.userLog.findMany({
+        where,
         orderBy: { createdAt: 'desc' },
       });
       return res.status(200).json(logs);

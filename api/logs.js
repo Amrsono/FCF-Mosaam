@@ -33,7 +33,7 @@ export default async function handler(req, res) {
 
     // POST: Create a log (Any authenticated user)
     if (req.method === 'POST') {
-      const { action, details } = req.body;
+      const { action, details, outlet } = req.body;
 
       if (!action) {
         return res.status(400).json({ error: 'Action is required.' });
@@ -44,6 +44,7 @@ export default async function handler(req, res) {
           username: decoded.username,
           action,
           details: details ? (typeof details === 'string' ? details : JSON.stringify(details)) : null,
+          outlet: outlet || decoded.outlet || 'eltalg',
         },
       });
 

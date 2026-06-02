@@ -244,7 +244,8 @@ export default async function handler(req, res) {
           data: {
             username: decoded.username,
             action: 'Delete Customer',
-            details: JSON.stringify({ phone })
+            details: JSON.stringify({ phone }),
+            outlet: decoded.outlet || 'eltalg'
           }
         });
 

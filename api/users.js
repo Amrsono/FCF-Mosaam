@@ -81,7 +81,8 @@ export default async function handler(req, res) {
         data: {
           username: decoded.username,
           action: password ? 'Update User Password' : 'Update User Branch',
-          details: JSON.stringify({ targetUser: username, updatedFields: Object.keys(updateData) })
+          details: JSON.stringify({ targetUser: username, updatedFields: Object.keys(updateData) }),
+          outlet: decoded.outlet || 'eltalg'
         }
       });
 
@@ -126,7 +127,8 @@ export default async function handler(req, res) {
         data: {
           username: decoded.username,
           action: 'Create User',
-          details: JSON.stringify({ targetUser: username.toLowerCase(), role, outlet })
+          details: JSON.stringify({ targetUser: username.toLowerCase(), role, outlet }),
+          outlet: decoded.outlet || 'eltalg'
         }
       });
 
@@ -170,7 +172,8 @@ export default async function handler(req, res) {
         data: {
           username: decoded.username,
           action: 'Delete User',
-          details: JSON.stringify({ targetUser: username.toLowerCase() })
+          details: JSON.stringify({ targetUser: username.toLowerCase() }),
+          outlet: decoded.outlet || 'eltalg'
         }
       });
 

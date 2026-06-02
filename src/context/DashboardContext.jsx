@@ -167,7 +167,7 @@ export const DashboardProvider = ({ children }) => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ action, details })
+        body: JSON.stringify({ action, details, outlet: user?.outlet || 'Unknown' })
       });
     } catch (e) {
       console.warn("Could not log user action", e);

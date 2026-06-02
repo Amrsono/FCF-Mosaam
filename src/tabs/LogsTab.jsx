@@ -249,6 +249,7 @@ export default function LogsTab() {
                 { label: language === 'ar' ? 'تاريخ' : 'Date',    accessor: l => new Date(l.createdAt).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-GB', { timeZone: 'Africa/Cairo' }) },
                 { label: language === 'ar' ? 'الوقت' : 'Time',    accessor: l => new Date(l.createdAt).toLocaleTimeString(language === 'ar' ? 'ar-EG' : 'en-GB', { timeZone: 'Africa/Cairo' }) },
                 { label: language === 'ar' ? 'المستخدم' : 'User',   accessor: 'username' },
+                { label: language === 'ar' ? 'المنفذ' : 'Outlet', accessor: 'outlet' },
                 { label: language === 'ar' ? 'الإجراء' : 'Action', accessor: 'action' },
                 { label: language === 'ar' ? 'رقم الطلب' : 'Order ID', accessor: l => {
                   try {
@@ -281,6 +282,7 @@ export default function LogsTab() {
                 <tr>
                   <th>{t('date')}</th>
                   <th>{t('user')}</th>
+                  <th>{language === 'ar' ? 'المنفذ' : 'Outlet'}</th>
                   <th>{t('action')}</th>
                   <th>{language === 'ar' ? 'رقم الطلب' : 'Order Number'}</th>
                   <th>{language === 'ar' ? 'المبلغ' : 'Amount'}</th>
@@ -290,7 +292,7 @@ export default function LogsTab() {
               <tbody>
                 {filteredLogs.length === 0 ? (
                   <tr>
-                    <td colSpan={6} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>{t('noData')}</td>
+                    <td colSpan={7} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>{t('noData')}</td>
                   </tr>
                 ) : (
                   filteredLogs.map(log => {
@@ -312,6 +314,11 @@ export default function LogsTab() {
                         <td>
                           <span className="badge" style={{ background: 'rgba(var(--color-primary-rgb), 0.1)', color: 'var(--color-primary)' }}>
                             {log.username}
+                          </span>
+                        </td>
+                        <td style={{ textTransform: 'capitalize' }}>
+                          <span className="badge" style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--text-secondary)' }}>
+                            {log.outlet || 'eltalg'}
                           </span>
                         </td>
                         <td style={{ fontWeight: 600 }}>{log.action}</td>

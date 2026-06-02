@@ -123,6 +123,7 @@ model UserLog {
   username  String
   action    String
   details   String?
+  outlet    String   @default("eltalg")
   createdAt DateTime @default(now())
 }
 

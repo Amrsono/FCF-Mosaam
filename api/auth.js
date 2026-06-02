@@ -84,7 +84,8 @@ export default async function handler(req, res) {
         data: {
           username: admin.username,
           action: 'User Login',
-          details: JSON.stringify({ outlet: userOutlet, role: admin.role })
+          details: JSON.stringify({ outlet: userOutlet, role: admin.role }),
+          outlet: userOutlet
         }
       });
 

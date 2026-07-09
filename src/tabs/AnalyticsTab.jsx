@@ -393,13 +393,61 @@ export default function AnalyticsTab() {
       { name: t('returnedStatus'), jumia: jumiaReturned.length, bosta: bostaReturned.length },
     ];
 
-    const getTransactionCount = (periodMs) => {
-      const limit = new Date(Date.now() - periodMs);
-      const jTrx = orders.filter(o => (o.status === 'Picked Up' && o.pickedUpAt && new Date(o.pickedUpAt) >= limit) || (o.status === 'Returned' && o.returnedAt && new Date(o.returnedAt) >= limit)).length;
-      const bTrx = bostaOrders.filter(o => (o.status === 'Picked Up' && o.pickedUpAt && new Date(o.pickedUpAt) >= limit) || (o.status === 'Returned' && o.returnedAt && new Date(o.returnedAt) >= limit)).length;
-      const basataTrx = basataTransactions.filter(t => t.performedAt && new Date(t.performedAt) >= limit).length;
-      return jTrx + bTrx + basataTrx;
+    // --- TRANSACTION COUNTERS (use selected date range & outlet) ---
+    const jTrxInRange = orders.filter(o => {
+      if (!matchesOutlet(o)) return false;
+      if (o.status === 'Picked Up' && isInRange(o.pickedUpAt)) return true;
+      if (o.status === 'Returned' && isInRange(o.returnedAt)) return true;
+      if (o.status === 'Cancelled' && isInRange(o.returnedAt)) return true;
+      if (o.status === 'Inventory' && isInRange(o.receivedAt)) return true;
+      return false;
+    }).length;
+    const bTrxInRange = bostaOrders.filter(o => {
+      if (!matchesOutlet(o)) return false;
+      if (o.status === 'Picked Up' && isInRange(o.pickedUpAt)) return true;
+      if (o.status === 'Returned' && isInRange(o.returnedAt)) return true;
+      if (o.status === 'Cancelled' && isInRange(o.returnedAt)) return true;
+      if (o.status === 'Inventory' && isInRange(o.receivedAt)) return true;
+      return false;
+    }).length;
+    const basataTrxInRange = activeBasata.length; // already filtered by isInRange + matchesOutlet
+    const totalTransactions = jTrxInRange + bTrxInRange + basataTrxInRange;
+
+    // --- ADMIN TRANSACTION COUNTERS (fixed rolling windows, respect outlet filter) ---
+    const countTrx = (orderList, basataList, windowStart) => {
+      const jCount = orderList.filter(o => {
+        if (!matchesOutlet(o)) return false;
+        const relevant =
+          (o.status === 'Picked Up'  && o.pickedUpAt  && new Date(o.pickedUpAt)  >= windowStart) ||
+          (o.status === 'Returned'   && o.returnedAt  && new Date(o.returnedAt)  >= windowStart) ||
+          (o.status === 'Cancelled'  && o.returnedAt  && new Date(o.returnedAt)  >= windowStart) ||
+          (o.status === 'Inventory'  && o.receivedAt  && new Date(o.receivedAt)  >= windowStart);
+        return relevant;
+      }).length;
+      const bCount = bostaOrders.filter(o => {
+        if (!matchesOutlet(o)) return false;
+        const relevant =
+          (o.status === 'Picked Up'  && o.pickedUpAt  && new Date(o.pickedUpAt)  >= windowStart) ||
+          (o.status === 'Returned'   && o.returnedAt  && new Date(o.returnedAt)  >= windowStart) ||
+          (o.status === 'Cancelled'  && o.returnedAt  && new Date(o.returnedAt)  >= windowStart) ||
+          (o.status === 'Inventory'  && o.receivedAt  && new Date(o.receivedAt)  >= windowStart);
+        return relevant;
+      }).length;
+      const basCount = basataList.filter(t => {
+        if (!matchesOutlet(t)) return false;
+        return t.performedAt && new Date(t.performedAt) >= windowStart;
+      }).length;
+      return jCount + bCount + basCount;
     };
+
+    const nowTs = new Date();
+    const startOfToday = new Date(Date.UTC(nowTs.getUTCFullYear(), nowTs.getUTCMonth(), nowTs.getUTCDate(), 0, 0, 0, 0));
+    const sevenDaysAgo  = new Date(nowTs.getTime() - 7  * 24 * 60 * 60 * 1000);
+    const thirtyDaysAgo = new Date(nowTs.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    const dailyCount   = countTrx(orders, basataTransactions, startOfToday);
+    const weeklyCount  = countTrx(orders, basataTransactions, sevenDaysAgo);
+    const monthlyCount = countTrx(orders, basataTransactions, thirtyDaysAgo);
 
     // --- MONTHLY TRENDS & BASKET SIZE (Always 6 Months Back) ---
     const sixMonthsAgo = new Date();
@@ -607,9 +655,7 @@ export default function AnalyticsTab() {
       topProductsData, topCategoriesData, allPickedUp, allOrdersInRange,
       monthlyTrendsData, genderData, genderMap, matchedPhonesCount,
       genderPurchasesData, genderCategoryChartData,
-      dailyCount: isAdminAccount ? getTransactionCount(86400000) : 0,
-      weeklyCount: isAdminAccount ? getTransactionCount(86400000 * 7) : 0,
-      monthlyCount: isAdminAccount ? getTransactionCount(86400000 * 30) : 0
+      totalTransactions, dailyCount, weeklyCount, monthlyCount
     };
   }, [orders, bostaOrders, basataTransactions, callLogs, customerReturns, selectedOutlet, startDate, endDate, isAdminAccount, language, calculatePenalty, insightsSource, customers, jumiaVolumeFilter]);
 
@@ -628,7 +674,7 @@ export default function AnalyticsTab() {
     topProductsData, topCategoriesData, allPickedUp, allOrdersInRange,
     monthlyTrendsData, genderData, genderMap, matchedPhonesCount,
     genderPurchasesData, genderCategoryChartData,
-    dailyCount, weeklyCount, monthlyCount
+    totalTransactions, dailyCount, weeklyCount, monthlyCount
   } = stats;
 
   const getCashByOutlet = (list) => {

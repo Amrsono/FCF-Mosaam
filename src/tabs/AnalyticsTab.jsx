@@ -98,9 +98,10 @@ export default function AnalyticsTab() {
   const { t, language } = useLanguage();
   
   const formatDate = (date) => {
-    const options = { timeZone: 'Africa/Cairo', year: 'numeric', month: '2-digit', day: '2-digit' };
-    const formatter = new Intl.DateTimeFormat('en-CA', options);
-    return formatter.format(date); // en-CA gives YYYY-MM-DD
+    const y = date.getUTCFullYear();
+    const m = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const d = String(date.getUTCDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
   };
 
   const f = globalFilters.analytics;
@@ -165,18 +166,14 @@ export default function AnalyticsTab() {
     { label: t('value'), accessor: 'value' }
   ];
 
-  // Time boundary
-  // Time boundary - Parse YYYY-MM-DD as Egypt Local
+  // Time boundary - Parse YYYY-MM-DD as UTC to match database timestamps
   const parseEgyptDate = (dateStr, setToEnd) => {
-    if (!dateStr) return setToEnd ? new Date(2100, 0, 1) : new Date(2000, 0, 1);
+    if (!dateStr) return setToEnd ? new Date(Date.UTC(2100, 0, 1)) : new Date(Date.UTC(2000, 0, 1));
     const [y, m, d] = dateStr.split('-').map(Number);
-    const date = new Date(y, m - 1, d);
     if (setToEnd) {
-      date.setHours(23, 59, 59, 999);
-    } else {
-      date.setHours(0, 0, 0, 0);
+      return new Date(Date.UTC(y, m - 1, d, 23, 59, 59, 999));
     }
-    return date;
+    return new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0));
   };
 
   const startLimit = parseEgyptDate(startDate, false);
@@ -614,7 +611,7 @@ export default function AnalyticsTab() {
       weeklyCount: isAdminAccount ? getTransactionCount(86400000 * 7) : 0,
       monthlyCount: isAdminAccount ? getTransactionCount(86400000 * 30) : 0
     };
-  }, [orders, bostaOrders, basataTransactions, callLogs, customerReturns, selectedOutlet, startDate, endDate, isAdminAccount, language, calculatePenalty, insightsSource, customers]);
+  }, [orders, bostaOrders, basataTransactions, callLogs, customerReturns, selectedOutlet, startDate, endDate, isAdminAccount, language, calculatePenalty, insightsSource, customers, jumiaVolumeFilter]);
 
   const {
     jumiaPickedUp, jumiaInventory, jumiaReceived, stdReturned, jumiaReturned, jumiaCancelled, jumiaProfit,

@@ -44,8 +44,8 @@ export const DashboardProvider = ({ children }) => {
       },
       analytics: {
         outlet: 'All',
-        dateStart: new Date().toISOString().split('T')[0],
-        dateEnd: new Date().toISOString().split('T')[0],
+        dateStart: (() => { const n = new Date(); return `${n.getUTCFullYear()}-${String(n.getUTCMonth()+1).padStart(2,'0')}-${String(n.getUTCDate()).padStart(2,'0')}`; })(),
+        dateEnd: (() => { const n = new Date(); return `${n.getUTCFullYear()}-${String(n.getUTCMonth()+1).padStart(2,'0')}-${String(n.getUTCDate()).padStart(2,'0')}`; })(),
         timeframe: 'daily'
       },
       sla: {

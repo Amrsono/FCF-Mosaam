@@ -411,43 +411,8 @@ export default function AnalyticsTab() {
       return false;
     }).length;
     const basataTrxInRange = activeBasata.length; // already filtered by isInRange + matchesOutlet
-    const totalTransactions = jTrxInRange + bTrxInRange + basataTrxInRange;
-
-    // --- ADMIN TRANSACTION COUNTERS (fixed rolling windows, respect outlet filter) ---
-    const countTrx = (orderList, basataList, windowStart) => {
-      const jCount = orderList.filter(o => {
-        if (!matchesOutlet(o)) return false;
-        const relevant =
-          (o.status === 'Picked Up'  && o.pickedUpAt  && new Date(o.pickedUpAt)  >= windowStart) ||
-          (o.status === 'Returned'   && o.returnedAt  && new Date(o.returnedAt)  >= windowStart) ||
-          (o.status === 'Cancelled'  && o.returnedAt  && new Date(o.returnedAt)  >= windowStart) ||
-          (o.status === 'Inventory'  && o.receivedAt  && new Date(o.receivedAt)  >= windowStart);
-        return relevant;
-      }).length;
-      const bCount = bostaOrders.filter(o => {
-        if (!matchesOutlet(o)) return false;
-        const relevant =
-          (o.status === 'Picked Up'  && o.pickedUpAt  && new Date(o.pickedUpAt)  >= windowStart) ||
-          (o.status === 'Returned'   && o.returnedAt  && new Date(o.returnedAt)  >= windowStart) ||
-          (o.status === 'Cancelled'  && o.returnedAt  && new Date(o.returnedAt)  >= windowStart) ||
-          (o.status === 'Inventory'  && o.receivedAt  && new Date(o.receivedAt)  >= windowStart);
-        return relevant;
-      }).length;
-      const basCount = basataList.filter(t => {
-        if (!matchesOutlet(t)) return false;
-        return t.performedAt && new Date(t.performedAt) >= windowStart;
-      }).length;
-      return jCount + bCount + basCount;
-    };
-
-    const nowTs = new Date();
-    const startOfToday = new Date(Date.UTC(nowTs.getUTCFullYear(), nowTs.getUTCMonth(), nowTs.getUTCDate(), 0, 0, 0, 0));
-    const sevenDaysAgo  = new Date(nowTs.getTime() - 7  * 24 * 60 * 60 * 1000);
-    const thirtyDaysAgo = new Date(nowTs.getTime() - 30 * 24 * 60 * 60 * 1000);
-
-    const dailyCount   = countTrx(orders, basataTransactions, startOfToday);
-    const weeklyCount  = countTrx(orders, basataTransactions, sevenDaysAgo);
-    const monthlyCount = countTrx(orders, basataTransactions, thirtyDaysAgo);
+    const ordersTrxInRange = jTrxInRange + bTrxInRange;
+    const totalTransactions = ordersTrxInRange + basataTrxInRange;
 
     // --- MONTHLY TRENDS & BASKET SIZE (Always 6 Months Back) ---
     const sixMonthsAgo = new Date();
@@ -655,7 +620,7 @@ export default function AnalyticsTab() {
       topProductsData, topCategoriesData, allPickedUp, allOrdersInRange,
       monthlyTrendsData, genderData, genderMap, matchedPhonesCount,
       genderPurchasesData, genderCategoryChartData,
-      totalTransactions, dailyCount, weeklyCount, monthlyCount
+      totalTransactions, ordersTrxInRange, basataTrxInRange
     };
   }, [orders, bostaOrders, basataTransactions, callLogs, customerReturns, selectedOutlet, startDate, endDate, isAdminAccount, language, calculatePenalty, insightsSource, customers, jumiaVolumeFilter]);
 
@@ -674,7 +639,7 @@ export default function AnalyticsTab() {
     topProductsData, topCategoriesData, allPickedUp, allOrdersInRange,
     monthlyTrendsData, genderData, genderMap, matchedPhonesCount,
     genderPurchasesData, genderCategoryChartData,
-    totalTransactions, dailyCount, weeklyCount, monthlyCount
+    totalTransactions, ordersTrxInRange, basataTrxInRange
   } = stats;
 
   const getCashByOutlet = (list) => {
@@ -1480,6 +1445,7 @@ export default function AnalyticsTab() {
             <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700 }}>{t('transactionCounters')}</h3>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+            {/* Card 1: Total transactions in selected period */}
             <div className="glass-panel" style={{ 
               background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.03))',
               border: '1px solid rgba(34, 197, 94, 0.2)',
@@ -1492,14 +1458,20 @@ export default function AnalyticsTab() {
             }}>
               <div style={{ position: 'absolute', top: '-10px', right: '-10px', width: '80px', height: '80px', background: 'rgba(34, 197, 94, 0.05)', borderRadius: '50%', filter: 'blur(20px)' }} />
               <div style={{ position: 'relative', zIndex: 1 }}>
-                <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.6rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t('dailyTransactions')}</div>
-                <div style={{ fontSize: '2.8rem', fontWeight: 900, color: 'var(--text-primary)', lineHeight: 1 }}>{dailyCount.toLocaleString()}</div>
+                <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.6rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  {language === 'ar' ? 'إجمالي المعاملات في الفترة' : 'Total in Period'}
+                </div>
+                <div style={{ fontSize: '2.8rem', fontWeight: 900, color: 'var(--text-primary)', lineHeight: 1 }}>{totalTransactions.toLocaleString()}</div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
+                  {language === 'ar' ? 'جميع المصادر' : 'All sources (Jumia + Bosta + Basata)'}
+                </div>
               </div>
               <div style={{ background: 'rgba(34, 197, 94, 0.15)', padding: '1rem', borderRadius: '1.25rem', display: 'flex', position: 'relative', zIndex: 1 }}>
                 <Zap size={32} color="#22c55e" strokeWidth={2.5} />
               </div>
             </div>
             
+            {/* Card 2: Orders (Jumia + Bosta) in selected period */}
             <div className="glass-panel" style={{ 
               background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(99, 102, 241, 0.03))',
               border: '1px solid rgba(99, 102, 241, 0.2)',
@@ -1512,14 +1484,20 @@ export default function AnalyticsTab() {
             }}>
               <div style={{ position: 'absolute', top: '-10px', right: '-10px', width: '80px', height: '80px', background: 'rgba(99, 102, 241, 0.05)', borderRadius: '50%', filter: 'blur(20px)' }} />
               <div style={{ position: 'relative', zIndex: 1 }}>
-                <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.6rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t('weeklyTransactions')}</div>
-                <div style={{ fontSize: '2.8rem', fontWeight: 900, color: 'var(--text-primary)', lineHeight: 1 }}>{weeklyCount.toLocaleString()}</div>
+                <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.6rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  {language === 'ar' ? 'طلبات الشحن (جوميا + بوسطة)' : 'Orders (Jumia + Bosta)'}
+                </div>
+                <div style={{ fontSize: '2.8rem', fontWeight: 900, color: 'var(--text-primary)', lineHeight: 1 }}>{ordersTrxInRange.toLocaleString()}</div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
+                  {language === 'ar' ? 'مخزن + استلام + مرتجع + ملغي' : 'Inventory + Picked Up + Returned + Cancelled'}
+                </div>
               </div>
               <div style={{ background: 'rgba(99, 102, 241, 0.15)', padding: '1rem', borderRadius: '1.25rem', display: 'flex', position: 'relative', zIndex: 1 }}>
                 <BarChart2 size={32} color="#6366f1" strokeWidth={2.5} />
               </div>
             </div>
 
+            {/* Card 3: Basata transactions in selected period */}
             <div className="glass-panel" style={{ 
               background: 'linear-gradient(135deg, rgba(249, 115, 22, 0.15), rgba(249, 115, 22, 0.03))',
               border: '1px solid rgba(249, 115, 22, 0.2)',
@@ -1532,8 +1510,13 @@ export default function AnalyticsTab() {
             }}>
               <div style={{ position: 'absolute', top: '-10px', right: '-10px', width: '80px', height: '80px', background: 'rgba(249, 115, 22, 0.05)', borderRadius: '50%', filter: 'blur(20px)' }} />
               <div style={{ position: 'relative', zIndex: 1 }}>
-                <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.6rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t('monthlyTransactions')}</div>
-                <div style={{ fontSize: '2.8rem', fontWeight: 900, color: 'var(--text-primary)', lineHeight: 1 }}>{monthlyCount.toLocaleString()}</div>
+                <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.6rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  {language === 'ar' ? 'معاملات بساطة' : 'Basata Transactions'}
+                </div>
+                <div style={{ fontSize: '2.8rem', fontWeight: 900, color: 'var(--text-primary)', lineHeight: 1 }}>{basataTrxInRange.toLocaleString()}</div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
+                  {language === 'ar' ? 'خدمات بساطة في الفترة المحددة' : 'Basata services in selected period'}
+                </div>
               </div>
               <div style={{ background: 'rgba(249, 115, 22, 0.15)', padding: '1rem', borderRadius: '1.25rem', display: 'flex', position: 'relative', zIndex: 1 }}>
                 <TrendingUp size={32} color="#f97316" strokeWidth={2.5} />

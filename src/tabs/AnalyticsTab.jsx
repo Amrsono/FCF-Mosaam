@@ -158,7 +158,7 @@ export default function AnalyticsTab() {
     return options;
   };
 
-  const isAdminAccount = user?.username === 'admin';
+  const isAdminAccount = user?.username?.toLowerCase() === 'admin' || user?.username?.toLowerCase() === 'ezz';
 
   const exportHeaders = [
     { label: t('stream'), accessor: 'group' },

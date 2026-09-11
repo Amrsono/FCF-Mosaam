@@ -1472,7 +1472,7 @@ export default function AnalyticsTab() {
               </div>
             </div>
             
-            {/* Card 2: Orders (Jumia + Bosta) in selected period */}
+            {/* Card 2: Orders (Jumia + Bosta + Customers) in selected period */}
             <div className="glass-panel" style={{ 
               background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(99, 102, 241, 0.03))',
               border: '1px solid rgba(99, 102, 241, 0.2)',
@@ -1486,11 +1486,11 @@ export default function AnalyticsTab() {
               <div style={{ position: 'absolute', top: '-10px', right: '-10px', width: '80px', height: '80px', background: 'rgba(99, 102, 241, 0.05)', borderRadius: '50%', filter: 'blur(20px)' }} />
               <div style={{ position: 'relative', zIndex: 1 }}>
                 <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.6rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  {language === 'ar' ? 'طلبات الشحن (جوميا + بوسطة)' : 'Orders (Jumia + Bosta)'}
+                  {language === 'ar' ? 'طلبات الشحن والعملاء (جوميا + بوسطة + العملاء)' : 'Orders (Jumia + Bosta + Customers Added)'}
                 </div>
-                <div style={{ fontSize: '2.8rem', fontWeight: 900, color: 'var(--text-primary)', lineHeight: 1 }}>{ordersTrxInRange.toLocaleString()}</div>
+                <div style={{ fontSize: '2.8rem', fontWeight: 900, color: 'var(--text-primary)', lineHeight: 1 }}>{(ordersTrxInRange + customersTrxInRange).toLocaleString()}</div>
                 <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
-                  {language === 'ar' ? 'مخزن + استلام + مرتجع + ملغي' : 'Inventory + Picked Up + Returned + Cancelled'}
+                  {language === 'ar' ? 'مخزن + استلام + مرتجع + ملغي + العملاء' : 'Inventory + Picked Up + Returned + Cancelled + Customers'}
                 </div>
               </div>
               <div style={{ background: 'rgba(99, 102, 241, 0.15)', padding: '1rem', borderRadius: '1.25rem', display: 'flex', position: 'relative', zIndex: 1 }}>

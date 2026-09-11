@@ -26,3 +26,5 @@ dist-ssr
 /src/generated/prisma
 
 .vercel
+
+scratch/

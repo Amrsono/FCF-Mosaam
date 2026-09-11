@@ -1,5 +1,5 @@
 import React from 'react';
-import { Package, Zap, BarChart2, Shield, Phone, ArrowRight, Truck, LayoutDashboard } from 'lucide-react';
+import { Package, Zap, BarChart2, Shield, Phone, ArrowRight, Truck, LayoutDashboard, CreditCard } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 
@@ -58,6 +58,16 @@ export default function LandingPage({ onSelectService }) {
       tab: 'calls'
     },
     ...(user?.role === 'admin' ? [
+      ...(user?.username?.toLowerCase() === 'admin' ? [
+        {
+          id: 'recharge',
+          title: t('rechargeApprovals'),
+          desc: t('rechargeApprovalsDesc'),
+          icon: <CreditCard size={24} color="#38bdf8" />,
+          gradient: 'linear-gradient(135deg, #0284c7, #0369a1)',
+          tab: 'recharge_approvals'
+        }
+      ] : []),
       {
         id: 'analytics',
         title: t('analytics'),

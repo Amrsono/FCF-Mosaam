@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldAlert, Check } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function AdminRechargeApproval() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(false);
   const { t, language } = useLanguage();
+  const { user } = useAuth();
   const isRtl = language === 'ar';
+  const isAdmin = user?.username?.toLowerCase() === 'admin';
 
   const fetchRequests = async () => {
+    if (!isAdmin) return;
     try {
       const token = localStorage.getItem('fcf_token');
       if (!token) return;
@@ -25,10 +29,18 @@ export default function AdminRechargeApproval() {
   };
 
   useEffect(() => {
+    if (!isAdmin) return;
     fetchRequests();
+    const handleUpdate = () => {
+      fetchRequests();
+    };
+    window.addEventListener('recharge-updated', handleUpdate);
     // Poll every 30 seconds for pending requests
     const interval = setInterval(fetchRequests, 30000);
-    return () => clearInterval(interval);
+    return () => {
+      window.removeEventListener('recharge-updated', handleUpdate);
+      clearInterval(interval);
+    };
   }, []);
 
   const handleApprove = async (id) => {
@@ -46,6 +58,7 @@ export default function AdminRechargeApproval() {
       if (res.ok) {
         // Remove from list
         setRequests(prev => prev.filter(req => req.id !== id));
+        window.dispatchEvent(new Event('recharge-updated'));
       } else {
         alert('Failed to approve request');
       }
@@ -57,7 +70,7 @@ export default function AdminRechargeApproval() {
     }
   };
 
-  if (requests.length === 0) return null;
+  if (!isAdmin || requests.length === 0) return null;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem', width: '100%' }}>

@@ -40,24 +40,33 @@ export default async function handler(req, res) {
       return res.status(201).json({ success: true, request });
     }
 
-    // GET /api/recharge (List pending for Admin)
+    // GET /api/recharge (List requests for Admin)
     if (req.method === 'GET') {
-      if (!user || (user.username !== 'admin' && user.role !== 'admin')) {
-        return res.status(403).json({ error: 'Forbidden' });
+      if (!user || user.username?.toLowerCase() !== 'admin') {
+        return res.status(403).json({ error: 'Forbidden. Admin access required.' });
       }
 
-      const pendingRequests = await prisma.rechargeRequest.findMany({
-        where: { status: 'pending' },
-        orderBy: { createdAt: 'desc' }
-      });
+      const { all } = Object.fromEntries(url.searchParams);
+      const whereClause = all === 'true' ? {} : { status: 'pending' };
 
-      return res.status(200).json({ requests: pendingRequests });
+      const [requests, pendingCount, allCount] = await Promise.all([
+        prisma.rechargeRequest.findMany({
+          where: whereClause,
+          orderBy: { createdAt: 'desc' }
+        }),
+        prisma.rechargeRequest.count({
+          where: { status: 'pending' }
+        }),
+        prisma.rechargeRequest.count()
+      ]);
+
+      return res.status(200).json({ requests, pendingCount, allCount });
     }
 
-    // PUT /api/recharge/approve
-    if (req.method === 'PUT' && url.pathname.includes('/approve')) {
-      if (!user || (user.username !== 'admin' && user.role !== 'admin')) {
-        return res.status(403).json({ error: 'Forbidden' });
+    // PUT /api/recharge/approve or /api/recharge/reject
+    if (req.method === 'PUT') {
+      if (!user || user.username?.toLowerCase() !== 'admin') {
+        return res.status(403).json({ error: 'Forbidden. Admin access required.' });
       }
 
       const raw = req.body;
@@ -68,40 +77,50 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Request ID is required.' });
       }
 
-      // Start transaction to approve and increment limit
-      const result = await prisma.$transaction(async (tx) => {
-        const reqRecord = await tx.rechargeRequest.findUnique({ where: { id } });
-        if (!reqRecord || reqRecord.status !== 'pending') {
-          throw new Error('Request not found or not pending.');
-        }
-
-        // Update request status
-        const updatedReq = await tx.rechargeRequest.update({
+      if (url.pathname.includes('/reject')) {
+        const updatedReq = await prisma.rechargeRequest.update({
           where: { id },
-          data: { status: 'approved' }
+          data: { status: 'rejected' }
+        });
+        return res.status(200).json({ success: true, request: updatedReq });
+      }
+
+      if (url.pathname.includes('/approve') || !url.pathname.includes('/reject')) {
+        // Start transaction to approve and increment limit
+        const result = await prisma.$transaction(async (tx) => {
+          const reqRecord = await tx.rechargeRequest.findUnique({ where: { id } });
+          if (!reqRecord || reqRecord.status !== 'pending') {
+            throw new Error('Request not found or not pending.');
+          }
+
+          // Update request status
+          const updatedReq = await tx.rechargeRequest.update({
+            where: { id },
+            data: { status: 'approved' }
+          });
+
+          // Update limit
+          let limitSetting = await tx.systemSettings.findUnique({
+            where: { key: 'TRANSACTION_LIMIT' }
+          });
+
+          if (!limitSetting) {
+            limitSetting = await tx.systemSettings.create({
+              data: { key: 'TRANSACTION_LIMIT', value: updatedReq.amount.toString() }
+            });
+          } else {
+            const currentLimit = parseInt(limitSetting.value, 10) || 0;
+            await tx.systemSettings.update({
+              where: { key: 'TRANSACTION_LIMIT' },
+              data: { value: (currentLimit + updatedReq.amount).toString() }
+            });
+          }
+
+          return updatedReq;
         });
 
-        // Update limit
-        let limitSetting = await tx.systemSettings.findUnique({
-          where: { key: 'TRANSACTION_LIMIT' }
-        });
-
-        if (!limitSetting) {
-          limitSetting = await tx.systemSettings.create({
-            data: { key: 'TRANSACTION_LIMIT', value: updatedReq.amount.toString() }
-          });
-        } else {
-          const currentLimit = parseInt(limitSetting.value, 10) || 0;
-          await tx.systemSettings.update({
-            where: { key: 'TRANSACTION_LIMIT' },
-            data: { value: (currentLimit + updatedReq.amount).toString() }
-          });
-        }
-
-        return updatedReq;
-      });
-
-      return res.status(200).json({ success: true, request: result });
+        return res.status(200).json({ success: true, request: result });
+      }
     }
 
     return res.status(404).json({ error: 'Not Found' });

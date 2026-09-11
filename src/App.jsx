@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DashboardProvider } from './context/DashboardContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { Package, Users, Clock, AlertTriangle, BarChart2, LayoutDashboard, Zap, LogOut, Shield, Menu, X, Phone, Gift, Truck, MapPin } from 'lucide-react';
+import { Package, Users, Clock, AlertTriangle, BarChart2, LayoutDashboard, Zap, LogOut, Shield, Menu, X, Phone, Gift, Truck, MapPin, CreditCard } from 'lucide-react';
 import OrdersTab from './tabs/OrdersTab';
 import CustomersTab from './tabs/CustomersTab';
 import SLATab from './tabs/SLATab';
@@ -14,6 +14,7 @@ import LogsTab from './tabs/LogsTab';
 import CallsLogTab from './tabs/CallsLogTab';
 import DiscountsTab from './tabs/DiscountsTab';
 import ImtidadTab from './tabs/ImtidadTab';
+import RechargeApprovalsTab from './tabs/RechargeApprovalsTab';
 import LoginPage from './pages/LoginPage';
 import LandingPage from './pages/LandingPage';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -27,9 +28,40 @@ function AppContent() {
   const [activeTab, setActiveTab] = useState('orders');
   const [currentService, setCurrentService] = useState('home');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [pendingRechargesCount, setPendingRechargesCount] = useState(0);
   const { user, logout, isLoading } = useAuth();
   const { t, language, toggleLanguage } = useLanguage();
   const { theme, toggleTheme } = useTheme();
+
+  // Fetch pending recharges for badge count (Admin username only)
+  useEffect(() => {
+    if (user?.username?.toLowerCase() !== 'admin') return;
+
+    const fetchCount = async () => {
+      try {
+        const token = localStorage.getItem('fcf_token');
+        if (!token) return;
+        const res = await fetch('/api/recharge', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setPendingRechargesCount(data.pendingCount !== undefined ? data.pendingCount : (data.requests?.length || 0));
+        }
+      } catch (err) {
+        // silent catch
+      }
+    };
+
+    fetchCount();
+    window.addEventListener('recharge-updated', fetchCount);
+    const interval = setInterval(fetchCount, 30000);
+
+    return () => {
+      window.removeEventListener('recharge-updated', fetchCount);
+      clearInterval(interval);
+    };
+  }, [user]);
 
   if (isLoading) {
     return (
@@ -43,6 +75,8 @@ function AppContent() {
 
   if (!user) return <LoginPage />;
 
+  const isSuperAdmin = user?.username?.toLowerCase() === 'admin';
+
   const allTabs = [
     { id: 'orders',    label: t('inventory'), icon: <Package size={20} />, service: 'jumia' },
     { id: 'customers', label: t('customers'), icon: <Users size={20} />, service: 'jumia' },
@@ -54,6 +88,9 @@ function AppContent() {
     { id: 'calls',     label: t('callsLog'),  icon: <Phone size={20} />, service: 'admin' },
     ...(user?.role === 'admin' ? [
       { id: 'imtidad_shipping', label: language === 'ar' ? 'شحن امتداد C2C' : 'Imtidad C2C Shipping', icon: <Truck size={20} />, service: 'imtidad' },
+      ...(isSuperAdmin ? [
+        { id: 'recharge_approvals', label: t('rechargeApprovals'), icon: <CreditCard size={20} />, service: 'admin', badge: pendingRechargesCount }
+      ] : []),
       { id: 'analytics', label: t('analytics'), icon: <BarChart2 size={20} />, service: 'admin' },
       { id: 'discounts', label: language === 'ar' ? 'أكواد الخصم' : 'Discounts', icon: <Gift size={20} />, service: 'admin' },
       { id: 'logs', label: t('logs'), icon: <Shield size={20} />, service: 'admin' }
@@ -81,7 +118,7 @@ function AppContent() {
         </header>
 
         <section className="content-area">
-          {user?.role === 'admin' && <AdminRechargeApproval />}
+          {isSuperAdmin && <AdminRechargeApproval />}
           {currentService === 'home' ? (
             <LandingPage onSelectService={handleSelectService} />
           ) : (
@@ -94,6 +131,7 @@ function AppContent() {
               {activeTab === 'bosta'     && <BostaTab />}
               {activeTab === 'returned'  && <ReturnedTab />}
               {activeTab === 'calls'     && <CallsLogTab />}
+              {activeTab === 'recharge_approvals' && isSuperAdmin && <RechargeApprovalsTab />}
               {activeTab === 'analytics' && user?.role === 'admin' && <AnalyticsTab />}
               {activeTab === 'discounts' && user?.role === 'admin' && <DiscountsTab />}
               {activeTab === 'logs'      && user?.role === 'admin' && <LogsTab />}
@@ -167,10 +205,32 @@ function AppContent() {
                 setActiveTab(tab.id);
                 setIsMobileMenuOpen(false);
               }}
-              style={{ background: activeTab === tab.id ? undefined : 'transparent', border: activeTab === tab.id ? undefined : 'none', textAlign: language === 'ar' ? 'right' : 'left', width: '100%' }}
+              style={{ 
+                background: activeTab === tab.id ? undefined : 'transparent', 
+                border: activeTab === tab.id ? undefined : 'none', 
+                textAlign: language === 'ar' ? 'right' : 'left', 
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem'
+              }}
             >
               {tab.icon}
-              {tab.label}
+              <span style={{ flex: 1 }}>{tab.label}</span>
+              {Boolean(tab.badge && tab.badge > 0) && (
+                <span style={{
+                  background: '#ef4444',
+                  color: 'white',
+                  fontSize: '0.72rem',
+                  fontWeight: 800,
+                  padding: '0.15rem 0.5rem',
+                  borderRadius: '999px',
+                  boxShadow: '0 2px 5px rgba(239,68,68,0.4)',
+                  lineHeight: 1.2
+                }}>
+                  {tab.badge}
+                </span>
+              )}
             </button>
           ))}
         </nav>

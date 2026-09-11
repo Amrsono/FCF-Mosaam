@@ -947,15 +947,15 @@ export default function AnalyticsTab() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
           <div style={{ flex: '1 1 300px' }}>
             <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem' }}>
-              <Activity size={14} /> {language === 'ar' ? 'إجمالي أرباح المحطة الصافية' : 'Total Net Station Profit'}
+              <Activity size={14} /> {language === 'ar' ? 'إجمالي الأموال المتداولة (الكل)' : 'Total Cash Processed (Gross)'}
             </div>
             <div style={{ fontSize: 'clamp(2.5rem, 10vw, 3.5rem)', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>
-              {grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {grandTotalVolume.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               <span style={{ fontSize: '0.4em', color: 'var(--text-muted)', [language === 'ar' ? 'marginRight' : 'marginLeft']: '0.5rem' }}>EGP</span>
             </div>
             <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.5rem' }}>
-              {language === 'ar' ? 'إجمالي الأموال المتداولة (الكل): ' : 'Total Cash Processed (Gross): '}
-              <strong style={{ color: 'var(--text-secondary)' }}>{grandTotalVolume.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP</strong>
+              {language === 'ar' ? 'إجمالي أرباح المحطة الصافية: ' : 'Total Net Station Profit: '}
+              <strong style={{ color: 'var(--text-secondary)' }}>{grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP</strong>
             </div>
           </div>
           <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', flex: '1 1 auto' }}>

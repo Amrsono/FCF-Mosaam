@@ -1550,7 +1550,6 @@ export default function AnalyticsTab() {
               </div>
             </div>
           </div>
-          </div>
         </div>
       )}
 

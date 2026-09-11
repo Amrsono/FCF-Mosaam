@@ -1486,7 +1486,7 @@ export default function AnalyticsTab() {
               <div style={{ position: 'absolute', top: '-10px', right: '-10px', width: '80px', height: '80px', background: 'rgba(99, 102, 241, 0.05)', borderRadius: '50%', filter: 'blur(20px)' }} />
               <div style={{ position: 'relative', zIndex: 1 }}>
                 <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.6rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  {language === 'ar' ? 'طلبات الشحن والعملاء (جوميا + بوسطة + العملاء)' : 'Orders (Jumia + Bosta + Customers Added)'}
+                  {language === 'ar' ? 'طلبات الشحن (جوميا + بوسطة)' : 'Orders (Jumia + Bosta )'}
                 </div>
                 <div style={{ fontSize: '2.8rem', fontWeight: 900, color: 'var(--text-primary)', lineHeight: 1 }}>{(ordersTrxInRange + customersTrxInRange).toLocaleString()}</div>
                 <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>

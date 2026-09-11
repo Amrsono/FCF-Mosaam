@@ -411,8 +411,9 @@ export default function AnalyticsTab() {
       return false;
     }).length;
     const basataTrxInRange = activeBasata.length; // already filtered by isInRange + matchesOutlet
+    const customersTrxInRange = (customers || []).filter(c => isInRange(c.createdAt)).length;
     const ordersTrxInRange = jTrxInRange + bTrxInRange;
-    const totalTransactions = ordersTrxInRange + basataTrxInRange;
+    const totalTransactions = ordersTrxInRange + basataTrxInRange + customersTrxInRange;
 
     // --- MONTHLY TRENDS & BASKET SIZE (Always 6 Months Back) ---
     const sixMonthsAgo = new Date();
@@ -620,7 +621,7 @@ export default function AnalyticsTab() {
       topProductsData, topCategoriesData, allPickedUp, allOrdersInRange,
       monthlyTrendsData, genderData, genderMap, matchedPhonesCount,
       genderPurchasesData, genderCategoryChartData,
-      totalTransactions, ordersTrxInRange, basataTrxInRange
+      totalTransactions, ordersTrxInRange, basataTrxInRange, customersTrxInRange
     };
   }, [orders, bostaOrders, basataTransactions, callLogs, customerReturns, selectedOutlet, startDate, endDate, isAdminAccount, language, calculatePenalty, insightsSource, customers, jumiaVolumeFilter]);
 
@@ -639,7 +640,7 @@ export default function AnalyticsTab() {
     topProductsData, topCategoriesData, allPickedUp, allOrdersInRange,
     monthlyTrendsData, genderData, genderMap, matchedPhonesCount,
     genderPurchasesData, genderCategoryChartData,
-    totalTransactions, ordersTrxInRange, basataTrxInRange
+    totalTransactions, ordersTrxInRange, basataTrxInRange, customersTrxInRange
   } = stats;
 
   const getCashByOutlet = (list) => {
@@ -1463,7 +1464,7 @@ export default function AnalyticsTab() {
                 </div>
                 <div style={{ fontSize: '2.8rem', fontWeight: 900, color: 'var(--text-primary)', lineHeight: 1 }}>{totalTransactions.toLocaleString()}</div>
                 <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
-                  {language === 'ar' ? 'جميع المصادر' : 'All sources (Jumia + Bosta + Basata)'}
+                  {language === 'ar' ? 'جميع المصادر (جوميا + بوسطة + بساطة + العملاء)' : 'All sources (Jumia + Bosta + Basata + Customers)'}
                 </div>
               </div>
               <div style={{ background: 'rgba(34, 197, 94, 0.15)', padding: '1rem', borderRadius: '1.25rem', display: 'flex', position: 'relative', zIndex: 1 }}>
@@ -1522,6 +1523,33 @@ export default function AnalyticsTab() {
                 <TrendingUp size={32} color="#f97316" strokeWidth={2.5} />
               </div>
             </div>
+
+            {/* Card 4: Customers added in selected period */}
+            <div className="glass-panel" style={{ 
+              background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(168, 85, 247, 0.03))',
+              border: '1px solid rgba(168, 85, 247, 0.2)',
+              padding: '1.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              position: 'relative',
+              overflow: 'hidden'
+            }}>
+              <div style={{ position: 'absolute', top: '-10px', right: '-10px', width: '80px', height: '80px', background: 'rgba(168, 85, 247, 0.05)', borderRadius: '50%', filter: 'blur(20px)' }} />
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.6rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  {language === 'ar' ? 'العملاء المسجلين' : 'Customers Added'}
+                </div>
+                <div style={{ fontSize: '2.8rem', fontWeight: 900, color: 'var(--text-primary)', lineHeight: 1 }}>{customersTrxInRange.toLocaleString()}</div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
+                  {language === 'ar' ? 'إضافة عميل = 1 معاملة' : '1 Customer = 1 Transaction'}
+                </div>
+              </div>
+              <div style={{ background: 'rgba(168, 85, 247, 0.15)', padding: '1rem', borderRadius: '1.25rem', display: 'flex', position: 'relative', zIndex: 1 }}>
+                <Users size={32} color="#a855f7" strokeWidth={2.5} />
+              </div>
+            </div>
+          </div>
           </div>
         </div>
       )}

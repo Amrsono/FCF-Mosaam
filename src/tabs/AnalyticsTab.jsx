@@ -1490,7 +1490,7 @@ export default function AnalyticsTab() {
                 </div>
                 <div style={{ fontSize: '2.8rem', fontWeight: 900, color: 'var(--text-primary)', lineHeight: 1 }}>{(ordersTrxInRange + customersTrxInRange).toLocaleString()}</div>
                 <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
-                  {language === 'ar' ? 'مخزن + استلام + مرتجع + ملغي + العملاء' : 'Inventory + Picked Up + Returned + Cancelled + Customers'}
+                  {language === 'ar' ? 'مخزن + استلام + مرتجع + ملغي' : 'Inventory + Picked Up + Returned + Cancelled '}
                 </div>
               </div>
               <div style={{ background: 'rgba(99, 102, 241, 0.15)', padding: '1rem', borderRadius: '1.25rem', display: 'flex', position: 'relative', zIndex: 1 }}>

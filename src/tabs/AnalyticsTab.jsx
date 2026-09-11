@@ -724,7 +724,7 @@ export default function AnalyticsTab() {
           </span>
         )}
       </div>
-      <div style={{ fontSize: '1.8rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1 }}>{value}</div>
+      <div style={{ fontSize: typeof value === 'string' && value.length > 15 ? '1.25rem' : '1.8rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.2 }}>{value}</div>
       {sub && <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{sub}</div>}
     </div>
   );
@@ -979,7 +979,7 @@ export default function AnalyticsTab() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
         <MetricCard title={`${t('jumia')} ${language === 'ar' ? 'الأرباح' : 'Profit'}`} value={`${jumiaProfit.toLocaleString()} EGP`} icon={<DollarSign size={14} />} color={CHART_COLORS.jumia} sub={language === 'ar' ? `${jumiaPickedUp.length} طلب استلام عميل` : `${jumiaPickedUp.length} customer pick ups`} />
         <MetricCard title={`${t('bosta')} ${language === 'ar' ? 'الأرباح' : 'Profit'}`} value={`${bostaProfit.toLocaleString()} EGP`} icon={<DollarSign size={14} />} color={CHART_COLORS.bosta} sub={language === 'ar' ? `${bostaPickedUp.length} طلب مستلم` : `${bostaPickedUp.length} orders picked up`} />
-        <MetricCard title={`${t('basata')} ${language === 'ar' ? 'الأرباح' : 'Net Profit'}`} value={`${basataProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP`} icon={<Zap size={14} />} color={CHART_COLORS.basata} sub={language === 'ar' ? `${activeBasata.length} عملية (حجم: ${basataVolume.toLocaleString()} EGP)` : `${activeBasata.length} txs (Vol: ${basataVolume.toLocaleString()} EGP)`} />
+        <MetricCard title={t('basata')} value={language === 'ar' ? `${activeBasata.length} عملية (حجم: ${basataVolume.toLocaleString()} EGP)` : `${activeBasata.length} txs (Vol: ${basataVolume.toLocaleString()} EGP)`} icon={<Zap size={14} />} color={CHART_COLORS.basata} sub={language === 'ar' ? `صافي الأرباح: ${basataProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP` : `Net Profit: ${basataProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} EGP`} />
         <MetricCard title={t('parkedPenalties')} value={`${activePenalties} EGP`} icon={<AlertOctagon size={14} />} color={CHART_COLORS.warning} sub={language === 'ar' ? `${jumiaInventory.length} طلب مخزن` : `${jumiaInventory.length} parked orders`} />
         <MetricCard title={language === 'ar' ? 'حالة SLA حرجة' : 'SLA Critical'} value={jumiaSlaCritical} icon={<ShieldAlert size={14} />} color={CHART_COLORS.danger} sub={language === 'ar' ? 'جوميا 5+ أيام تأخير' : 'Jumia 5+ days overdue'} />
         <MetricCard title={t('customers')} value={customers.length} icon={<Users size={14} />} color="var(--color-primary)" sub={language === 'ar' ? 'مسجلين في المحطة' : 'Registered at station'} />

@@ -38,6 +38,9 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [hovered, setHovered] = useState(null);
+  const [rechargeMode, setRechargeMode] = useState(false);
+  const [rechargeAmount, setRechargeAmount] = useState('');
+  const [rechargeSuccess, setRechargeSuccess] = useState(false);
 
   const isRtl = language === 'ar';
 
@@ -58,6 +61,30 @@ export default function LoginPage() {
     cancelPendingLogin();
     setForm({ username: '', password: '' });
     setError('');
+    setRechargeMode(false);
+    setRechargeSuccess(false);
+  };
+
+  const handleRechargeSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/recharge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: rechargeAmount, requestedBy: form.username })
+      });
+      if (res.ok) {
+        setRechargeSuccess(true);
+      } else {
+        const data = await res.json();
+        setError(data.error || 'Failed to submit request');
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   /* ─── Shared wrapper ──────────────────────────────────────────── */
@@ -248,7 +275,7 @@ export default function LoginPage() {
       </div>
 
       {/* Error Banner */}
-      {error && (
+      {error && !error.includes('LIMIT_REACHED') && (
         <div style={{
           background: 'rgba(239,68,68,0.12)',
           border: '1px solid rgba(239,68,68,0.3)',
@@ -266,7 +293,62 @@ export default function LoginPage() {
         </div>
       )}
 
+      {/* Limit Reached Banner */}
+      {error && error.includes('LIMIT_REACHED') && !rechargeMode && (
+        <div style={{
+          background: 'rgba(245,158,11,0.12)',
+          border: '1px solid rgba(245,158,11,0.3)',
+          borderRadius: 'var(--radius-md)',
+          padding: '0.75rem 1rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.5rem',
+          marginBottom: '1.25rem',
+          color: '#fcd34d',
+          fontSize: '0.88rem'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <AlertCircle size={16} />
+            {isRtl ? 'الخدمة متوقفة. يرجى إعادة الشحن للاستمرار.' : 'Service suspended. Please recharge to continue using the service.'}
+          </div>
+          {error === 'LIMIT_REACHED_EZZ' && (
+            <button
+              onClick={() => setRechargeMode(true)}
+              style={{
+                background: 'rgba(245,158,11,0.2)',
+                border: '1px solid rgba(245,158,11,0.5)',
+                color: '#fcd34d',
+                padding: '0.5rem',
+                borderRadius: 'var(--radius-sm)',
+                cursor: 'pointer',
+                marginTop: '0.5rem'
+              }}
+            >
+              {isRtl ? 'مفعلة بالفعل؟ اضغط هنا' : 'Already activated? Click here'}
+            </button>
+          )}
+        </div>
+      )}
+
+      {rechargeSuccess && (
+         <div style={{
+          background: 'rgba(34,197,94,0.12)',
+          border: '1px solid rgba(34,197,94,0.3)',
+          borderRadius: 'var(--radius-md)',
+          padding: '0.75rem 1rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          marginBottom: '1.25rem',
+          color: '#86efac',
+          fontSize: '0.88rem'
+        }}>
+          {isRtl ? 'تم إرسال طلب التفعيل. في انتظار موافقة الإدارة.' : 'Activation request sent. Pending admin approval.'}
+        </div>
+      )}
+
       {/* Form */}
+      {!rechargeMode && !rechargeSuccess && (
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
 
         {/* Username */}
@@ -340,6 +422,39 @@ export default function LoginPage() {
           ) : (isRtl ? 'تسجيل الدخول' : 'Sign In')}
         </button>
       </form>
+      )}
+
+      {/* Recharge Form */}
+      {rechargeMode && !rechargeSuccess && (
+        <form onSubmit={handleRechargeSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div className="input-group">
+            <label className="input-label" style={{ textAlign: isRtl ? 'right' : 'left' }}>{isRtl ? 'مبلغ الشحن' : 'Recharge Amount'}</label>
+            <input
+              required
+              type="number"
+              className="input-field"
+              placeholder={isRtl ? 'أدخل المبلغ' : 'Enter amount'}
+              value={rechargeAmount}
+              onChange={e => setRechargeAmount(e.target.value)}
+            />
+          </div>
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={isLoading}
+            style={{ marginTop: '0.5rem', width: '100%', padding: '0.85rem' }}
+          >
+            {isLoading ? t('loading') : (isRtl ? 'إرسال الطلب' : 'Submit Request')}
+          </button>
+          <button
+            type="button"
+            onClick={() => { setRechargeMode(false); setError(''); }}
+            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', marginTop: '0.5rem' }}
+          >
+            {isRtl ? 'إلغاء' : 'Cancel'}
+          </button>
+        </form>
+      )}
 
       {/* Footer Note */}
       <div style={{ marginTop: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.78rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.25rem' }}>

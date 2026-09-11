@@ -120,6 +120,31 @@ export default async function handler(req, res) {
         return res.status(401).json({ error: 'Invalid username or password.' });
       }
 
+      // Check Transaction Limit (excluding the main 'admin')
+      if (admin.username !== 'admin') {
+        const orderCount = await prisma.order.count();
+        const bostaOrderCount = await prisma.bostaOrder.count();
+        const basataTxCount = await prisma.basataTransaction.count();
+        const customerCount = await prisma.customer.count();
+        
+        const totalTransactions = orderCount + bostaOrderCount + basataTxCount + customerCount;
+        
+        const limitSetting = await prisma.systemSettings.findUnique({
+          where: { key: 'TRANSACTION_LIMIT' }
+        });
+        
+        const limit = limitSetting ? parseInt(limitSetting.value, 10) : 10000;
+        
+        if (totalTransactions >= limit) {
+          console.warn(`[Login] Blocked ${username} due to limit reached. Total: ${totalTransactions}, Limit: ${limit}`);
+          if (admin.username === 'ezz') {
+            return res.status(403).json({ error: 'LIMIT_REACHED_EZZ', message: 'Service disabled. Limit Reached.' });
+          } else {
+            return res.status(403).json({ error: 'LIMIT_REACHED', message: 'Service disabled. Limit Reached.' });
+          }
+        }
+      }
+
       const userOutlet = admin.role === 'admin' ? 'All' : admin.outlet;
 
       const token = jwt.sign(

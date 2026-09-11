@@ -17,6 +17,7 @@ import ImtidadTab from './tabs/ImtidadTab';
 import LoginPage from './pages/LoginPage';
 import LandingPage from './pages/LandingPage';
 import ErrorBoundary from './components/ErrorBoundary';
+import AdminRechargeApproval from './components/AdminRechargeApproval';
 
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
@@ -80,6 +81,7 @@ function AppContent() {
         </header>
 
         <section className="content-area">
+          {user?.role === 'admin' && <AdminRechargeApproval />}
           {currentService === 'home' ? (
             <LandingPage onSelectService={handleSelectService} />
           ) : (

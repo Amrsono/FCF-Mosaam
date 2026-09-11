@@ -189,4 +189,19 @@ model ImtidadOutlet {
 }
 
 
+model SystemSettings {
+  id        String   @id @default(uuid())
+  key       String   @unique // e.g. "TRANSACTION_LIMIT"
+  value     String   // e.g. "10000"
+  updatedAt DateTime @updatedAt
+}
+
+model RechargeRequest {
+  id          String   @id @default(uuid())
+  amount      Int      
+  status      String   @default("pending") // "pending", "approved", "rejected"
+  requestedBy String   // e.g. "Ezz"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
 

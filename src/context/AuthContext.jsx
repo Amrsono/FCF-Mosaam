@@ -61,6 +61,8 @@ export const AuthProvider = ({ children }) => {
 
     if (isExempt(data.user)) {
       // Admins / Ezz → log in immediately, no outlet step
+      sessionStorage.setItem('fcf_just_logged_in', 'true');
+      sessionStorage.removeItem('fcf_credit_modal_session_dismissed');
       setUser(data.user);
     } else {
       // Agents → hold in pendingUser until they choose an outlet
@@ -106,6 +108,8 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem('fcf_token');
     localStorage.removeItem('fcf_session_outlet');
+    sessionStorage.removeItem('fcf_just_logged_in');
+    sessionStorage.removeItem('fcf_credit_modal_session_dismissed');
     setUser(null);
     setPendingUser(null);
   };

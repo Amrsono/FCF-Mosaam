@@ -19,6 +19,7 @@ import LoginPage from './pages/LoginPage';
 import LandingPage from './pages/LandingPage';
 import ErrorBoundary from './components/ErrorBoundary';
 import AdminRechargeApproval from './components/AdminRechargeApproval';
+import CreditStatusModal from './components/CreditStatusModal';
 
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
@@ -29,9 +30,28 @@ function AppContent() {
   const [currentService, setCurrentService] = useState('home');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [pendingRechargesCount, setPendingRechargesCount] = useState(0);
+  const [showCreditModal, setShowCreditModal] = useState(false);
   const { user, logout, isLoading } = useAuth();
   const { t, language, toggleLanguage } = useLanguage();
   const { theme, toggleTheme } = useTheme();
+
+  const isCreditAuditedUser = user?.role === 'admin' || user?.username?.toLowerCase() === 'admin' || user?.username?.toLowerCase() === 'ezz';
+
+  // Auto-trigger credit counter status popup on login for admin or Ezz
+  useEffect(() => {
+    if (!isCreditAuditedUser) return;
+
+    const justLoggedIn = sessionStorage.getItem('fcf_just_logged_in') === 'true';
+    const sessionDismissed = sessionStorage.getItem('fcf_credit_modal_session_dismissed') === 'true';
+
+    if (justLoggedIn || !sessionDismissed) {
+      setShowCreditModal(true);
+    }
+
+    const handleOpen = () => setShowCreditModal(true);
+    window.addEventListener('open-credit-modal', handleOpen);
+    return () => window.removeEventListener('open-credit-modal', handleOpen);
+  }, [user, isCreditAuditedUser]);
 
   // Fetch pending recharges for badge count (Admin username only)
   useEffect(() => {
@@ -110,12 +130,51 @@ function AppContent() {
     <div className="app-container" dir={language === 'ar' ? 'rtl' : 'ltr'}>
       {/* Main Panel */}
       <main className="main-content">
-        <header className="header">
-          <button className="menu-toggle" onClick={() => setIsMobileMenuOpen(true)}>
-            <Menu size={24} />
-          </button>
-          <h2>{currentService === 'home' ? t('selectService') : allTabs.find(t => t.id === activeTab)?.label}</h2>
+        <header className="header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <button className="menu-toggle" onClick={() => setIsMobileMenuOpen(true)}>
+              <Menu size={24} />
+            </button>
+            <h2 style={{ margin: 0 }}>{currentService === 'home' ? t('selectService') : allTabs.find(t => t.id === activeTab)?.label}</h2>
+          </div>
+
+          {isCreditAuditedUser && (
+            <button
+              className="btn btn-outline"
+              onClick={() => setShowCreditModal(true)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                padding: '0.4rem 0.85rem',
+                borderRadius: '10px',
+                fontSize: '0.8rem',
+                fontWeight: 700,
+                border: '1px solid var(--border-color)',
+                background: 'rgba(var(--color-primary-rgb, 99, 102, 241), 0.08)',
+                color: 'var(--text-primary)',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+              title={t('creditStatusTitle')}
+            >
+              <Zap size={15} color="var(--color-primary)" />
+              <span className="hide-mobile">{t('creditStatusTitle')}</span>
+            </button>
+          )}
         </header>
+
+        {isCreditAuditedUser && (
+          <CreditStatusModal 
+            isOpen={showCreditModal} 
+            onClose={() => setShowCreditModal(false)} 
+            onNavigateToApprovals={() => {
+              if (isSuperAdmin) {
+                handleSelectService('admin', 'recharge_approvals');
+              }
+            }}
+          />
+        )}
 
         <section className="content-area">
           {isSuperAdmin && <AdminRechargeApproval />}
